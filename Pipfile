@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+tensorflow = "==2.3.1"
+tensorflow-probability = "==0.11.1"
+matplotlib = "*"
+numpy = "==1.18.5"
+
+[requires]
+python_version = "3.7"
