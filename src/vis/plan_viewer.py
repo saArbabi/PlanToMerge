@@ -110,6 +110,23 @@ class Viewer():
         self.draw_vehicles(ax, vehicles)
         # self.draw_attention_line(ax, vehicles)
 
+    def draw_beliefs(self, ax, sdv):
+        if not sdv.planner.belief_info:
+            return
+
+        belief_info = sdv.planner.belief_info
+        max_depth = len(belief_info)
+        colors = cm.rainbow(np.linspace(1, 0, max_depth))
+        depth = 1
+        for c in colors:
+            ax.scatter(belief_info[depth]['xs'],
+                       belief_info[depth]['ys'],
+                       color=c, s=5)
+            ax.annotate(str(len(belief_info[depth]['xs'])), \
+                        (belief_info[depth]['xs'][0], belief_info[depth]['ys'][0]))
+
+            depth += 1
+
     def draw_plans(self, ax, sdv):
         if not sdv.planner.tree_info:
             return
@@ -141,5 +158,7 @@ class Viewer():
         self.draw_highway(self.env_ax, vehicles)
         self.draw_decision_counts(self.decision_ax, sdv)
         self.draw_plans(self.env_ax, sdv)
+        self.draw_beliefs(self.env_ax, sdv)
+
         self.fig.tight_layout()
         plt.pause(1e-10)

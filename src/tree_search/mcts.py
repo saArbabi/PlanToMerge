@@ -2,6 +2,7 @@ import numpy as np
 import time
 from tree_search.factory import safe_deepcopy_env
 from tree_search.abstract import AbstractPlanner, Node
+import hashlib
 
 class MCTSDPW(AbstractPlanner):
     """
@@ -51,15 +52,20 @@ class MCTSDPW(AbstractPlanner):
     def extract_belief_info(self, state, depth):
         if depth not in self.belief_info:
             self.belief_info[depth] = {}
-            self.belief_info[depth]['xs'] = [veh.x for veh in state.vehicles if veh.id != 'sdv']
-            self.belief_info[depth]['ys'] = [veh.y for veh in state.vehicles if veh.id != 'sdv']
-        self.belief_info[depth]['xs'].extend([veh.x for veh in state.vehicles if veh.id != 'sdv'])
-        self.belief_info[depth]['ys'].extend([veh.y for veh in state.vehicles if veh.id != 'sdv'])
+            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == 1]
+            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == 1]
+        else:
+            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == 1])
+            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == 1])
 
     def extract_tree_info(self, tree_states):
         self.tree_info.append(tree_states)
-            # tree_states['x'].append(state.sdv.x)
-            # tree_states['y'].append(state.sdv.y)
+
+    def not_exit_tree(self, depth, decision_node, terminal):
+        not_exit = depth < self.config['horizon'] and \
+                (decision_node.count != 0 or decision_node == self.root) and not terminal
+        return not_exit
+
     def run(self, state, observation):
         """
             Run an iteration of MCTSDPW, starting from a given state
@@ -70,25 +76,22 @@ class MCTSDPW(AbstractPlanner):
         total_reward = 0
         depth = 0
 
-        # state.seed(self.np_random.randint(2**30))
+        # state.seed(self.rng.randint(1e5))
         terminal = False
-        tree_states = {'x':[], 'y':[]}
-        while depth < self.config['horizon'] and \
-                (decision_node.count != 0 or decision_node == self.root) and not terminal:
-
-            tree_states['x'].append(state.sdv.glob_x)
-            tree_states['y'].append(state.sdv.glob_y)
-
-            # perform an decision followed by a transition
+        tree_states = {'x':[state.sdv.glob_x], 'y':[state.sdv.glob_y]}
+        while self.not_exit_tree(depth, decision_node, terminal):
+            # perform a decision followed by a transition
             chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
             # print(decision)
             observation, reward, terminal = self.step(state, decision)
             node_observation = observation if self.config["closed_loop"] else None
             decision_node = chance_node.get_child(node_observation)
 
-            total_reward += self.config["gamma"] ** depth * reward
+            # total_reward += self.config["gamma"] ** depth * reward
             depth += 1
-            # self.extract_belief_info(state, depth)
+            tree_states['x'].append(state.sdv.glob_x)
+            tree_states['y'].append(state.sdv.glob_y)
+            self.extract_belief_info(state, depth)
 
         self.extract_tree_info(tree_states)
 
@@ -107,21 +110,24 @@ class MCTSDPW(AbstractPlanner):
         :return: the total reward of the rollout trajectory
         """
         for h in range(depth, self.config["horizon"]):
-            decision = np.random.choice(self.get_available_decisions(state))
+            decision = self.rng.choice(self.get_available_decisions(state))
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** h * reward
             if terminal:
                 break
         return total_reward
 
-
     def plan(self, state, observation):
         self.reset()
         self.tree_info = []
         self.belief_info = {}
+        # print('before: ', self.root.children[0].children)
         for i in range(10):
-            # self.run(state, observation)
+            print('###################')
             self.run(safe_deepcopy_env(state), observation)
+        # print('after: ', self.root.children)
+        # print('after: ', self.root.children[2].value)
+        # print('after: ', self.root.children[1].children)
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""
@@ -129,9 +135,6 @@ class MCTSDPW(AbstractPlanner):
         return chosen_decision, decision_counts
 
 class DecisionNode(Node):
-    K = 1.0
-    """ The value function first-order filter gain"""
-
     def __init__(self, parent, planner):
         super(DecisionNode, self).__init__(parent, planner)
         self.value = 0
@@ -149,7 +152,7 @@ class DecisionNode(Node):
 
     def expand(self, state):
         # decision = self.planner.np_random.choice(list(self.unexplored_decisions(state)))
-        decision = np.random.choice(list(self.unexplored_decisions(state)))
+        decision = self.planner.rng.choice(list(self.unexplored_decisions(state)))
         self.children[decision] = ChanceNode(self, self.planner)
         return self.children[decision], decision
 
@@ -179,7 +182,13 @@ class DecisionNode(Node):
         :param total_reward: the total reward obtained through a trajectory passing by this node
         """
         self.count += 1
-        self.value += 1 / self.count * (total_reward - self.value)
+        self.value += total_reward
+
+    def ucb_value(self, decision, temperature):
+        ucb_val = self.children[decision].value + \
+                            temperature * \
+                            np.sqrt(np.log(self.count) / self.children[decision].count)
+        return ucb_val
 
     def selection_strategy(self, temperature):
         """
@@ -191,8 +200,8 @@ class DecisionNode(Node):
 
         decisions = list(self.children.keys())
         indexes = []
-        for a in decisions:
-            ucb_val = self.children[a].value +  temperature * np.sqrt(np.log(self.count / (self.children[a].count)))
+        for decision in decisions:
+            ucb_val = self.ucb_value(decision, temperature)
             indexes.append(ucb_val)
 
         decision = decisions[self.random_argmax(indexes)]
@@ -225,13 +234,12 @@ class ChanceNode(Node):
         self.children[obs_id] = DecisionNode(self, self.planner)
 
     def get_child(self, observation):
-        import hashlib
         obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
         # print(len(self.children))
         # print(observation)
         if obs_id not in self.children:
             if self.k_state*self.count**self.alpha_state < len(self.children):
-                obs_id = np.random.choice(list(self.children))
+                obs_id = self.planner.rng.choice(list(self.children))
                 return self.children[obs_id]
             else:
                 # Add observation to the children set

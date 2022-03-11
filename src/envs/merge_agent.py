@@ -1,11 +1,12 @@
 from envs.merge import EnvMerge
 from vehicles.sdv_vehicle import SDVehicle
-
+import numpy as np
 import copy
 
 class EnvMergeAgent(EnvMerge):
     def __init__(self, config):
         super().__init__(config)
+        self.seed(2022)
 
     def initialize_env(self, episode_id):
         """Initates the environment
@@ -18,6 +19,9 @@ class EnvMergeAgent(EnvMerge):
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
                 self.vehicles[i] = self.sdv
+
+    def seed(self, seed):
+        self.rng = np.random.RandomState(seed)
 
     def turn_sdv(self, vehicle):
         """Keep the initial state of the vehicle, but let tree search
@@ -39,10 +43,8 @@ class EnvMergeAgent(EnvMerge):
                 vehicle.neighbours = vehicle.my_neighbours(self.vehicles+[self.dummy_stationary_car])
                 # IDMMOBIL car
                 actions = vehicle.act()
+                actions[0] += self.rng.normal(0, 3)
                 joint_action.append(actions)
-                if self.time_step > 0:
-                    vehicle.act_long_p = vehicle.act_long_c
-                vehicle.act_long_c = actions[0]
         return joint_action
 
     def get_sdv_action(self, decision):
@@ -69,4 +71,4 @@ class EnvMergeAgent(EnvMerge):
         return obs, self.get_reward(obs), False
 
     def get_reward(self, obs):
-        return -obs
+        return obs

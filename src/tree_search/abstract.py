@@ -4,10 +4,9 @@ import numpy as np
 
 class AbstractPlanner(object):
     def __init__(self):
-        self.np_random = None
         self.root = None
         self.reset()
-        # self.seed()
+        self.seed(2022)
         self.config = self.default_config()
 
     @classmethod
@@ -16,14 +15,12 @@ class AbstractPlanner(object):
                     gamma=0.8,
                     step_strategy="reset")
 
-    def seed(self, seed=None):
+    def seed(self, seed):
         """
             Seed the planner randomness source, e.g. for rollout policy
         :param seed: the seed to be used
-        :return: the used seed
         """
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+        self.rng = np.random.RandomState(seed)
 
     def plan(self, state, observation):
         """
@@ -138,8 +135,7 @@ class Node(object):
         :return: a random index among the maximums
         """
         indices = Node.all_argmax(x)
-        return np.random.choice(indices)
-        # return self.planner.np_random.choice(indices)
+        return self.planner.rng.choice(indices)
 
     def __str__(self):
         return "{} (n:{}, v:{:.2f})".format(list(self.path()), self.count, self.get_value())

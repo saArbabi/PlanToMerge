@@ -1,5 +1,6 @@
 from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
 from tree_search.mcts import MCTSDPW
+import numpy as np
 
 import json
 
@@ -24,7 +25,6 @@ class SDVehicle(IDMMOBILVehicleMerge):
         if self.time_lapse % self.budget == 0:
             self.planner.plan(env_state, obs)
             self.decision, self.decisions_and_counts = self.planner.get_decision()
-            print(self.decisions_and_counts)
             # self.decision = 0
         return self.decision
 
@@ -41,5 +41,9 @@ class SDVehicle(IDMMOBILVehicleMerge):
         return [act_long, act_lat]
 
     def observe(self):
+        """Observation used by the planner
+        """
         delta_x_to_merge = self.ramp_exit_start-self.glob_x
-        return delta_x_to_merge
+        return self.glob_y
+        # return self.glob_y + np.random.normal()
+        # return delta_x_to_merge

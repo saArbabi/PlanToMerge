@@ -3,7 +3,6 @@ def safe_deepcopy_env(obj):
     """
         Perform a deep copy of an environment.
     """
-    print('i die here')
     cls = obj.__class__
     result = cls.__new__(cls)
     memo = {id(obj): result}
