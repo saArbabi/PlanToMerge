@@ -50,7 +50,7 @@ class Viewer():
             ax.annotate(annotation_mark_2[i], (glob_xs[i], glob_ys[i]-1))
 
         for vehicle in vehicles:
-            if vehicle.id == self.focus_on_this_vehicle:
+            if str(vehicle.id) == self.focus_on_this_vehicle:
                 print('#############  ', vehicle.id, '  ##############')
                 print('My neighbours: ')
                 for key, neighbour in vehicle.neighbours.items():
@@ -144,15 +144,24 @@ class Viewer():
 
         for decision, count in decisions_and_counts:
             if count == max(counts):
+                max_count = count
                 color = 'green'
             else:
                 color = 'grey'
 
-            plt.bar(decision, count, 0.5, \
+            ax.annotate(count, (decision, count/2))
+
+            ax.bar(decision, count, 0.5, \
                     label=sdv.OPTIONS[decision][1], color=color)
+        ax.set_ylim([0, max_count+1])
 
         ax.set_xticks(list(sdv.OPTIONS.keys()))
-        ax.set_xticklabels(['up', 'down', 'merge'])
+        ax.set_xticklabels(['LANEKEEP/ TIMID',
+                            'LANEKEEP/ NORMAL',
+                            'LANEKEEP/ AGGRESSIVE',
+                            'MERGE/ TIMID',
+                            'MERGE/ NORMAL',
+                            'MERGE/ AGGRESSIVE'])
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)

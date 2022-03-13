@@ -5,14 +5,13 @@ import numpy as np
 class AbstractPlanner(object):
     def __init__(self):
         self.root = None
-        self.reset()
         self.seed(2022)
         self.config = self.default_config()
 
     @classmethod
     def default_config(cls):
         return dict(budget=500,
-                    gamma=0.8,
+                    gamma=0.9,
                     step_strategy="reset")
 
     def seed(self, seed):
@@ -118,6 +117,15 @@ class Node(object):
             path.append(node.parent)
             node = node.parent
         return reversed(path)
+
+    def update(self, total_reward):
+        """
+            Update the visit count and value of this node, given a sample of total reward.
+
+        :param total_reward: the total reward obtained through a trajectory passing by this node
+        """
+        self.count += 1
+        self.value += total_reward
 
     @staticmethod
     def all_argmax(x):

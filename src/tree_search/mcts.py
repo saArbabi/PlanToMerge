@@ -23,13 +23,13 @@ class MCTSDPW(AbstractPlanner):
     def default_config(cls):
         cfg = super().default_config()
         cfg.update({
-            "temperature": 1,
+            "temperature": 2,
             "closed_loop": True,
             "k_state": 1,
             "alpha_state": 0.3,
             "k_decision": 1,
             "alpha_decision": 0.3,
-            "horizon": 7
+            "horizon": 10
 
         })
         return cfg
@@ -46,8 +46,8 @@ class MCTSDPW(AbstractPlanner):
         #     # most left lane
         #     return [0, 1, 2, 6, 7, 8]
         # else:
-        # return [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        return [0, 1, 2]
+        # return [0, 1, 2, 3, 4, 5]
+        return [0, 3]
 
     def extract_belief_info(self, state, depth):
         if depth not in self.belief_info:
@@ -82,12 +82,9 @@ class MCTSDPW(AbstractPlanner):
         while self.not_exit_tree(depth, decision_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
-            # print(decision)
             observation, reward, terminal = self.step(state, decision)
             node_observation = observation if self.config["closed_loop"] else None
             decision_node = chance_node.get_child(node_observation)
-
-            # total_reward += self.config["gamma"] ** depth * reward
             depth += 1
             tree_states['x'].append(state.sdv.glob_x)
             tree_states['y'].append(state.sdv.glob_y)
@@ -97,6 +94,7 @@ class MCTSDPW(AbstractPlanner):
 
         if not terminal:
             total_reward = self.evaluate(state, total_reward, depth=depth)
+            print(total_reward)
         # Backup global statistics
         decision_node.backup_to_root(total_reward)
 
@@ -121,13 +119,18 @@ class MCTSDPW(AbstractPlanner):
         self.reset()
         self.tree_info = []
         self.belief_info = {}
-        # print('before: ', self.root.children[0].children)
         for i in range(10):
-            print('###################')
+            # t0 = time.time()
             self.run(safe_deepcopy_env(state), observation)
-        # print('after: ', self.root.children)
-        # print('after: ', self.root.children[2].value)
-        # print('after: ', self.root.children[1].children)
+            # print('########### run: ', i)
+            # for key, d in self.root.children.items():
+            #     print('dec: ', key , ' dec_value: ', d.value)
+            #     print('dec: ', key , ' dec_count: ', d.count)
+            #     print('dec: ', key , ' ucb: ', self.root.ucb_value(key, self.config['temperature']))
+            #     if key == 0:
+            #         print(self.root.count)
+            #         print(self.root.children[key].count)
+
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""
@@ -175,19 +178,13 @@ class DecisionNode(Node):
         if self.parent:
             self.parent.backup_to_root(total_reward)
 
-    def update(self, total_reward):
-        """
-            Update the visit count and value of this node, given a sample of total reward.
-
-        :param total_reward: the total reward obtained through a trajectory passing by this node
-        """
-        self.count += 1
-        self.value += total_reward
-
     def ucb_value(self, decision, temperature):
-        ucb_val = self.children[decision].value + \
-                            temperature * \
-                            np.sqrt(np.log(self.count) / self.children[decision].count)
+        exploitation = self.children[decision].value/self.children[decision].count
+        exploration = np.sqrt(np.log(self.count) / self.children[decision].count)
+        ucb_val = exploitation + temperature * exploration
+        # print('###############')
+        # print('exploitation ', exploitation)
+        # print('exploration ', exploration)
         return ucb_val
 
     def selection_strategy(self, temperature):
@@ -257,12 +254,3 @@ class ChanceNode(Node):
         assert self.parent
         self.update(total_reward)
         self.parent.backup_to_root(total_reward)
-
-    def update(self, total_reward):
-        """
-            Update the visit count and value of this node, given a sample of total reward.
-
-        :param total_reward: the total reward obtained through a trajectory passing by this node
-        """
-        self.count += 1
-        self.value += 1 / self.count * (total_reward - self.value)

@@ -16,20 +16,23 @@ def main():
     viewer = Viewer(config)
     while True:
         print(env.time_step)
-        
+
         user_input = input()
-        if user_input == 'n':
-            sys.exit()
-        try:
-            viewer.focus_on_this_vehicle = int(user_input)
-        except:
-            pass
+        if user_input:
+            if user_input == 'n':
+                sys.exit()
+            try:
+                viewer.focus_on_this_vehicle = user_input
+            except:
+                pass
 
 
-        obs = env.sdv.observe()
+        obs = env.sdv.planner_observe()
         decision = env.sdv.get_sdv_decision(env, obs)
-        viewer.render(env.vehicles, env.sdv)
-        _, _, _ = env.step(decision)
 
+
+        viewer.render(env.vehicles, env.sdv)
+        _, reward, _ = env.step(decision)
+        print('reward ', reward)
 if __name__=='__main__':
     main()

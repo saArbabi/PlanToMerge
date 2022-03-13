@@ -48,6 +48,7 @@ class EnvMergeAgent(EnvMerge):
         return joint_action
 
     def get_sdv_action(self, decision):
+        self.sdv.neighbours = self.sdv.my_neighbours(self.vehicles+[self.dummy_stationary_car])
         actions = self.sdv.act(decision)
         return actions
 
@@ -56,7 +57,7 @@ class EnvMergeAgent(EnvMerge):
         """
         assert self.vehicles, 'Environment not yet initialized'
         joint_action = self.get_joint_action()
-        obs = self.sdv.observe()
+        obs = self.sdv.planner_observe()
         sdv_action = self.get_sdv_action(decision)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
@@ -71,4 +72,6 @@ class EnvMergeAgent(EnvMerge):
         return obs, self.get_reward(obs), False
 
     def get_reward(self, obs):
-        return obs
+        # return -obs
+        # return -5
+        return 1
