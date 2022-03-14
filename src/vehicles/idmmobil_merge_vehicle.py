@@ -158,12 +158,7 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         return [act_long, act_lat]
 
     def is_merge_complete(self):
-        if self.glob_y >= 1.5*self.lane_width:
-            if self.neighbours['rl']:
-                self.neighbours['rl'].neighbours['f'] = self
-                self.neighbours['rl'].neighbours['m'] = None
-            self.lane_decision = 'keep_lane'
-            self.glob_y = 1.5*self.lane_width
+        return self.glob_y >= 1.5*self.lane_width
 
     def lateral_action(self):
         if self.lane_decision == 'keep_lane':
@@ -177,9 +172,6 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
             return 0
 
     def is_merge_possible(self, act_rl_lc):
-        # return False
-        # if self.id == 4:
-        #     print(act_rl_lc)
         if self.lane_id > 1 and self.glob_x > self.merge_lane_start and \
                 self.driver_params['safe_braking'] <= act_rl_lc:
             return True
@@ -187,7 +179,12 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
     def idm_mobil_act(self):
         act_long = self.idm_action(self, self.neighbours['att'])
         if self.lane_decision != 'keep_lane':
-            self.is_merge_complete()
+            if self.is_merge_complete():
+                if self.neighbours['rl']:
+                    self.neighbours['rl'].neighbours['f'] = self
+                    self.neighbours['rl'].neighbours['m'] = None
+                self.lane_decision = 'keep_lane'
+                self.glob_y = 1.5*self.lane_width
 
         elif self.lane_decision == 'keep_lane' and self.lane_id == 2:
             lc_left_condition = 0

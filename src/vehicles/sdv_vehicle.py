@@ -74,9 +74,10 @@ class SDVehicle(IDMMOBILVehicleMerge):
             elif merge_decision == 'LANEKEEP':
                 self.lane_decision = 'keep_lane'
 
-        # print(self.neighbours['f'])
         act_long = self.idm_action(self, self.neighbours['att'])
         # act_lat = self.lateral_action()
+        # if self.lane_decision != 'keep_lane':
+            # self.is_merge_complete()
         if self.lane_decision == 'move_left':
             act_lat = 1
         elif self.lane_decision == 'keep_lane':
@@ -88,7 +89,11 @@ class SDVehicle(IDMMOBILVehicleMerge):
     def planner_observe(self):
         """Observation used by the planner
         """
-        delta_x_to_merge = self.ramp_exit_start-self.glob_x
+        # delta_x_to_merge = self.ramp_exit_start-self.glob_x
+        # obs = {
+        #        'gloab_y':None,
+        #        'delta_x_to_merge' :None,
+        #        }
         return self.glob_y
-        # return self.glob_y + np.random.NORMAL()
+        # return self.glob_y + np.random.normal()
         # return delta_x_to_merge

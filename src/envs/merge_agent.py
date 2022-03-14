@@ -57,7 +57,6 @@ class EnvMergeAgent(EnvMerge):
         """
         assert self.vehicles, 'Environment not yet initialized'
         joint_action = self.get_joint_action()
-        obs = self.sdv.planner_observe()
         sdv_action = self.get_sdv_action(decision)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
@@ -69,9 +68,29 @@ class EnvMergeAgent(EnvMerge):
         self.sdv.time_lapse += 1
 
         self.time_step += 1
-        return obs, self.get_reward(obs), False
+        obs = self.sdv.planner_observe()
+        reward = self.get_reward(obs)
+        terminal = self.is_terminal()
+        return obs, reward, terminal
+
+    def is_terminal(self):
+        """ Set conditions for instance at which the episode is over
+        Note: Collisions are not possible, since agent does not take actions that
+            result in collisions
+
+        Episode is complete if: agent successfully performs a merge
+        """
+        return self.sdv.is_merge_complete()
+        # return False
+
 
     def get_reward(self, obs):
-        # return -obs
+        # return 1
+        if self.sdv.is_merge_complete():
+            return 1
+        else:
+            return 0
+        # obs =
+        # return obs
         # return -5
-        return 1
+        # return 1

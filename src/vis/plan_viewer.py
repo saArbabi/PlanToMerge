@@ -130,6 +130,7 @@ class Viewer():
     def draw_plans(self, ax, sdv):
         if not sdv.planner.tree_info:
             return
+
         for itr in sdv.planner.tree_info:
             ax.plot(itr['x'], itr['y'], '-o', \
                                         markersize=3, alpha=0.2, color='black')
@@ -156,18 +157,18 @@ class Viewer():
         ax.set_ylim([0, max_count+1])
 
         ax.set_xticks(list(sdv.OPTIONS.keys()))
-        ax.set_xticklabels(['LANEKEEP/ TIMID',
-                            'LANEKEEP/ NORMAL',
-                            'LANEKEEP/ AGGRESSIVE',
-                            'MERGE/ TIMID',
-                            'MERGE/ NORMAL',
-                            'MERGE/ AGGRESSIVE'])
+        ax.set_xticklabels(['LANEKEEP \n TIMID',
+                            'LANEKEEP \n NORMAL',
+                            'LANEKEEP \n AGGRESSIVE',
+                            'MERGE \n TIMID',
+                            'MERGE \n NORMAL',
+                            'MERGE \n AGGRESSIVE'])
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
         self.draw_decision_counts(self.decision_ax, sdv)
         self.draw_plans(self.env_ax, sdv)
-        self.draw_beliefs(self.env_ax, sdv)
+        # self.draw_beliefs(self.env_ax, sdv)
 
         self.fig.tight_layout()
         plt.pause(1e-10)

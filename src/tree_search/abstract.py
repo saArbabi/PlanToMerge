@@ -6,13 +6,6 @@ class AbstractPlanner(object):
     def __init__(self):
         self.root = None
         self.seed(2022)
-        self.config = self.default_config()
-
-    @classmethod
-    def default_config(cls):
-        return dict(budget=500,
-                    gamma=0.9,
-                    step_strategy="reset")
 
     def seed(self, seed):
         """
@@ -41,7 +34,7 @@ class AbstractPlanner(object):
         decisions = []
         node = self.root
         while node.children:
-            decision = node.selection_rule()
+            decision, _ = node.selection_rule()
             decisions.append(decision)
             node = node.children[decision]
         return decisions
@@ -79,9 +72,6 @@ class Node(object):
 
         self.value_upper = 0
         """ Estimated value of the node's decision sequence"""
-
-    def get_value(self):
-        return self.value_upper
 
     def expand(self, branching_factor):
         for a in range(branching_factor):
@@ -146,7 +136,7 @@ class Node(object):
         return self.planner.rng.choice(indices)
 
     def __str__(self):
-        return "{} (n:{}, v:{:.2f})".format(list(self.path()), self.count, self.get_value())
+        return "{} (n:{}, v:{:.2f})".format(list(self.path()), self.count, self.value)
 
     def __repr__(self):
         return '<node {}>'.format(id(self))

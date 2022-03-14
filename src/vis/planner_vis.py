@@ -29,10 +29,8 @@ def main():
 
         obs = env.sdv.planner_observe()
         decision = env.sdv.get_sdv_decision(env, obs)
-
-
         viewer.render(env.vehicles, env.sdv)
-        _, reward, _ = env.step(decision)
-        print('reward ', reward)
+        _, reward, terminal = env.step(decision)
+        
 if __name__=='__main__':
     main()
