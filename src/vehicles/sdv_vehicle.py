@@ -5,18 +5,17 @@ import numpy as np
 import json
 
 class SDVehicle(IDMMOBILVehicleMerge):
-    OPTIONS = {0: ['LANEKEEP', 'TIMID'],
-               1: ['LANEKEEP', 'NORMAL'],
-               2: ['LANEKEEP', 'AGGRESSIVE'],
-               3: ['MERGE', 'TIMID'],
-               4: ['MERGE', 'NORMAL'],
-               5: ['MERGE', 'AGGRESSIVE']}
+    OPTIONS = {1 : ['LANEKEEP', 'TIMID'],
+               2 : ['LANEKEEP', 'NORMAL'],
+               3 : ['LANEKEEP', 'AGGRESSIVE'],
+               4 : ['MERGE', 'TIMID'],
+               5 : ['MERGE', 'NORMAL'],
+               6 : ['MERGE', 'AGGRESSIVE']}
 
     def __init__(self, id):
         self.id = id
         self.planner = MCTSDPW()
-        self.actme = [0, 0]
-        self.budget = 10 # timesteps with 0.1s step size
+        self.decision_steps_n = 10 # timesteps with 0.1s step size
         self.decisions_and_counts = None
         self.decision = None
         with open('./src/envs/config.json', 'rb') as handle:
@@ -25,8 +24,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
             self.ramp_exit_start = config['ramp_exit_start']
 
     def get_sdv_decision(self, env_state, obs):
-        # if self.time_lapse % self.budget == 0:
-        if self.time_lapse % self.budget == 0:
+        if self.time_lapse % self.decision_steps_n == 0:
             self.planner.plan(env_state, obs)
             decision, self.decisions_and_counts = self.planner.get_decision()
             # self.decision = 0
@@ -75,9 +73,15 @@ class SDVehicle(IDMMOBILVehicleMerge):
                 self.lane_decision = 'keep_lane'
 
         act_long = self.idm_action(self, self.neighbours['att'])
-        # act_lat = self.lateral_action()
-        # if self.lane_decision != 'keep_lane':
-            # self.is_merge_complete()
+        act_lat = self.lateral_action()
+        # act_rl_lc = self.idm_action(self.neighbours['rl'], self)
+        # if self.neighbours['rl']:
+        #     print(self.neighbours['rl'].id, ' ', act_rl_lc, ' ', (self.lane_decision), ' ', self.glob_x)
+        # else:
+        #     print('no rl car ', (self.lane_decision), ' ', self.glob_x)
+        # print('sdv glob_x ', self.glob_x)
+        # print('sdv lane id ', self.lane_id)
+
         if self.lane_decision == 'move_left':
             act_lat = 1
         elif self.lane_decision == 'keep_lane':
@@ -85,15 +89,3 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
         return [act_long, act_lat]
         # return [0, 0]
-
-    def planner_observe(self):
-        """Observation used by the planner
-        """
-        # delta_x_to_merge = self.ramp_exit_start-self.glob_x
-        # obs = {
-        #        'gloab_y':None,
-        #        'delta_x_to_merge' :None,
-        #        }
-        return self.glob_y
-        # return self.glob_y + np.random.normal()
-        # return delta_x_to_merge

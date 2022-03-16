@@ -14,6 +14,7 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         self.act_long_p = None # last action
         self.merge_lane_start = config['merge_lane_start']
         self.ramp_exit_start = config['ramp_exit_start']
+        self.min_act_long = 0
 
     def my_neighbours(self, vehicles):
         """
@@ -47,15 +48,14 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
 
                     if vehicle.glob_x > self.glob_x:
                         # front neibouring cars
-                        if vehicle.target_lane == self.target_lane and \
-                                vehicle.lane_decision == 'keep_lane':
-                                if delta_x < min(delta_xs_f):
-                                    delta_xs_f.append(delta_x)
-                                    candidate_f = vehicle
+                        if vehicle.lane_id == self.lane_id:
+                            if delta_x < min(delta_xs_f):
+                                delta_xs_f.append(delta_x)
+                                candidate_f = vehicle
 
-                                if delta_x < min(delta_xs_att):
-                                    delta_xs_att.append(delta_x)
-                                    candidate_att = vehicle
+                            if delta_x < min(delta_xs_att):
+                                delta_xs_att.append(delta_x)
+                                candidate_att = vehicle
 
                         if vehicle.target_lane == right_lane_id or \
                             (self.lane_decision != 'keep_lane' and vehicle.lane_id == 2):

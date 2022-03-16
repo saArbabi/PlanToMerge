@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, './src')
 from plan_viewer import Viewer
-from envs.merge_agent import EnvMergeAgent
+from envs.auto_merge import EnvAutoMerge
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -9,7 +9,7 @@ import json
 def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
-    env = EnvMergeAgent(config)
+    env = EnvAutoMerge(config)
     episode_id = 3
     env.initialize_env(episode_id)
 
@@ -27,10 +27,10 @@ def main():
                 pass
 
 
-        obs = env.sdv.planner_observe()
+        obs = env.planner_observe()
         decision = env.sdv.get_sdv_decision(env, obs)
         viewer.render(env.vehicles, env.sdv)
-        _, reward, terminal = env.step(decision)
-        
+        env.step(decision)
+
 if __name__=='__main__':
     main()

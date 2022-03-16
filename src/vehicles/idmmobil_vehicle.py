@@ -323,8 +323,26 @@ class IDMMOBILVehicle(Vehicle):
                     (1-(follower.speed/follower.driver_params['desired_v'])**4-\
                                                         (desired_gap/(delta_x))**2)
 
-        return act_long
-        # return max(-5, min(act_long, 5))
+        # return act_long
+        # if self.id == 2:
+        #     if self.neighbours['att']:
+        #         print('other att ', self.neighbours['att'].id)
+        #     if self.neighbours['m']:
+        #         print('other m ', self.neighbours['m'].id)
+        #
+        #     if act_long < -10:
+        #         print('!!!!!!!!!!!! oops ', act_long)
+        #     else:
+        #         print('good ', act_long)
+        #
+        #     print('other glob_x ', self.glob_x)
+
+        # if self.id == 2:
+
+                # import sys
+                # sys.exit()
+
+        return max(-7, min(act_long, 5))
 
     def check_reservations(self, target_lane, reservations):
         """To ensure:

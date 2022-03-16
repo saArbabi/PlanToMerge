@@ -27,6 +27,8 @@ class MCTSDPW(AbstractPlanner):
             return cfg
 
     def reset(self):
+        self.tree_info = []
+        self.belief_info = {}
         self.root = DecisionNode(parent=None, planner=self)
 
     def get_available_decisions(self, state):
@@ -39,17 +41,23 @@ class MCTSDPW(AbstractPlanner):
         #     return [0, 1, 2, 6, 7, 8]
         # else:
         # return [0, 1, 2, 3, 4, 5]
+        if state.sdv.glob_x > state.sdv.merge_lane_start:
         # return [3]
-        return [0, 3]
+            return [1, 4]
+        else:
+            return [1, 4]
+            # return [1]
+
 
     def extract_belief_info(self, state, depth):
+        vehicle_id = 2
         if depth not in self.belief_info:
             self.belief_info[depth] = {}
-            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == 1]
-            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == 1]
+            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == vehicle_id]
+            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == vehicle_id]
         else:
-            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == 1])
-            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == 1])
+            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == vehicle_id])
+            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == vehicle_id])
 
     def extract_tree_info(self, tree_states):
         self.tree_info.append(tree_states)
@@ -58,6 +66,17 @@ class MCTSDPW(AbstractPlanner):
         not_exit = depth < self.config['horizon'] and \
                 (decision_node.count != 0 or decision_node == self.root) and not terminal
         return not_exit
+
+    def log_visited_sdv_state(self, state, tree_states, mcts_stage):
+        """ Use this for visualising tree """
+        if mcts_stage == 'selection':
+            tree_states['x'].append(state.sdv.glob_x)
+            tree_states['y'].append(state.sdv.glob_y)
+        elif mcts_stage == 'rollout':
+            tree_states['x_rollout'].append(state.sdv.glob_x)
+            tree_states['y_rollout'].append(state.sdv.glob_y)
+
+        return tree_states
 
     def run(self, state, observation):
         """
@@ -68,28 +87,30 @@ class MCTSDPW(AbstractPlanner):
         decision_node = self.root
         total_reward = 0
         depth = 0
-
         # state.seed(self.rng.randint(1e5))
         terminal = False
-        tree_states = {'x':[state.sdv.glob_x], 'y':[state.sdv.glob_y]}
+        tree_states = {
+                        'x':[], 'y':[],
+                        'x_rollout':[], 'y_rollout':[]}
 
+        self.extract_belief_info(state, 0)
+        self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, decision_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
+            # print('######### ', depth, ' ########################### in tree')
             observation, reward, terminal = self.step(state, decision)
             decision_node = chance_node.get_child(observation)
             depth += 1
-            tree_states['x'].append(state.sdv.glob_x)
-            tree_states['y'].append(state.sdv.glob_y)
+            self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
 
-
-        total_reward += reward
+        total_reward += self.config["gamma"] ** depth * reward
         if not terminal:
             tree_states, total_reward = self.evaluate(state,
-                                                      tree_states,
-                                                      total_reward,
-                                                      depth=depth)
+                                         tree_states,
+                                          total_reward,
+                                          depth=depth)
         # print(total_reward)
         # Backup global statistics
         decision_node.backup_to_root(total_reward)
@@ -104,20 +125,24 @@ class MCTSDPW(AbstractPlanner):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-        for h in range(depth, self.config["horizon"]):
+
+        self.log_visited_sdv_state(state, tree_states, 'rollout')
+        # self.extract_belief_info(state, depth)
+        for rollout_depth in range(depth, self.config["horizon"]):
             decision = self.rng.choice(self.get_available_decisions(state))
+            # print('######### ', rollout_depth, ' ########################### in rollout')
             observation, reward, terminal = self.step(state, decision)
-            total_reward += self.config["gamma"] ** h * reward
-            tree_states['x'].append(state.sdv.glob_x)
-            tree_states['y'].append(state.sdv.glob_y)
+            total_reward += self.config["gamma"] ** rollout_depth * reward
+            self.log_visited_sdv_state(state, tree_states, 'rollout')
+            self.extract_belief_info(state, rollout_depth+1)
+
             if terminal:
                 break
+
         return tree_states, total_reward
 
     def plan(self, state, observation):
         self.reset()
-        self.tree_info = []
-        self.belief_info = {}
         for i in range(self.config['budget']):
             # t0 = time.time()
             self.run(safe_deepcopy_env(state), observation)
@@ -200,6 +225,7 @@ class DecisionNode(Node):
 
         exploration = np.sqrt(np.log(self.count) / self.children[decision].count)
         ucb_val = exploitation + temperature * exploration
+        # ucb_val = exploitation
         # print('###############')
         # print('exploitation ', exploitation)
         # print('exploration ', exploration)

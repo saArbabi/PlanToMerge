@@ -7,7 +7,7 @@ from matplotlib.patches import Rectangle
 class Viewer():
     def __init__(self, config):
         self.config  = config
-        self.fig = plt.figure(figsize=(10, 3))
+        self.fig = plt.figure(figsize=(10, 5))
         self.env_ax = self.fig.add_subplot(211)
         self.decision_ax = self.fig.add_subplot(212)
         self.focus_on_this_vehicle = None
@@ -67,7 +67,7 @@ class Viewer():
                 print('ego_lane_id_target: ', vehicle.target_lane)
                 print('glob_y: ', vehicle.glob_y)
                 print('glob_x: ', round(vehicle.glob_x, 2))
-                print('ego_act: ', vehicle.act_long_c)
+                print('ego_act: ', vehicle.act_long)
                 print('steps_since_lc_initiation: ', vehicle.steps_since_lc_initiation)
                 print('driver_params: ', vehicle.driver_params)
                 print('###########################')
@@ -117,22 +117,23 @@ class Viewer():
         belief_info = sdv.planner.belief_info
         max_depth = len(belief_info)
         colors = cm.rainbow(np.linspace(1, 0, max_depth))
-        depth = 1
-        for c in colors:
+
+        for depth, c in enumerate(colors):
             ax.scatter(belief_info[depth]['xs'],
                        belief_info[depth]['ys'],
                        color=c, s=5)
-            ax.annotate(str(len(belief_info[depth]['xs'])), \
-                        (belief_info[depth]['xs'][0], belief_info[depth]['ys'][0]))
 
-            depth += 1
+            # ax.annotate(str(len(belief_info[depth]['xs'])), \
+            #             (belief_info[depth]['xs'][-1], belief_info[depth]['ys'][-1]))
 
     def draw_plans(self, ax, sdv):
         if not sdv.planner.tree_info:
             return
 
-        for itr in sdv.planner.tree_info:
-            ax.plot(itr['x'], itr['y'], '-o', \
+        for plan_itr in sdv.planner.tree_info:
+            ax.plot(plan_itr['x_rollout'], plan_itr['y_rollout'], 'o-', \
+                                        markersize=3, alpha=0.5, color='orange')
+            ax.plot(plan_itr['x'], plan_itr['y'], '-o', \
                                         markersize=3, alpha=0.2, color='black')
 
     def draw_decision_counts(self, ax, sdv):
@@ -166,8 +167,8 @@ class Viewer():
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
-        self.draw_decision_counts(self.decision_ax, sdv)
-        self.draw_plans(self.env_ax, sdv)
+        # self.draw_decision_counts(self.decision_ax, sdv)
+        # self.draw_plans(self.env_ax, sdv)
         # self.draw_beliefs(self.env_ax, sdv)
 
         self.fig.tight_layout()

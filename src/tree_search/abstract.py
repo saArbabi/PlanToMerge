@@ -43,7 +43,11 @@ class AbstractPlanner(object):
         # print('hi: ' ,state.sdv.time_lapse)
         # while state.sdv.time_lapse % state.sdv.budget != 0:
         for i in range(10):
-            observation, reward, terminal = state.step(decision)
+            state.step(decision)
+
+        observation = state.planner_observe()
+        reward = state.get_reward()
+        terminal = state.is_terminal()
         return observation, reward, terminal
 
     def reset(self):

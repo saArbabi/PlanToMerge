@@ -2,10 +2,14 @@ from envs.merge import EnvMerge
 from vehicles.sdv_vehicle import SDVehicle
 import numpy as np
 import copy
+from envs.env_initializor_test import EnvInitializor
+# from envs.env_initializor import EnvInitializor
+import sys
 
-class EnvMergeAgent(EnvMerge):
+class EnvAutoMerge(EnvMerge):
     def __init__(self, config):
         super().__init__(config)
+        self.env_initializor = EnvInitializor(config)
         self.seed(2022)
 
     def initialize_env(self, episode_id):
@@ -19,6 +23,7 @@ class EnvMergeAgent(EnvMerge):
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
                 self.vehicles[i] = self.sdv
+
 
     def seed(self, seed):
         self.rng = np.random.RandomState(seed)
@@ -43,19 +48,31 @@ class EnvMergeAgent(EnvMerge):
                 vehicle.neighbours = vehicle.my_neighbours(self.vehicles+[self.dummy_stationary_car])
                 # IDMMOBIL car
                 actions = vehicle.act()
-                actions[0] += self.rng.normal(0, 3)
+                vehicle.act_long = actions[0]
+                if vehicle.act_long < vehicle.min_act_long:
+                    vehicle.min_act_long = vehicle.act_long
+                # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
+                # actions[0] += self.rng.normal(0, 3)
                 joint_action.append(actions)
         return joint_action
 
     def get_sdv_action(self, decision):
         self.sdv.neighbours = self.sdv.my_neighbours(self.vehicles+[self.dummy_stationary_car])
         actions = self.sdv.act(decision)
+        self.sdv.act_long = actions[0]
+        if self.sdv.act_long < self.sdv.min_act_long:
+            self.sdv.min_act_long = self.sdv.act_long
+        # if self.sdv.neighbours['att']:
+        #     print('sdv att ', self.sdv.neighbours['att'].id)
+        #     print('sdv targ ', self.sdv.target_lane)
+
         return actions
 
     def step(self, decision=None):
         """ steps the environment forward in time.
         """
         assert self.vehicles, 'Environment not yet initialized'
+        # print(self.time_step, ' ########################### STEP ######')
         joint_action = self.get_joint_action()
         sdv_action = self.get_sdv_action(decision)
 
@@ -66,12 +83,19 @@ class EnvMergeAgent(EnvMerge):
 
         self.sdv.step(sdv_action)
         self.sdv.time_lapse += 1
-
         self.time_step += 1
-        obs = self.sdv.planner_observe()
-        reward = self.get_reward(obs)
-        terminal = self.is_terminal()
-        return obs, reward, terminal
+
+    def planner_observe(self):
+        """Observation used by the planner
+        """
+        # delta_x_to_merge = self.ramp_exit_start-self.glob_x
+        # obs = {
+        #        'gloab_y':None,
+        #        'delta_x_to_merge' :None,
+        #        }
+        return self.sdv.glob_y
+        # return self.glob_y + np.random.normal()
+        # return delta_x_to_merge
 
     def is_terminal(self):
         """ Set conditions for instance at which the episode is over
@@ -84,13 +108,24 @@ class EnvMergeAgent(EnvMerge):
         # return False
 
 
-    def get_reward(self, obs):
-        # return 1
+    def get_reward(self):
+        # if decision == 1:
+        #     return 0
+        # else:
+        #     return 1
+
+
+
+        total_reward = 0
         if self.sdv.is_merge_complete():
-            return 1
-        else:
-            return 0
-        # obs =
-        # return obs
-        # return -5
-        # return 1
+            total_reward += 0.2
+
+        for vehicle in self.vehicles:
+            # print(vehicle.id, ' ', round(vehicle.min_act_long))
+            if vehicle.min_act_long < -6:
+                total_reward -= 1
+                print('shit')
+            # sys.exit()
+
+        print('total_reward ', total_reward)
+        return total_reward
