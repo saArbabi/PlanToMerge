@@ -10,6 +10,11 @@ class MCTSDPW(AbstractPlanner):
        An implementation of Monte-Carlo Tree Search with Upper Confidence Tree exploration
        and Double Progressive Widenning.
     """
+    OPTIONS_CAT = {
+                'LANEKEEP' : [1, 2, 3, 4, 5, 6],
+                'LANEKEE-ONLY' : [1, 2, 3],
+                'MERGE' : [4, 5, 6]}
+
     def __init__(self):
         """
             New MCTSDPW instance.
@@ -33,24 +38,15 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, planner=self)
 
     def get_available_decisions(self, state):
-        if state.sdv.decision == 4:
-            return [4]
-        # return [4]
-        # while abs(state.sdv.lane_offset) > 0.3:
-        # if state.sdv.lane_id == 1:
-        #     # most right lane
-        #     return [0, 1, 2, 3, 4, 5]
-        # elif state.sdv.lane_id == state.config['lane_count']:
-        #     # most left lane
-        #     return [0, 1, 2, 6, 7, 8]
-        # else:
-        # return [0, 1, 2, 3, 4, 5]
-        if state.sdv.glob_x > state.sdv.merge_lane_start:
-        # return [3]
-            return [1, 4]
-        else:
-            return [1]
-
+        """
+        Available agent decisions is conditioned on,
+        (1) agent state
+        (2) last agent decision
+        """
+        # return [5, 2]
+        if state.sdv.glob_x < state.sdv.merge_lane_start:
+            return self.OPTIONS_CAT['LANEKEE-ONLY']
+        return self.OPTIONS_CAT[state.sdv.decision_cat]
 
     def extract_belief_info(self, state, depth):
         vehicle_id = 2
@@ -131,13 +127,13 @@ class MCTSDPW(AbstractPlanner):
 
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         # self.extract_belief_info(state, depth)
-        for rollout_depth in range(depth, self.config["horizon"]):
+        for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
             # print('######### ', rollout_depth, ' ########################### in rollout')
             observation, reward, terminal = self.step(state, decision)
-            total_reward += self.config["gamma"] ** rollout_depth * reward
+            total_reward += self.config["gamma"] ** (rollout_depth) * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
-            self.extract_belief_info(state, rollout_depth+1)
+            self.extract_belief_info(state, rollout_depth)
 
             if terminal:
                 break
@@ -146,6 +142,7 @@ class MCTSDPW(AbstractPlanner):
 
     def plan(self, state, observation):
         self.reset()
+
         for i in range(self.config['budget']):
             # t0 = time.time()
             self.run(safe_deepcopy_env(state), observation)

@@ -132,7 +132,7 @@ class Viewer():
 
         for plan_itr in sdv.planner.tree_info:
             ax.plot(plan_itr['x_rollout'], plan_itr['y_rollout'], 'o-', \
-                                        markersize=3, alpha=0.5, color='orange')
+                                        markersize=3, alpha=0.2, color='orange')
             ax.plot(plan_itr['x'], plan_itr['y'], '-o', \
                                         markersize=3, alpha=0.2, color='black')
 
@@ -155,15 +155,15 @@ class Viewer():
 
             ax.bar(decision, count, 0.5, \
                     label=sdv.OPTIONS[decision][1], color=color)
-        ax.set_ylim([0, max_count+1])
+        ax.set_ylim([0, 40])
 
         ax.set_xticks(list(sdv.OPTIONS.keys()))
-        ax.set_xticklabels(['LANEKEEP \n TIMID',
-                            'LANEKEEP \n NORMAL',
-                            'LANEKEEP \n AGGRESSIVE',
-                            'MERGE \n TIMID',
-                            'MERGE \n NORMAL',
-                            'MERGE \n AGGRESSIVE'])
+        ax.set_xticklabels(['LANEKEEP \n UP',
+                            'LANEKEEP \n IDLE',
+                            'LANEKEEP \n DOWN',
+                            'MERGE \n UP',
+                            'MERGE \n IDLE',
+                            'MERGE \n DOWN'])
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)

@@ -49,8 +49,7 @@ class EnvAutoMerge(EnvMerge):
                 # IDMMOBIL car
                 actions = vehicle.act()
                 vehicle.act_long = actions[0]
-                if vehicle.act_long < vehicle.min_act_long:
-                    vehicle.min_act_long = vehicle.act_long
+                self.set_min_action(vehicle, vehicle.act_long)
                 # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
                 # actions[0] += self.rng.normal(0, 3)
                 joint_action.append(actions)
@@ -62,6 +61,8 @@ class EnvAutoMerge(EnvMerge):
         self.sdv.act_long = actions[0]
         if self.sdv.act_long < self.sdv.min_act_long:
             self.sdv.min_act_long = self.sdv.act_long
+        self.set_min_action(self.sdv, self.sdv.act_long)
+
         # if self.sdv.neighbours['att']:
         #     print('sdv att ', self.sdv.neighbours['att'].id)
         #     print('sdv targ ', self.sdv.target_lane)
@@ -102,8 +103,11 @@ class EnvAutoMerge(EnvMerge):
         Note: Collisions are not possible, since agent does not take actions that
             result in collisions
 
-        Episode is complete if: agent successfully performs a merge
+        Episode is complete if:
+        (1) agent successfully performs a merge
+        (2) agent fails to perform a merge (i.e., merge aborition)
         """
+        # return False
         if self.sdv.is_merge_complete():
             if self.sdv.neighbours['rl']:
                 self.sdv.neighbours['rl'].neighbours['f'] = self
@@ -111,19 +115,15 @@ class EnvAutoMerge(EnvMerge):
             self.sdv.lane_decision = 'keep_lane'
             self.sdv.glob_y = 1.5*self.sdv.lane_width
             return True
-        else:
-            return False
-        # return False
 
+    def set_min_action(self, vehicle, act_long):
+        if act_long < vehicle.min_act_long:
+            vehicle.min_act_long = act_long
+
+    def reset_min_action(self, vehicle):
+        vehicle.min_act_long = 0
 
     def get_reward(self):
-        # if decision == 1:
-        #     return 0
-        # else:
-        #     return 1
-
-
-
         total_reward = 0
         if self.sdv.is_merge_complete():
             total_reward += 0.2
@@ -132,5 +132,35 @@ class EnvAutoMerge(EnvMerge):
             # print(vehicle.id, ' ', round(vehicle.min_act_long))
             if vehicle.min_act_long < -6:
                 total_reward -= 1
+                if vehicle.id =='sdv':
+                    if vehicle.neighbours['att']:
+                        att_id = vehicle.neighbours['att'].id
+                        att_glob_x = vehicle.neighbours['att'].glob_x
+                    else:
+                        att_id = None
+                        att_glob_x = None
+
+                    if vehicle.id == 'sdv':
+                        dec = vehicle.decision
+                    else:
+                        dec = None
+
+                    glob_x = round(vehicle.glob_x, 1)
+                    glob_y = round(vehicle.glob_y , 1)
+                    print('####################')
+                    print(f'time-lapse: {vehicle.time_lapse}')
+                    print(f'veh_id: {vehicle.id}')
+                    print(f'glob_x: {glob_x}')
+                    print(f'glob_y: {glob_y}')
+                    print(f'att_id: {att_id}')
+                    print(f'att_glob_x: {att_glob_x}')
+                    print(f'min_act: {vehicle.min_act_long}')
+                    print(f'dec: {dec}')
+
+            # vehicle.min_act_long = 0 # reset
             # sys.exit()
+        print('####################')
+        print('decision ', vehicle.decision)
+        print('total_reward ', total_reward)
+
         return total_reward

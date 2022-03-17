@@ -5,12 +5,12 @@ import numpy as np
 import json
 
 class SDVehicle(IDMMOBILVehicleMerge):
-    OPTIONS = {1 : ['LANEKEEP', 'TIMID'],
-               2 : ['LANEKEEP', 'NORMAL'],
-               3 : ['LANEKEEP', 'AGGRESSIVE'],
-               4 : ['MERGE', 'TIMID'],
-               5 : ['MERGE', 'NORMAL'],
-               6 : ['MERGE', 'AGGRESSIVE']}
+    OPTIONS = {1 : ['LANEKEEP', 'UP'],
+               2 : ['LANEKEEP', 'IDLE'],
+               3 : ['LANEKEEP', 'DOWN'],
+               4 : ['MERGE', 'UP'],
+               5 : ['MERGE', 'IDLE'],
+               6 : ['MERGE', 'DOWN']}
 
     def __init__(self, id):
         self.id = id
@@ -55,28 +55,49 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.driver_params['max_act'] = self.get_driver_param('max_act')
         self.driver_params['min_act'] = self.get_driver_param('min_act')
 
+    def change_driving_style(self, driving_style):
+        aggressiveness = self.driver_params['aggressiveness']
+        if driving_style == 'UP':
+            aggressiveness = min(0.9, aggressiveness + 0.1)
+        elif driving_style == 'IDLE':
+            pass
+        elif driving_style == 'DOWN':
+            aggressiveness = max(0.1, aggressiveness - 0.1)
+        return aggressiveness
+
     def act(self, decision):
         # print(self.driver_params['aggressiveness'])
         if not self.decision or self.decision != decision:
-            self.decision = decision
             merge_decision = self.OPTIONS[decision][0]
             driving_style = self.OPTIONS[decision][1]
+            self.decision = decision
+            self.decision_cat = merge_decision
+            # print('decision ', decision)
+            # print('aggressiveness ', self.driver_params['aggressiveness'])
 
-            if driving_style == 'TIMID':
-                self.driver_params['aggressiveness'] = 0
-            elif driving_style == 'NORMAL':
-                self.driver_params['aggressiveness'] = 0.5
-            elif driving_style == 'AGGRESSIVE':
-                self.driver_params['aggressiveness'] = 1
+            self.driver_params['aggressiveness'] = self.change_driving_style(driving_style)
             self.set_driver_params()
 
             if merge_decision == 'MERGE':
                 self.lane_decision = 'move_left'
 
-            elif merge_decision == 'LANEKEEP':
+            elif merge_decision == 'LANEKEEP' or merge_decision == 'ABORT':
                 self.lane_decision = 'keep_lane'
+                if self.target_lane != self.lane_id:
+                    self.target_lane = self.lane_id
+
+        # if self.decision_cat == 'ABORT' and not self.neighbours['att']:
+        #     if self.speed > 0:
+        #         act_long = -1
+        #     if self.speed <= 0:
+        #         act_long = 0
+        #         self.speed = 0
+        #
+        # else:
+        #     act_long = self.idm_action(self, self.neighbours['att'])
 
         act_long = self.idm_action(self, self.neighbours['att'])
+
         if self.is_merge_complete():
             if self.neighbours['rl']:
                 self.neighbours['rl'].neighbours['f'] = self
