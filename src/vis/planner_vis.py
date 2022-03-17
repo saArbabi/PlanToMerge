@@ -37,7 +37,7 @@ def main():
         # print('act_long ', env.sdv.act_long)
 
 
-
+        viewer.log_var(env.sdv.act_long, var_name='action')
         viewer.render(env.vehicles, env.sdv)
         env.step(decision)
 

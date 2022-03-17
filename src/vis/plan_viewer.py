@@ -7,12 +7,14 @@ from matplotlib.patches import Rectangle
 class Viewer():
     def __init__(self, config):
         self.config  = config
-        self.fig = plt.figure(figsize=(10, 5))
-        self.env_ax = self.fig.add_subplot(211)
-        self.decision_ax = self.fig.add_subplot(212)
+        self.fig = plt.figure(figsize=(10, 6))
+        self.env_ax = self.fig.add_subplot(311)
+        self.decision_ax = self.fig.add_subplot(312)
+        self.var_ax = self.fig.add_subplot(313)
         self.focus_on_this_vehicle = None
         self.merge_box = [Rectangle((config['merge_lane_start'], 0), \
                             config['merge_lane_length'], config['lane_width'])]
+        self.logged_var = []
 
     def draw_road(self, ax):
         lane_cor = self.config['lane_width']*self.config['lanes_n']
@@ -165,11 +167,23 @@ class Viewer():
                             'MERGE \n IDLE',
                             'MERGE \n DOWN'])
 
+    def log_var(self, var, var_name):
+        self.logged_var.append(var)
+
+    def draw_var(self, ax):
+        ax.clear()
+        ax.plot(self.logged_var)
+        ax.set_xlim(0, 180)
+        ax.set_ylim(-6, 6)
+        ax.set_ylabel('long.acc ($ms^{-2}$)')
+        ax.set_xlabel('step')
+
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
         self.draw_decision_counts(self.decision_ax, sdv)
         self.draw_plans(self.env_ax, sdv)
         self.draw_beliefs(self.env_ax, sdv)
+        self.draw_var(self.var_ax)
 
         self.fig.tight_layout()
         plt.pause(1e-10)
