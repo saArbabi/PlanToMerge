@@ -167,9 +167,9 @@ class Viewer():
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
-        # self.draw_decision_counts(self.decision_ax, sdv)
-        # self.draw_plans(self.env_ax, sdv)
-        # self.draw_beliefs(self.env_ax, sdv)
+        self.draw_decision_counts(self.decision_ax, sdv)
+        self.draw_plans(self.env_ax, sdv)
+        self.draw_beliefs(self.env_ax, sdv)
 
         self.fig.tight_layout()
         plt.pause(1e-10)

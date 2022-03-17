@@ -19,6 +19,7 @@ class MCTSDPW(AbstractPlanner):
         """
         self.config = self.default_config()
         super(MCTSDPW, self).__init__()
+        self.reset()
 
     @classmethod
     def default_config(cls):
@@ -32,6 +33,9 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, planner=self)
 
     def get_available_decisions(self, state):
+        if state.sdv.decision == 4:
+            return [4]
+        # return [4]
         # while abs(state.sdv.lane_offset) > 0.3:
         # if state.sdv.lane_id == 1:
         #     # most right lane
@@ -45,8 +49,7 @@ class MCTSDPW(AbstractPlanner):
         # return [3]
             return [1, 4]
         else:
-            return [1, 4]
-            # return [1]
+            return [1]
 
 
     def extract_belief_info(self, state, depth):

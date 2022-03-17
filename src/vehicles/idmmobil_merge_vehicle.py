@@ -36,7 +36,6 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         candidate_f, candidate_fl, candidate_rl, candidate_r, \
         candidate_fr, candidate_m, candidate_att = (None for i in range(7))
 
-        right_lane_id = self.lane_id + 1
         left_lane_id = self.lane_id - 1
 
         for vehicle in vehicles:
@@ -48,7 +47,9 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
 
                     if vehicle.glob_x > self.glob_x:
                         # front neibouring cars
-                        if vehicle.lane_id == self.lane_id:
+                        if vehicle.target_lane == self.target_lane and \
+                                vehicle.lane_decision == 'keep_lane':
+
                             if delta_x < min(delta_xs_f):
                                 delta_xs_f.append(delta_x)
                                 candidate_f = vehicle
@@ -56,13 +57,6 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
                             if delta_x < min(delta_xs_att):
                                 delta_xs_att.append(delta_x)
                                 candidate_att = vehicle
-
-                        if vehicle.target_lane == right_lane_id or \
-                            (self.lane_decision != 'keep_lane' and vehicle.lane_id == 2):
-                            if delta_x < min(delta_xs_fr):
-                                # neighbour keeping lane
-                                delta_xs_fr.append(delta_x)
-                                candidate_fr = vehicle
 
                         if vehicle.target_lane == left_lane_id:
                             if delta_x < min(delta_xs_fl):
@@ -139,16 +133,16 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         elif m_veh == self.neighbours['att']:
             return True
         elif m_veh.lane_id == self.lane_id:
-            # print('lane-based ########')
+            print('lane-based ########')
             return True
 
         act_long = self.idm_action(self, m_veh)
         if act_long < self.driver_params['safe_braking']:
             # emergency situation
-            # print('collisio- avoidance based ########')
+            print('collisio- avoidance based ########')
             return True
         elif self.is_cidm_att(act_long, m_veh, f_veh):
-            # print('cidm-based ########')
+            print('cidm-based ########')
             return True
         else:
             return False

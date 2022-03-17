@@ -104,7 +104,15 @@ class EnvAutoMerge(EnvMerge):
 
         Episode is complete if: agent successfully performs a merge
         """
-        return self.sdv.is_merge_complete()
+        if self.sdv.is_merge_complete():
+            if self.sdv.neighbours['rl']:
+                self.sdv.neighbours['rl'].neighbours['f'] = self
+                self.sdv.neighbours['rl'].neighbours['m'] = None
+            self.sdv.lane_decision = 'keep_lane'
+            self.sdv.glob_y = 1.5*self.sdv.lane_width
+            return True
+        else:
+            return False
         # return False
 
 
@@ -124,8 +132,5 @@ class EnvAutoMerge(EnvMerge):
             # print(vehicle.id, ' ', round(vehicle.min_act_long))
             if vehicle.min_act_long < -6:
                 total_reward -= 1
-                print('shit')
             # sys.exit()
-
-        print('total_reward ', total_reward)
         return total_reward

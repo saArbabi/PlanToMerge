@@ -25,6 +25,9 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
     def get_sdv_decision(self, env_state, obs):
         if self.time_lapse % self.decision_steps_n == 0:
+            available_dec = self.planner.get_available_decisions(env_state)
+            if len(available_dec) == 1:
+                return available_dec[0]
             self.planner.plan(env_state, obs)
             decision, self.decisions_and_counts = self.planner.get_decision()
             # self.decision = 0
@@ -69,11 +72,20 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
             if merge_decision == 'MERGE':
                 self.lane_decision = 'move_left'
+
             elif merge_decision == 'LANEKEEP':
                 self.lane_decision = 'keep_lane'
 
         act_long = self.idm_action(self, self.neighbours['att'])
+        if self.is_merge_complete():
+            if self.neighbours['rl']:
+                self.neighbours['rl'].neighbours['f'] = self
+                self.neighbours['rl'].neighbours['m'] = None
+            self.lane_decision = 'keep_lane'
+            self.glob_y = 1.5*self.lane_width
+
         act_lat = self.lateral_action()
+
         # act_rl_lc = self.idm_action(self.neighbours['rl'], self)
         # if self.neighbours['rl']:
         #     print(self.neighbours['rl'].id, ' ', act_rl_lc, ' ', (self.lane_decision), ' ', self.glob_x)
@@ -82,10 +94,10 @@ class SDVehicle(IDMMOBILVehicleMerge):
         # print('sdv glob_x ', self.glob_x)
         # print('sdv lane id ', self.lane_id)
 
-        if self.lane_decision == 'move_left':
-            act_lat = 1
-        elif self.lane_decision == 'keep_lane':
-            act_lat = 0
+        # if self.lane_decision == 'move_left':
+        #     act_lat = 1
+        # elif self.lane_decision == 'keep_lane':
+        #     act_lat = 0
 
         return [act_long, act_lat]
         # return [0, 0]
