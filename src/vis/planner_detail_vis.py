@@ -38,27 +38,30 @@ def main():
 
         ###############################################
         if env.sdv.time_lapse %  env.sdv.decision_steps_n == 0:
-            env.sdv.planner.reset()
-            for i in range(1, env.sdv.planner.config['budget']+1):
-                print('MCTS Run ', i, '/', env.sdv.planner.config['budget'])
-                env.sdv.planner.run(safe_deepcopy_env(env), obs)
-                _, env.sdv.decisions_and_counts = env.sdv.planner.get_decision()
-                viewer.draw_decision_counts(viewer.decision_ax, env.sdv)
-                viewer.draw_plans(viewer.env_ax, env.sdv)
-                viewer.draw_beliefs(viewer.env_ax, env.sdv)
+            if env.sdv.glob_x > 280:
+                env.sdv.planner.reset()
+                for i in range(1, env.sdv.planner.config['budget']+1):
+                    print('MCTS Run ', i, '/', env.sdv.planner.config['budget'])
+                    env.sdv.planner.run(safe_deepcopy_env(env), obs)
+                    _, env.sdv.decisions_and_counts = env.sdv.planner.get_decision()
+                    viewer.draw_decision_counts(viewer.decision_ax, env.sdv)
+                    viewer.draw_plans(viewer.env_ax, env.sdv)
+                    viewer.draw_beliefs(viewer.env_ax, env.sdv)
+                    viewer.fig.tight_layout()
+                    plt.pause(1e-10)
+
+                    ###############################################
+                    user_input = input()
+                    if user_input:
+                        if user_input == 'n':
+                            sys.exit()
+
+                decision, env.sdv.decisions_and_counts = env.sdv.planner.get_decision()
+
                 viewer.fig.tight_layout()
                 plt.pause(1e-10)
-
-                ###############################################
-                user_input = input()
-                if user_input:
-                    if user_input == 'n':
-                        sys.exit()
-
-            decision, env.sdv.decisions_and_counts = env.sdv.planner.get_decision()
-
-            viewer.fig.tight_layout()
-            plt.pause(1e-10)
+            else:
+                decision = 2
 
         else:
             decision = env.sdv.decision

@@ -29,6 +29,15 @@ def main():
 
         obs = env.planner_observe()
         decision = env.sdv.get_sdv_decision(env, obs)
+
+        # if env.time_step % 10 == 0:
+        #     np.random.seed(None)
+        #     decision = np.random.choice([5, 2])
+        # print('decision ', decision)
+        # print('act_long ', env.sdv.act_long)
+
+
+
         viewer.render(env.vehicles, env.sdv)
         env.step(decision)
 
