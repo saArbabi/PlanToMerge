@@ -43,7 +43,7 @@ class MCTSDPW(AbstractPlanner):
         (1) agent state
         (2) last agent decision
         """
-        # return [5, 2]
+        return [1, 3]
         if state.sdv.glob_x < state.sdv.merge_lane_start:
             return self.OPTIONS_CAT['LANEKEE-ONLY']
         return self.OPTIONS_CAT[state.sdv.decision_cat]
@@ -99,12 +99,12 @@ class MCTSDPW(AbstractPlanner):
             chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
             # print('######### ', depth, ' ########################### in tree')
             observation, reward, terminal = self.step(state, decision)
+            total_reward += self.config["gamma"] ** depth * reward
             decision_node = chance_node.get_child(observation)
             depth += 1
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
 
-        total_reward += self.config["gamma"] ** depth * reward
         if not terminal:
             tree_states, total_reward = self.evaluate(state,
                                          tree_states,
