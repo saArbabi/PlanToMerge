@@ -43,7 +43,7 @@ class MCTSDPW(AbstractPlanner):
         (1) agent state
         (2) last agent decision
         """
-        return [1, 3]
+        # return [1, 3]
         if state.sdv.glob_x < state.sdv.merge_lane_start:
             return self.OPTIONS_CAT['LANEKEE-ONLY']
         return self.OPTIONS_CAT[state.sdv.decision_cat]

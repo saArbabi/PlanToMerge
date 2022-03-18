@@ -17,8 +17,6 @@ def main():
 
     viewer = Viewer(config)
 
-    decisions = [4, 1, 4, 1, 4]
-    decision_i = 0
     while True:
         print(env.time_step)
 
@@ -38,7 +36,7 @@ def main():
 
         ###############################################
         if env.sdv.time_lapse %  env.sdv.decision_steps_n == 0:
-            if env.sdv.glob_x > 280:
+            if env.sdv.glob_x > 0:
                 env.sdv.planner.reset()
                 for i in range(1, env.sdv.planner.config['budget']+1):
                     print('MCTS Run ', i, '/', env.sdv.planner.config['budget'])

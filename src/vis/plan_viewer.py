@@ -132,11 +132,21 @@ class Viewer():
         if not sdv.planner.tree_info:
             return
 
-        for plan_itr in sdv.planner.tree_info:
+        longest_tree_length = 0
+        for i, plan_itr in enumerate(sdv.planner.tree_info):
             ax.plot(plan_itr['x_rollout'], plan_itr['y_rollout'], 'o-', \
                                         markersize=3, alpha=0.2, color='orange')
+
             ax.plot(plan_itr['x'], plan_itr['y'], '-o', \
                                         markersize=3, alpha=0.2, color='black')
+
+            if len(plan_itr['x']) > longest_tree_length:
+                longest_tree_length = len(plan_itr['x'])
+                longest_tree_index = i
+
+        longest_plan = sdv.planner.tree_info[longest_tree_index]
+        ax.scatter(longest_plan['x'][-1], \
+                   longest_plan['y'][-1], color='red', marker='|', s=1000)
 
     def draw_decision_counts(self, ax, sdv):
         if not sdv.decisions_and_counts:
@@ -158,6 +168,7 @@ class Viewer():
             ax.bar(decision, count, 0.5, \
                     label=sdv.OPTIONS[decision][1], color=color)
         ax.set_ylim([0, 40])
+        ax.set_xlim([0, 7])
 
         ax.set_xticks(list(sdv.OPTIONS.keys()))
         ax.set_xticklabels(['LANEKEEP \n UP',
@@ -180,10 +191,14 @@ class Viewer():
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
-        self.draw_decision_counts(self.decision_ax, sdv)
-        self.draw_plans(self.env_ax, sdv)
-        self.draw_beliefs(self.env_ax, sdv)
-        self.draw_var(self.var_ax)
+        # if sdv.glob_x > 200:
+        # self.draw_plans(self.env_ax, sdv)
+        # self.draw_beliefs(self.env_ax, sdv)
+        # self.draw_var(self.var_ax)
+        if sdv.time_lapse % sdv.decision_steps_n == 0:
+            self.draw_decision_counts(self.decision_ax, sdv)
+
+
 
         self.fig.tight_layout()
         plt.pause(1e-10)

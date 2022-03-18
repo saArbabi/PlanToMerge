@@ -55,14 +55,24 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.driver_params['max_act'] = self.get_driver_param('max_act')
         self.driver_params['min_act'] = self.get_driver_param('min_act')
 
+    # def change_driving_style(self, driving_style):
+    #     aggressiveness = self.driver_params['aggressiveness']
+    #     if driving_style == 'UP':
+    #         aggressiveness = min(0.9, aggressiveness + 0.1)
+    #     elif driving_style == 'IDLE':
+    #         pass
+    #     elif driving_style == 'DOWN':
+    #         aggressiveness = max(0.1, aggressiveness - 0.1)
+    #     return aggressiveness
+
     def change_driving_style(self, driving_style):
         aggressiveness = self.driver_params['aggressiveness']
         if driving_style == 'UP':
-            aggressiveness = min(0.9, aggressiveness + 0.1)
+            aggressiveness = 0.6
         elif driving_style == 'IDLE':
-            pass
+            aggressiveness = 0.5
         elif driving_style == 'DOWN':
-            aggressiveness = max(0.1, aggressiveness - 0.1)
+            aggressiveness = 0.4
         return aggressiveness
 
     def act(self, decision):

@@ -67,7 +67,7 @@ class EnvInitializor():
         vehicles.append(new_vehicle)
 
         lead_vehicle = vehicles[-1]
-        glob_x = 130
+        glob_x = 50
         new_vehicle = self.create_main_lane_vehicle(lead_vehicle, \
                                         lane_id, glob_x, aggs[1])
 

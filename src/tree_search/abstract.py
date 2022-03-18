@@ -123,7 +123,7 @@ class Node(object):
         :param total_reward: the total reward obtained through a trajectory passing by this node
         """
         self.count += 1
-        self.value += total_reward
+        self.value += (total_reward - self.value)/self.count
 
     @staticmethod
     def all_argmax(x):
