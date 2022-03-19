@@ -10,10 +10,14 @@ class MCTSDPW(AbstractPlanner):
        An implementation of Monte-Carlo Tree Search with Upper Confidence Tree exploration
        and Double Progressive Widenning.
     """
+    # OPTIONS_CAT = {
+    #             'LANEKEEP' : [1, 2, 3, 4, 5, 6],
+    #             'LANEKEE-ONLY' : [1, 2, 3],
+    #             'MERGE' : [4, 5, 6]}
     OPTIONS_CAT = {
-                'LANEKEEP' : [1, 2, 3, 4, 5, 6],
-                'LANEKEE-ONLY' : [1, 2, 3],
-                'MERGE' : [4, 5, 6]}
+                'LANEKEEP' : [1, 4],
+                'LANEKEE-ONLY' : [1],
+                'MERGE' : [4]}
 
     def __init__(self):
         """
@@ -43,7 +47,7 @@ class MCTSDPW(AbstractPlanner):
         (1) agent state
         (2) last agent decision
         """
-        # return [1, 3]
+        # return [1, 2, 3, 4, 5, 6]
         if state.sdv.glob_x < state.sdv.merge_lane_start:
             return self.OPTIONS_CAT['LANEKEE-ONLY']
         return self.OPTIONS_CAT[state.sdv.decision_cat]
@@ -217,12 +221,8 @@ class DecisionNode(Node):
         if self.parent:
             self.parent.backup_to_root(total_reward)
 
-    def ucb_value(self, decision, temperature, max_value):
-        if max_value == 0:
-            exploitation = self.children[decision].value
-        else:
-            exploitation = self.children[decision].value / max_value
-
+    def ucb_value(self, decision, temperature):
+        exploitation = self.children[decision].value
         exploration = np.sqrt(np.log(self.count) / self.children[decision].count)
         ucb_val = exploitation + temperature * exploration
         # ucb_val = exploitation
@@ -243,10 +243,9 @@ class DecisionNode(Node):
         :return: the selected decision with maximum value and exploration bonus.
         """
         decisions = list(self.children.keys())
-        max_value = max([self.children[a].value for a in decisions] + [1])
         indexes = []
         for decision in decisions:
-            ucb_val = self.ucb_value(decision, temperature, max_value)
+            ucb_val = self.ucb_value(decision, temperature)
             indexes.append(ucb_val)
 
         decision = decisions[self.random_argmax(indexes)]

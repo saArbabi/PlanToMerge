@@ -14,7 +14,7 @@ class Viewer():
         self.focus_on_this_vehicle = None
         self.merge_box = [Rectangle((config['merge_lane_start'], 0), \
                             config['merge_lane_length'], config['lane_width'])]
-        self.logged_var = []
+        self.logged_var = {'sdv':[], 'other':[]}
 
     def draw_road(self, ax):
         lane_cor = self.config['lane_width']*self.config['lanes_n']
@@ -178,27 +178,34 @@ class Viewer():
                             'MERGE \n IDLE',
                             'MERGE \n DOWN'])
 
-    def log_var(self, var, var_name):
-        self.logged_var.append(var)
+    def log_var(self, vehicles):
+        for vehicle in vehicles:
+            if vehicle.id == 2:
+                self.logged_var['other'].append(vehicle.act_long)
+            elif vehicle.id == 'sdv':
+                self.logged_var['sdv'].append(vehicle.act_long)
 
     def draw_var(self, ax):
         ax.clear()
-        ax.plot(self.logged_var)
+        ax.plot(self.logged_var['sdv'], color='red', label='Merger')
+        ax.plot(self.logged_var['other'], color='blue', label='Yielder')
         ax.set_xlim(0, 180)
-        ax.set_ylim(-6, 6)
+        ax.set_ylim(-7, 7)
         ax.set_ylabel('long.acc ($ms^{-2}$)')
         ax.set_xlabel('step')
+        ax.legend()
+        ax.grid()
 
     def render(self, vehicles, sdv):
         self.draw_highway(self.env_ax, vehicles)
         # if sdv.glob_x > 200:
-        # self.draw_plans(self.env_ax, sdv)
-        # self.draw_beliefs(self.env_ax, sdv)
-        # self.draw_var(self.var_ax)
+
         if sdv.time_lapse % sdv.decision_steps_n == 0:
             self.draw_decision_counts(self.decision_ax, sdv)
-
-
+            self.draw_plans(self.env_ax, sdv)
+            self.draw_beliefs(self.env_ax, sdv)
+            self.draw_var(self.var_ax)
+            wait = input("Press Enter to continue ...")
 
         self.fig.tight_layout()
         plt.pause(1e-10)

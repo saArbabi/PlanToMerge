@@ -18,6 +18,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.decision_steps_n = 10 # timesteps with 0.1s step size
         self.decisions_and_counts = None
         self.decision = None
+        self.decision_cat = 'LANEKEEP'
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
             self.merge_lane_start = config['merge_lane_start']

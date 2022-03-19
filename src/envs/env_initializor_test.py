@@ -67,7 +67,7 @@ class EnvInitializor():
         vehicles.append(new_vehicle)
 
         lead_vehicle = vehicles[-1]
-        glob_x = 50
+        glob_x = 150
         new_vehicle = self.create_main_lane_vehicle(lead_vehicle, \
                                         lane_id, glob_x, aggs[1])
 
@@ -79,7 +79,7 @@ class EnvInitializor():
         # ramp vehicles
         lane_id = 2
         aggs = 0.5
-        glob_x = 150
+        glob_x = 210
         new_vehicle = self.create_ramp_merge_vehicle(lane_id, glob_x, aggs)
         vehicles.append(new_vehicle)
         return vehicles

@@ -131,33 +131,33 @@ class EnvAutoMerge(EnvMerge):
 
         for vehicle in self.vehicles:
             # print(vehicle.id, ' ', round(vehicle.min_act_long))
-            if vehicle.min_act_long < -6:
+            if vehicle.min_act_long < -5:
                 total_reward -= 1
-                if vehicle.id =='sdv':
-                    if vehicle.neighbours['att']:
-                        att_id = vehicle.neighbours['att'].id
-                        att_glob_x = vehicle.neighbours['att'].glob_x
-                    else:
-                        att_id = None
-                        att_glob_x = None
-
-                    if vehicle.id == 'sdv':
-                        dec = vehicle.decision
-                    else:
-                        dec = None
-
-                    glob_x = round(vehicle.glob_x, 1)
-                    glob_y = round(vehicle.glob_y , 1)
-                    print('####################')
-                    print(f'time-lapse: {vehicle.time_lapse}')
-                    print(f'veh_id: {vehicle.id}')
-                    print(f'glob_x: {glob_x}')
-                    print(f'glob_y: {glob_y}')
-                    print(f'att_id: {att_id}')
-                    print(f'att_glob_x: {att_glob_x}')
-                    print(f'min_act: {vehicle.min_act_long}')
-                    print(f'dec: {dec}')
-                    wait = input("Press Enter to continue.")
+                # 
+                # if vehicle.neighbours['att']:
+                #     att_id = vehicle.neighbours['att'].id
+                #     att_glob_x = vehicle.neighbours['att'].glob_x
+                # else:
+                #     att_id = None
+                #     att_glob_x = None
+                #
+                # if vehicle.id == 'sdv':
+                #     dec = vehicle.decision
+                # else:
+                #     dec = None
+                #
+                # glob_x = round(vehicle.glob_x, 1)
+                # glob_y = round(vehicle.glob_y , 1)
+                # print('####################')
+                # print(f'veh_id: {vehicle.id}')
+                # print(f'time-lapse: {vehicle.time_lapse}')
+                # print(f'glob_x: {glob_x}')
+                # print(f'glob_y: {glob_y}')
+                # print(f'att_id: {att_id}')
+                # print(f'att_glob_x: {att_glob_x}')
+                # print(f'min_act: {vehicle.min_act_long}')
+                # print(f'dec: {dec}')
+                # wait = input("Press Enter to continue.")
 
         # print('####################')
         # print('decision ', vehicle.decision)
