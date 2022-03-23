@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, './src')
 from plan_viewer import Viewer
+from tree_vis import TreeVis
 from envs.auto_merge import EnvAutoMerge
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,13 +15,15 @@ def main():
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
+    vis_tree = TreeVis()
     while True:
-        print(env.time_step)
-
-        user_input = input()
+        user_input = input(env.time_step + \
+                           ' Enter to continue, n to exit, s to save tree  ')
         if user_input:
             if user_input == 'n':
                 sys.exit()
+            if user_input == 's':
+                vis_tree.save_tree_snapshot(env.sdv.planner, env.time_step)
             try:
                 viewer.focus_on_this_vehicle = user_input
             except:
