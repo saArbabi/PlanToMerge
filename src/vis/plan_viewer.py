@@ -205,7 +205,7 @@ class Viewer():
             self.draw_plans(self.env_ax, sdv)
             self.draw_beliefs(self.env_ax, sdv)
             self.draw_var(self.var_ax)
-            wait = input("Press Enter to continue ...")
+            wait = input("Ready to see the plans?")
 
         self.fig.tight_layout()
         plt.pause(1e-10)

@@ -116,7 +116,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
             self.lane_decision = 'keep_lane'
             self.glob_y = 1.5*self.lane_width
 
-        act_lat = self.lateral_action()
+        # act_lat = self.lateral_action()
 
         # act_rl_lc = self.idm_action(self.neighbours['rl'], self)
         # if self.neighbours['rl']:
@@ -126,10 +126,10 @@ class SDVehicle(IDMMOBILVehicleMerge):
         # print('sdv glob_x ', self.glob_x)
         # print('sdv lane id ', self.lane_id)
 
-        # if self.lane_decision == 'move_left':
-        #     act_lat = 1
-        # elif self.lane_decision == 'keep_lane':
-        #     act_lat = 0
+        if self.lane_decision == 'move_left':
+            act_lat = 1
+        elif self.lane_decision == 'keep_lane':
+            act_lat = 0
 
         return [act_long, act_lat]
         # return [0, 0]
