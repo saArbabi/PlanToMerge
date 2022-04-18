@@ -3,11 +3,13 @@ import os
 import sys
 from graphviz import Digraph
 import time
+import collections
+
 
 # sys.path.append('C:\\Users\\sa00443\\.virtualenvs\\PlanToMerge-7mESgO4X\\Lib\\site-packages')
 # sys.path.append('C:\\Program Files\\Graphviz\\bin')
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files\\Graphviz\\bin'
-# sys.executable 
+# sys.executable
 # %%
 class TreeVis():
     def create_node_label(self, tree_node, node_title, node_type):
@@ -19,7 +21,7 @@ class TreeVis():
             node_label = str(count)
 
         elif node_type == 'ChanceNode':
-            value = round(tree_node.value, 1)
+            value = round(tree_node.value, 2)
             node_label = f'{node_title}\n count; {count}\n value; {value}'
 
         return node_label
@@ -50,7 +52,8 @@ class TreeVis():
         """
         counts = [child_node.count for child_node in parent_node.children.values()]
         max_count = max(counts)
-
+        parent_node.children = collections.OrderedDict(sorted(parent_node.children.items()))
+        
         for key, child_node in parent_node.children.items():
             if key == 4:
                 node_title = 'LC'

@@ -17,7 +17,7 @@ def main():
     viewer = Viewer(config)
     vis_tree = TreeVis()
     while True:
-        user_input = input(env.time_step + \
+        user_input = input(str(env.time_step) + \
                            ' Enter to continue, n to exit, s to save tree  ')
         if user_input:
             if user_input == 'n':

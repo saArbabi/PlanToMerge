@@ -48,6 +48,7 @@ class MCTSDPW(AbstractPlanner):
         (2) last agent decision
         """
         # return [1, 2, 3, 4, 5, 6]
+        return [1, 4]
         if state.sdv.glob_x < state.sdv.merge_lane_start:
             return self.OPTIONS_CAT['LANEKEE-ONLY']
         return self.OPTIONS_CAT[state.sdv.decision_cat]
@@ -135,7 +136,7 @@ class MCTSDPW(AbstractPlanner):
             decision = self.rng.choice(self.get_available_decisions(state))
             # print('######### ', rollout_depth, ' ########################### in rollout')
             observation, reward, terminal = self.step(state, decision)
-            total_reward += self.config["gamma"] ** (rollout_depth) * reward
+            total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
             self.extract_belief_info(state, rollout_depth)
 

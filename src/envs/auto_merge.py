@@ -95,7 +95,7 @@ class EnvAutoMerge(EnvMerge):
         #        'delta_x_to_merge' :None,
         #        }
         return self.sdv.glob_y
-        # return self.glob_y + np.random.normal()
+        # return self.sdv.glob_y + self.rng.random()
         # return delta_x_to_merge
 
     def is_terminal(self):
@@ -106,7 +106,7 @@ class EnvAutoMerge(EnvMerge):
         Episode is complete if:
         (1) agent successfully performs a merge
         """
-        # return False
+        return False
         if self.sdv.is_merge_complete():
             if self.sdv.neighbours['rl']:
                 self.sdv.neighbours['rl'].neighbours['f'] = self
@@ -132,8 +132,9 @@ class EnvAutoMerge(EnvMerge):
         for vehicle in self.vehicles:
             # print(vehicle.id, ' ', round(vehicle.min_act_long))
             if vehicle.min_act_long < -5:
-                total_reward -= 1
-                # 
+                # total_reward -= 1
+                total_reward -= 0
+                #
                 # if vehicle.neighbours['att']:
                 #     att_id = vehicle.neighbours['att'].id
                 #     att_glob_x = vehicle.neighbours['att'].glob_x
