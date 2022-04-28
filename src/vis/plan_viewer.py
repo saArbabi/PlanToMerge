@@ -202,10 +202,11 @@ class Viewer():
 
         if sdv.time_lapse % sdv.decision_steps_n == 0:
             self.draw_decision_counts(self.decision_ax, sdv)
-            self.draw_plans(self.env_ax, sdv)
-            self.draw_beliefs(self.env_ax, sdv)
-            self.draw_var(self.var_ax)
-            wait = input("Ready to see the plans?")
+
+            # wait = input("Ready to see the plans?")
+        self.draw_plans(self.env_ax, sdv)
+        self.draw_beliefs(self.env_ax, sdv)
+        self.draw_var(self.var_ax)
 
         self.fig.tight_layout()
         plt.pause(1e-10)

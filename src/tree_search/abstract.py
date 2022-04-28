@@ -40,12 +40,6 @@ class AbstractPlanner(object):
         return decisions
 
     def step(self, state, decision):
-        # print('hi: ' ,state.sdv.time_lapse)
-        # while state.sdv.time_lapse % state.sdv.budget != 0:
-        # print('decision ', decision)
-        for vehicle in state.vehicles:
-            state.reset_min_action(vehicle)
-
         for i in range(10):
             state.step(decision)
 

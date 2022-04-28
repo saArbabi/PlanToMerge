@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, './src')
-from plan_viewer import Viewer
-from tree_vis import TreeVis
+from vis.plan_viewer import Viewer
+from vis.tree_vis import TreeVis
 from envs.auto_merge import EnvAutoMerge
 import matplotlib.pyplot as plt
 import numpy as np

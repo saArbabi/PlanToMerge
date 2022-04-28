@@ -1,5 +1,4 @@
 from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
-from tree_search.mcts import MCTSDPW
 import numpy as np
 
 import json
@@ -14,15 +13,32 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
     def __init__(self, id):
         self.id = id
-        self.planner = MCTSDPW()
         self.decision_steps_n = 10 # timesteps with 0.1s step size
         self.decisions_and_counts = None
         self.decision = None
         self.decision_cat = 'LANEKEEP'
+        self.load_planner()
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
             self.merge_lane_start = config['merge_lane_start']
             self.ramp_exit_start = config['ramp_exit_start']
+
+    def load_planner(self):
+        with open('./src/tree_search/config_files/config.json', 'rb') as handle:
+            cfg = json.load(handle)
+            planner_type = cfg['planner_type']
+
+        if planner_type == 'uninformed':
+            from tree_search.uninformed import Uninformed
+            self.planner = Uninformed()
+
+        if planner_type == 'omniscient':
+            from tree_search.omniscient import Omniscient
+            self.planner = Omniscient()
+
+        if planner_type == 'mcts':
+            from tree_search.mcts import MCTSDPW
+            self.planner = MCTSDPW()
 
     def get_sdv_decision(self, env_state, obs):
         if self.time_lapse % self.decision_steps_n == 0:

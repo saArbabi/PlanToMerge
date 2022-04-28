@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, './src')
-from viewer import Viewer
+from vis.viewer import Viewer
 from envs.merge import EnvMerge
 import matplotlib.pyplot as plt
 import numpy as np

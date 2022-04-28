@@ -42,16 +42,26 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, planner=self)
 
     def get_available_decisions(self, state):
-        """
-        Available agent decisions is conditioned on,
-        (1) agent state
-        (2) last agent decision
-        """
         # return [1, 2, 3, 4, 5, 6]
-        return [1, 4]
-        if state.sdv.glob_x < state.sdv.merge_lane_start:
-            return self.OPTIONS_CAT['LANEKEE-ONLY']
-        return self.OPTIONS_CAT[state.sdv.decision_cat]
+
+        if not state.sdv.decision or state.sdv.decision == 2:
+            return [2, 5]
+
+        # elif state.sdv.decision == 2:
+        #     return [2]
+
+        elif state.sdv.decision == 5:
+            return [5]
+
+        # if state.sdv.decision == 2 or not state.sdv.decision:
+        #     return [2, 5]
+        # else:
+        #     return [5]
+        #
+        # return [1, 4]
+        # if state.sdv.glob_x < state.sdv.merge_lane_start:
+        #     return self.OPTIONS_CAT['LANEKEE-ONLY']
+        # return self.OPTIONS_CAT[state.sdv.decision_cat]
 
     def extract_belief_info(self, state, depth):
         vehicle_id = 2
@@ -91,7 +101,7 @@ class MCTSDPW(AbstractPlanner):
         decision_node = self.root
         total_reward = 0
         depth = 0
-        # state.seed(self.rng.randint(1e5))
+        state.seed(self.rng.randint(1e5))
         terminal = False
         tree_states = {
                         'x':[], 'y':[],
@@ -147,34 +157,10 @@ class MCTSDPW(AbstractPlanner):
 
     def plan(self, state, observation):
         self.reset()
-
         for i in range(self.config['budget']):
-            # t0 = time.time()
             self.run(safe_deepcopy_env(state), observation)
-
-            # print('########### run: ', i)
-            # for key, d in self.root.children.items():
-            #     print('dec: ', key , ' dec_value: ', d.value)
-            #     print('dec: ', key , ' dec_count: ', d.count)
-            #     print('dec: ', key , ' ucb: ', self.root.ucb_value(key, self.config['temperature']))
-            #     if key == 0:
-            #         print(self.root.count)
-            #         print(self.root.children[key].count)
         node = self.root
         i = 0
-        # print(self.root.count)
-        # print(self.root.children[0])
-        # print(self.root.children[3])
-        # # print(self.root.children[3].children.values()[0])
-        # print(list(self.root.children[3].children.values())[0])
-        # print(list(self.root.children[3].children.values())[1])
-        # print(list(self.root.children[3].children.values())[2])
-        # while node.children:
-        #     print(i)
-        #     i += 1
-        #     node = node.children[0]
-
-        # print(self.get_plan())
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""

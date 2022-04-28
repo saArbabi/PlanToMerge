@@ -53,11 +53,11 @@ class TreeVis():
         counts = [child_node.count for child_node in parent_node.children.values()]
         max_count = max(counts)
         parent_node.children = collections.OrderedDict(sorted(parent_node.children.items()))
-        
+
         for key, child_node in parent_node.children.items():
-            if key == 4:
+            if key == 5:
                 node_title = 'LC'
-            elif key == 1:
+            elif key == 2:
                 node_title = 'LK'
             else:
                 node_title = None

@@ -20,10 +20,10 @@ class EnvAutoMerge(EnvMerge):
         self.env_initializor.dummy_stationary_car = self.dummy_stationary_car
         self.vehicles = self.env_initializor.init_env(episode_id)
         for i, vehicle in enumerate(self.vehicles):
+            vehicle.max_brake = 0
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
                 self.vehicles[i] = self.sdv
-
 
     def seed(self, seed):
         self.rng = np.random.RandomState(seed)
@@ -49,7 +49,7 @@ class EnvAutoMerge(EnvMerge):
                 # IDMMOBIL car
                 actions = vehicle.act()
                 vehicle.act_long = actions[0]
-                self.set_min_action(vehicle, vehicle.act_long)
+                self.max_brake(vehicle, vehicle.act_long)
                 # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
                 # actions[0] += self.rng.normal(0, 3)
                 joint_action.append(actions)
@@ -59,9 +59,6 @@ class EnvAutoMerge(EnvMerge):
         self.sdv.neighbours = self.sdv.my_neighbours(self.vehicles+[self.dummy_stationary_car])
         actions = self.sdv.act(decision)
         self.sdv.act_long = actions[0]
-        if self.sdv.act_long < self.sdv.min_act_long:
-            self.sdv.min_act_long = self.sdv.act_long
-        self.set_min_action(self.sdv, self.sdv.act_long)
 
         # if self.sdv.neighbours['att']:
         #     print('sdv att ', self.sdv.neighbours['att'].id)
@@ -94,7 +91,12 @@ class EnvAutoMerge(EnvMerge):
         #        'gloab_y':None,
         #        'delta_x_to_merge' :None,
         #        }
-        return self.sdv.glob_y
+        obs = 0
+        for vehicle in self.vehicles:
+            if vehicle.id != 'sdv' and vehicle.max_brake < -5:
+                obs += vehicle.glob_x
+
+        return obs
         # return self.sdv.glob_y + self.rng.random()
         # return delta_x_to_merge
 
@@ -106,62 +108,26 @@ class EnvAutoMerge(EnvMerge):
         Episode is complete if:
         (1) agent successfully performs a merge
         """
-        return False
+        # return False
         if self.sdv.is_merge_complete():
-            if self.sdv.neighbours['rl']:
-                self.sdv.neighbours['rl'].neighbours['f'] = self
-                self.sdv.neighbours['rl'].neighbours['m'] = None
-            self.sdv.lane_decision = 'keep_lane'
-            self.sdv.glob_y = 1.5*self.sdv.lane_width
             return True
 
-    def set_min_action(self, vehicle, act_long):
-        if act_long < vehicle.min_act_long:
-            vehicle.min_act_long = act_long
-
-    def reset_min_action(self, vehicle):
-        vehicle.min_act_long = 0
+    def max_brake(self, vehicle, act_long):
+        if act_long < vehicle.max_brake:
+            vehicle.max_brake = act_long
 
     def get_reward(self):
+        """
+        Reward is set to encourage the following behaviours:
+        1) perform merge successfully (TTM)
+        2) avoid reckless decisions
+        """
         total_reward = 0
-        # if self.sdv.decision == 4:
-        #     total_reward += 0.2
         if self.sdv.is_merge_complete():
             total_reward += 0.2
-
+        #
         for vehicle in self.vehicles:
-            # print(vehicle.id, ' ', round(vehicle.min_act_long))
-            if vehicle.min_act_long < -5:
-                # total_reward -= 1
-                total_reward -= 0
-                #
-                # if vehicle.neighbours['att']:
-                #     att_id = vehicle.neighbours['att'].id
-                #     att_glob_x = vehicle.neighbours['att'].glob_x
-                # else:
-                #     att_id = None
-                #     att_glob_x = None
-                #
-                # if vehicle.id == 'sdv':
-                #     dec = vehicle.decision
-                # else:
-                #     dec = None
-                #
-                # glob_x = round(vehicle.glob_x, 1)
-                # glob_y = round(vehicle.glob_y , 1)
-                # print('####################')
-                # print(f'veh_id: {vehicle.id}')
-                # print(f'time-lapse: {vehicle.time_lapse}')
-                # print(f'glob_x: {glob_x}')
-                # print(f'glob_y: {glob_y}')
-                # print(f'att_id: {att_id}')
-                # print(f'att_glob_x: {att_glob_x}')
-                # print(f'min_act: {vehicle.min_act_long}')
-                # print(f'dec: {dec}')
-                # wait = input("Press Enter to continue.")
-
-        # print('####################')
-        # print('decision ', vehicle.decision)
-        # print('total_reward ', total_reward)
+            if vehicle.id != 'sdv' and vehicle.max_brake < -5:
+                total_reward -= 0.2
 
         return total_reward
