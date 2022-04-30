@@ -23,7 +23,7 @@ class EnvAutoMerge(EnvMerge):
             vehicle.max_brake = 0
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
-                self.vehicles[i] = self.sdv
+                del self.vehicles[i]
 
     def seed(self, seed):
         self.rng = np.random.RandomState(seed)
@@ -44,15 +44,15 @@ class EnvAutoMerge(EnvMerge):
         """
         joint_action = []
         for vehicle in self.vehicles:
-            if vehicle.id != 'sdv':
-                vehicle.neighbours = vehicle.my_neighbours(self.vehicles+[self.dummy_stationary_car])
-                # IDMMOBIL car
-                actions = vehicle.act()
-                vehicle.act_long = actions[0]
-                self.max_brake(vehicle, vehicle.act_long)
-                # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
-                # actions[0] += self.rng.normal(0, 3)
-                joint_action.append(actions)
+            vehicle.neighbours = vehicle.my_neighbours(self.all_cars() + \
+                                                       [self.dummy_stationary_car])
+            # IDMMOBIL car
+            actions = vehicle.act()
+            vehicle.act_long = actions[0]
+            self.max_brake(vehicle, vehicle.act_long)
+            # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
+            # actions[0] += self.rng.normal(0, 3)
+            joint_action.append(actions)
         return joint_action
 
     def get_sdv_action(self, decision):
@@ -75,9 +75,8 @@ class EnvAutoMerge(EnvMerge):
         sdv_action = self.get_sdv_action(decision)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
-            if vehicle.id != 'sdv':
-                vehicle.step(actions)
-                vehicle.time_lapse += 1
+            vehicle.step(actions)
+            vehicle.time_lapse += 1
 
         self.sdv.step(sdv_action)
         self.sdv.time_lapse += 1
@@ -93,7 +92,7 @@ class EnvAutoMerge(EnvMerge):
         #        }
         obs = 0
         for vehicle in self.vehicles:
-            if vehicle.id != 'sdv' and vehicle.max_brake < -5:
+            if vehicle.max_brake < -5:
                 obs += vehicle.glob_x
 
         return obs
@@ -127,7 +126,13 @@ class EnvAutoMerge(EnvMerge):
             total_reward += 0.2
         #
         for vehicle in self.vehicles:
-            if vehicle.id != 'sdv' and vehicle.max_brake < -5:
+            if vehicle.max_brake < -5:
                 total_reward -= 0.2
 
         return total_reward
+
+    def all_cars(self):
+        """
+        returns the list of all the cars on the road
+        """
+        return self.vehicles + [self.sdv]

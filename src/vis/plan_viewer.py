@@ -202,8 +202,8 @@ class Viewer():
         ax.legend()
         ax.grid()
 
-    def render(self, env, planner):
-        self.draw_highway(self.env_ax, env.vehicles)
+    def render(self, vehicles, planner):
+        self.draw_highway(self.env_ax, vehicles)
         self.draw_decision_counts(self.decision_ax, planner)
         self.draw_plans(self.env_ax, planner)
         self.draw_beliefs(self.env_ax, planner)

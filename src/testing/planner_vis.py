@@ -61,9 +61,9 @@ def main():
             decision = env.sdv.decision
 
 
-
-        viewer.log_var(env.vehicles)
-        viewer.render(env, planner)
+        all_cars = env.all_cars()
+        viewer.log_var(all_cars)
+        viewer.render(all_cars, planner)
         env.step(decision)
 
 if __name__=='__main__':
