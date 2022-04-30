@@ -26,17 +26,10 @@ class BeliefSearch(MCTSDPW):
         terminal = state.is_terminal()
         return observation, reward, terminal
 
-    def run(self, state, observation):
+    def run(self, belief_node):
         """
-        :param state: env object
-        Note: sampled_state = [sampled_latent_state, state]
+        ?
         """
-        belief_node = self.root
-
-        # if not belief_node.belief_params:
-            # belief_node.belief_params = state
-        belief_node.update_belief(state)
-
         total_reward = 0
         depth = 0
         # state.seed(self.rng.randint(1e5))
@@ -45,15 +38,17 @@ class BeliefSearch(MCTSDPW):
                         'x':[], 'y':[],
                         'x_rollout':[], 'y_rollout':[]}
 
+
+        state = belief_node.sample_belief()
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
-
             chance_node, decision = belief_node.get_child(state, temperature=self.config['temperature'])
             observation, reward, terminal = self.step(state, decision)
             belief_node = chance_node.get_child(observation)
             belief_node.update_belief(state)
+            state = belief_node.sample_belief()
 
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
@@ -71,14 +66,19 @@ class BeliefSearch(MCTSDPW):
         self.extract_tree_info(tree_states)
 
     def plan(self, state, observation):
+        """
+        need observation?
+        """
         self.reset()
+        belief_node = self.root
+        belief_node.update_belief(state)
         for plan_itr in range(self.config['budget']):
             # input('This is plan iteration '+ str(plan_itr))
             # t_0 = time.time()
             # t_1 = time.time()
             # print('copy time: ', t_1 - t_0)
 
-            self.run(safe_deepcopy_env(state), observation)
+            self.run(belief_node)
             # print(self.update_counts)
 
 
@@ -89,10 +89,18 @@ class BeliefNode(DecisionNode):
         self.belief_params = None # this holds the belief parameters
 
     def expand(self, state):
-        # decision = self.planner.np_random.choice(list(self.unexplored_decisions(state)))
         decision = self.planner.rng.choice(list(self.unexplored_decisions(state)))
         self.children[decision] = SubChanceNode(self, self.planner)
         return self.children[decision], decision
+
+    def get_child(self, state, temperature=None):
+        if len(self.children) == len(self.planner.get_available_decisions(state)) \
+                or self.k_decision*self.count**self.alpha_decision < len(self.children):
+            # select one of previously expanded decisions
+            return self.selection_strategy(temperature)
+        else:
+            # insert a new aciton
+            return self.expand(state)
 
     def update_belief(self, state):
         if not self.belief_params:
@@ -106,14 +114,14 @@ class BeliefNode(DecisionNode):
             # print('vehicle.mu ', vehicle.mu)
         # self.belief_params = [mu, var]
         # self.state = [state, ]
-        self.statee = state
+        self.state = safe_deepcopy_env(state)
 
 
-    def sample_belief(self, state):
+    def sample_belief(self):
         """
         Returns a sample from the belief state
         """
-        return state
+        return self.state
 
 class SubChanceNode(ChanceNode):
     def __init__(self, parent, planner):
