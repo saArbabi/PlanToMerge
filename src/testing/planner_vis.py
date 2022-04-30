@@ -5,6 +5,7 @@ from vis.tree_vis import TreeVis
 from envs.auto_merge import EnvAutoMerge
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 import json
 
 def load_planner():
@@ -46,7 +47,7 @@ def main():
             if user_input == 'n':
                 sys.exit()
             if user_input == 's':
-                vis_tree.save_tree_snapshot(env.sdv.planner, env.time_step)
+                vis_tree.save_tree_snapshot(planner, env.time_step)
             try:
                 viewer.focus_on_this_vehicle = user_input
             except:
@@ -55,8 +56,13 @@ def main():
 
         obs = env.planner_observe()
         if env.sdv.is_decision_time():
+
+            t_0 = time.time()
             planner.plan(env, obs)
             decision = planner.get_decision()
+            t_1 = time.time()
+            print('compute time: ', t_1 - t_0)
+
         else:
             decision = env.sdv.decision
 
