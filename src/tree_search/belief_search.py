@@ -104,24 +104,28 @@ class BeliefNode(DecisionNode):
 
     def update_belief(self, state):
         if not self.belief_params:
-            # self.planner.update_counts += 1
+            self.planner.update_counts += 1
             self.belief_params = 1
+            self.state = state
 
-        for vehicle in state.vehicles:
-            vehicle.mu = vehicle.driver_params['aggressiveness']
-            vehicle.var = 0.2
+
+                # vehicle.mu = vehicle.driver_params['aggressiveness']
+                # vehicle.var = 0.2
             # print('id ', vehicle.id)
             # print('vehicle.mu ', vehicle.mu)
         # self.belief_params = [mu, var]
         # self.state = [state, ]
-        self.state = safe_deepcopy_env(state)
 
 
     def sample_belief(self):
         """
         Returns a sample from the belief state
         """
-        return self.state
+        sampled_state = safe_deepcopy_env(self.state)
+        for vehicle in sampled_state.vehicles:
+            vehicle.driver_params['aggressiveness'] = 0.05
+            vehicle.set_driver_params()
+        return sampled_state
 
 class SubChanceNode(ChanceNode):
     def __init__(self, parent, planner):
