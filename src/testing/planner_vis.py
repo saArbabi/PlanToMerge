@@ -7,6 +7,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 
+def load_planner():
+    with open('./src/tree_search/config_files/config.json', 'rb') as handle:
+        cfg = json.load(handle)
+        planner_type = cfg['planner_type']
+
+    if planner_type == 'uninformed':
+        from tree_search.uninformed import Uninformed
+        planner = Uninformed()
+
+    if planner_type == 'omniscient':
+        from tree_search.omniscient import Omniscient
+        planner = Omniscient()
+
+    if planner_type == 'mcts':
+        from tree_search.mcts import MCTSDPW
+        planner = MCTSDPW()
+
+    if planner_type == 'belief_search':
+        from tree_search.belief_search import BeliefSearch
+        planner = BeliefSearch()
+    return planner
+
 def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
@@ -16,6 +38,7 @@ def main():
 
     viewer = Viewer(config)
     vis_tree = TreeVis()
+    planner = load_planner()
     while True:
         user_input = input(str(env.time_step) + \
                            ' Enter to continue, n to exit, s to save tree  ')
@@ -31,17 +54,16 @@ def main():
 
 
         obs = env.planner_observe()
-        decision = env.sdv.get_sdv_decision(env, obs)
+        if env.sdv.is_decision_time():
+            planner.plan(env, obs)
+            decision = planner.get_decision()
+        else:
+            decision = env.sdv.decision
 
-        # if env.time_step % 10 == 0:
-        #     np.random.seed(None)
-        #     decision = np.random.choice([5, 2])
-        # print('decision ', decision)
-        # print('act_long ', env.sdv.act_long)
 
 
         viewer.log_var(env.vehicles)
-        viewer.render(env.vehicles, env.sdv)
+        viewer.render(env, planner)
         env.step(decision)
 
 if __name__=='__main__':

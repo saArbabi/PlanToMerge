@@ -5,6 +5,13 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 
 class Viewer():
+    OPTIONS = {1 : ['LANEKEEP', 'UP'],
+               2 : ['LANEKEEP', 'IDLE'],
+               3 : ['LANEKEEP', 'DOWN'],
+               4 : ['MERGE', 'UP'],
+               5 : ['MERGE', 'IDLE'],
+               6 : ['MERGE', 'DOWN']}
+
     def __init__(self, config):
         self.config  = config
         self.fig = plt.figure(figsize=(10, 6))
@@ -112,11 +119,10 @@ class Viewer():
         self.draw_vehicles(ax, vehicles)
         # self.draw_attention_line(ax, vehicles)
 
-    def draw_beliefs(self, ax, sdv):
-        if not sdv.planner.belief_info:
+    def draw_beliefs(self, ax, planner):
+        if not planner.belief_info:
             return
-
-        belief_info = sdv.planner.belief_info
+        belief_info = planner.belief_info
         max_depth = len(belief_info)
         colors = cm.rainbow(np.linspace(1, 0, max_depth))
 
@@ -128,12 +134,12 @@ class Viewer():
             # ax.annotate(str(len(belief_info[depth]['xs'])), \
             #             (belief_info[depth]['xs'][-1], belief_info[depth]['ys'][-1]))
 
-    def draw_plans(self, ax, sdv):
-        if not sdv.planner.tree_info:
+    def draw_plans(self, ax, planner):
+        if not planner.tree_info:
             return
 
         longest_tree_length = 0
-        for i, plan_itr in enumerate(sdv.planner.tree_info):
+        for i, plan_itr in enumerate(planner.tree_info):
             ax.plot(plan_itr['x_rollout'], plan_itr['y_rollout'], 'o-', \
                                         markersize=3, alpha=0.2, color='orange')
 
@@ -144,16 +150,16 @@ class Viewer():
                 longest_tree_length = len(plan_itr['x'])
                 longest_tree_index = i
 
-        longest_plan = sdv.planner.tree_info[longest_tree_index]
+        longest_plan = planner.tree_info[longest_tree_index]
         ax.scatter(longest_plan['x'][-1], \
                    longest_plan['y'][-1], color='red', marker='|', s=1000)
 
-    def draw_decision_counts(self, ax, sdv):
-        if not sdv.decisions_and_counts:
+    def draw_decision_counts(self, ax, planner):
+        if not planner.decision_counts:
             return
         ax.clear()
-        decisions = sdv.decisions_and_counts['decisions']
-        counts = sdv.decisions_and_counts['counts']
+        decisions = planner.decision_counts['decisions']
+        counts = planner.decision_counts['counts']
         decisions_and_counts = [x for x in sorted(zip(decisions, counts))]
 
         for decision, count in decisions_and_counts:
@@ -166,11 +172,11 @@ class Viewer():
             ax.annotate(count, (decision, count/2))
 
             ax.bar(decision, count, 0.5, \
-                    label=sdv.OPTIONS[decision][1], color=color)
+                    label=self.OPTIONS[decision][1], color=color)
         ax.set_ylim([0, 40])
         ax.set_xlim([0, 7])
 
-        ax.set_xticks(list(sdv.OPTIONS.keys()))
+        ax.set_xticks(list(self.OPTIONS.keys()))
         ax.set_xticklabels(['LANEKEEP \n UP',
                             'LANEKEEP \n IDLE',
                             'LANEKEEP \n DOWN',
@@ -196,16 +202,11 @@ class Viewer():
         ax.legend()
         ax.grid()
 
-    def render(self, vehicles, sdv):
-        self.draw_highway(self.env_ax, vehicles)
-        # if sdv.glob_x > 200:
-
-        if sdv.time_lapse % sdv.decision_steps_n == 0:
-            self.draw_decision_counts(self.decision_ax, sdv)
-
-            # wait = input("Ready to see the plans?")
-        self.draw_plans(self.env_ax, sdv)
-        self.draw_beliefs(self.env_ax, sdv)
+    def render(self, env, planner):
+        self.draw_highway(self.env_ax, env.vehicles)
+        self.draw_decision_counts(self.decision_ax, planner)
+        self.draw_plans(self.env_ax, planner)
+        self.draw_beliefs(self.env_ax, planner)
         self.draw_var(self.var_ax)
 
         self.fig.tight_layout()

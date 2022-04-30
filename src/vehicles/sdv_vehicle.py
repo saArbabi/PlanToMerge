@@ -17,39 +17,16 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.decisions_and_counts = None
         self.decision = None
         self.decision_cat = 'LANEKEEP'
-        self.load_planner()
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
             self.merge_lane_start = config['merge_lane_start']
             self.ramp_exit_start = config['ramp_exit_start']
 
-    def load_planner(self):
-        with open('./src/tree_search/config_files/config.json', 'rb') as handle:
-            cfg = json.load(handle)
-            planner_type = cfg['planner_type']
-
-        if planner_type == 'uninformed':
-            from tree_search.uninformed import Uninformed
-            self.planner = Uninformed()
-
-        if planner_type == 'omniscient':
-            from tree_search.omniscient import Omniscient
-            self.planner = Omniscient()
-
-        if planner_type == 'mcts':
-            from tree_search.mcts import MCTSDPW
-            self.planner = MCTSDPW()
-
-    def get_sdv_decision(self, env_state, obs):
+    def is_decision_time(self):
         if self.time_lapse % self.decision_steps_n == 0:
-            available_dec = self.planner.get_available_decisions(env_state)
-            if len(available_dec) == 1:
-                return available_dec[0]
-            self.planner.plan(env_state, obs)
-            decision, self.decisions_and_counts = self.planner.get_decision()
-            # self.decision = 0
-            return decision
-        return self.decision
+            return True
+        else:
+            return 
 
     def get_driver_param(self, param_name):
         if param_name in ['desired_v', 'max_act', 'min_act']:

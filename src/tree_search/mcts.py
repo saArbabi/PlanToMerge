@@ -157,15 +157,13 @@ class MCTSDPW(AbstractPlanner):
 
     def plan(self, state, observation):
         self.reset()
-        for i in range(self.config['budget']):
+        for plan_itr in range(self.config['budget']):
             self.run(safe_deepcopy_env(state), observation)
-        node = self.root
-        i = 0
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""
-        chosen_decision, decision_counts = self.root.selection_rule()
-        return chosen_decision, decision_counts
+        chosen_decision, self.decision_counts = self.root.selection_rule()
+        return chosen_decision
 
 class DecisionNode(Node):
     def __init__(self, parent, planner):
@@ -250,10 +248,7 @@ class DecisionNode(Node):
 
         return decisions[max(counts, key=(lambda i: self.children[decisions[i]].value))], decision_counts
 
-
 class ChanceNode(Node):
-    K = 1.0
-    """ The value function first-order filter gain"""
     def __init__(self, parent, planner):
         assert parent is not None
         super().__init__(parent, planner)
