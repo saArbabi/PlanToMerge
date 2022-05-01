@@ -17,7 +17,6 @@ class BeliefSearch(MCTSDPW):
         self.root = BeliefNode(parent=None, planner=self)
 
     def step(self, state, decision):
-
         for i in range(10):
             state.step(decision)
 
@@ -103,6 +102,11 @@ class BeliefNode(DecisionNode):
             return self.expand(state)
 
     def update_belief(self, state):
+        """
+        Passes the sequence of past vehicle observations (vehicle viewpoint)
+        and actions into an LSTM encoder. Then the encoded state is mapped to
+        the latent belief.
+        """
         if not self.belief_params:
             self.planner.update_counts += 1
             self.belief_params = 1
