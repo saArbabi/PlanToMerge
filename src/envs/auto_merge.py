@@ -7,10 +7,9 @@ from envs.env_initializor_test import EnvInitializor
 import sys
 
 class EnvAutoMerge(EnvMerge):
-    def __init__(self, config):
-        super().__init__(config)
-        self.env_initializor = EnvInitializor(config)
-        self.seed(2022)
+    def __init__(self):
+        super().__init__()
+        # self.seed(2022)
 
     def env_reward_reset(self):
         self.is_large_deceleration = False
@@ -19,9 +18,10 @@ class EnvAutoMerge(EnvMerge):
         """Initiates the environment
         """
         self.time_step = 0
-        self.env_initializor.next_vehicle_id = 1
-        self.env_initializor.dummy_stationary_car = self.dummy_stationary_car
-        self.vehicles = self.env_initializor.init_env(episode_id)
+        env_initializor = EnvInitializor(self.config)
+        env_initializor.next_vehicle_id = 1
+        env_initializor.dummy_stationary_car = self.dummy_stationary_car
+        self.vehicles = env_initializor.init_env(episode_id)
         for i, vehicle in enumerate(self.vehicles):
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
@@ -57,8 +57,6 @@ class EnvAutoMerge(EnvMerge):
             if self.time_step > 0:
                 vehicle.act_long_p = vehicle.act_long_c
             vehicle.act_long_c = act_long
-
-
         return joint_action
 
     def get_sdv_action(self, decision):

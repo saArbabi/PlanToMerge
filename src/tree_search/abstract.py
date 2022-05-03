@@ -58,16 +58,12 @@ class Node(object):
         A tree node
     """
 
-    def __init__(self, parent, planner):
+    def __init__(self, parent):
         """
             New node.
-
         :param parent: its parent node
-        :param planner: the planner using the node
         """
         self.parent = parent
-        self.planner = planner
-
         self.children = {}
         """ Dict of children nodes, indexed by decision labels"""
 
@@ -76,10 +72,6 @@ class Node(object):
 
         self.value_upper = 0
         """ Estimated value of the node's decision sequence"""
-
-    def expand(self, branching_factor):
-        for a in range(branching_factor):
-            self.children[a] = type(self)(self, self.planner)
 
     def selection_rule(self):
         raise NotImplementedError()
@@ -130,14 +122,14 @@ class Node(object):
         m = np.amax(x)
         return np.nonzero(x == m)[0]
 
-    def random_argmax(self, x):
+    def random_argmax(self, x, rng):
         """
             Randomly tie-breaking arg max
         :param x: an array
         :return: a random index among the maximums
         """
         indices = Node.all_argmax(x)
-        return self.planner.rng.choice(indices)
+        return rng.choice(indices)
 
     def __str__(self):
         return "{} (n:{}, v:{:.2f})".format(list(self.path()), self.count, self.value)

@@ -38,7 +38,7 @@ def load_planner():
 def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
-    env = EnvAutoMerge(config)
+    env = EnvAutoMerge()
     episode_id = 3
     env.initialize_env(episode_id)
 

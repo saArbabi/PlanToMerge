@@ -1,41 +1,86 @@
 from tree_search.mcts import MCTSDPW, DecisionNode, ChanceNode
 from tree_search.abstract import AbstractPlanner, Node
 from tree_search.factory import safe_deepcopy_env
-import json
 import time
 import hashlib
 import numpy as np
 import sys
+from tree_search.imagined_env import ImaginedEnv
+from tree_search.belief_net import BeliefNet
 
 class QMDP(MCTSDPW):
     def __init__(self):
         super(QMDP, self).__init__()
         self.update_counts = 0
-        self.load_nidm()
-
-    def load_nidm(self):
-        model_name = 'neural_idm_367'
-        epoch_count = '20'
-        exp_dir = './src/models/'+model_name
-        exp_path = exp_dir+'/model_epo'+epoch_count
-        with open(exp_dir+'/'+'config.json', 'rb') as handle:
-            config = json.load(handle)
-
-        from models.neural_idm import  NeurIDMModel
-        self.nidm_model = NeurIDMModel(config)
-        self.nidm_model.load_weights(exp_path).expect_partial()
+        self._enough_history = False
+        self.decision_counts = False
+        self.nidm = BeliefNet()
+        self.img_state = ImaginedEnv()
 
     def reset(self):
         self.tree_info = []
         self.belief_info = {}
-        self.root = BeliefNode(parent=None, planner=self)
+        self.root = BeliefNode(parent=None, config=self.config)
 
+    def is_decision_time(self, env):
+        """The planner computes a decision if:
+            1) enough history observations are collected
+            2) certain number of timesteps have elapsed from the last decision
+        """
+        if self.enough_history(env):
+            if self.steps_till_next_decision == 0:
+                self.steps_till_next_decision = self.steps_per_decision
+                return True
+            else:
+                self.steps_till_next_decision -= 1
+
+    def enough_history(self, state):
+        """
+        checks to see if enough observations have been tracked for the model.
+        """
+        if not self._enough_history:
+            for vehicle in state.vehicles:
+                if vehicle.id == 2:
+                    if not np.isnan(vehicle.obs_history).any():
+                        self._enough_history = True
+        return self._enough_history
+
+    def get_joint_action(self, state):
+        """
+        Returns the joint action of all vehicles other than SDV on the road
+        """
+        joint_action = []
+        for vehicle in state.vehicles:
+            vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
+                                                       [state.dummy_stationary_car])
+
+
+            actions = vehicle.act()
+            # if vehicle.id == 2:
+            #     actions = vehicle.act()
+            #
+            # else:
+            #     actions = self.nidm.estimate_vehicle_action(vehicle)
+
+
+            joint_action.append(actions)
+            act_long = actions[0]
+
+            if act_long < -5:
+                state.is_large_deceleration = True
+
+            if state.time_step > 0:
+                vehicle.act_long_p = vehicle.act_long_c
+            vehicle.act_long_c = act_long
+
+
+        return joint_action
     def step(self, state, decision):
         state.env_reward_reset()
-
-        for i in range(10):
-            state.step(decision)
-
+        for i in range(self.steps_per_decision):
+            joint_action = self.get_joint_action(state)
+            state.step(joint_action, decision)
+            ##############
         observation = state.planner_observe()
         reward = state.get_reward()
         terminal = state.is_terminal()
@@ -59,9 +104,12 @@ class QMDP(MCTSDPW):
         self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
-            chance_node, decision = belief_node.get_child(state, temperature=self.config['temperature'])
+            chance_node, decision = belief_node.get_child(
+                                        self.get_available_decisions(state),
+                                        self.rng)
             observation, reward, terminal = self.step(state, decision)
-            belief_node = chance_node.get_child(observation)
+            belief_node = chance_node.get_child(observation,
+                                                self.rng)
 
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
@@ -88,28 +136,21 @@ class QMDP(MCTSDPW):
             # self.planner.update_counts += 1
             belief_node.belief_params = 1
             belief_node.state = state
+        self.nidm.latent_inference(state.vehicles)
 
-        # if self.time_lapse_since_last_param_update == 0:
-        # obs_history = self.scale_state(self.obs_history.copy(), 'full')
-        for vehicle in state.vehicles:
-            if vehicle.id == 2:
-                obs_history = vehicle.obs_history.copy()
-                enc_h = self.nidm_model.h_seq_encoder(obs_history)
-                latent_dis_param = self.nidm_model.belief_net(enc_h , dis_type='prior')
-                z_idm, z_att = self.nidm_model.belief_net.sample_z(latent_dis_param)
-                proj_idm = self.nidm_model.belief_net.z_proj_idm(z_idm)
-                proj_att = self.nidm_model.belief_net.z_proj_att(z_att)
-                # self.belief_update(proj_att)
-                # self.enc_h = tf.reshape(enc_h, [self.samples_n, 1, 128])
-                idm_params = self.nidm_model.idm_layer(proj_idm)
-                # self.driver_params_update(idm_params)
-
+    def imagine_state(self, state):
+        """
+        Returns an "imagined" environment.
+        """
+        self.img_state.copy_attrs(state)
+        return self.img_state
 
     def plan(self, state, observation):
         """
         need observation?
         """
         self.reset()
+        state = self.imagine_state(state)
         belief_node = self.root
         self.update_belief(belief_node, state)
         for plan_itr in range(self.config['budget']):
@@ -124,23 +165,23 @@ class QMDP(MCTSDPW):
 
 
 class BeliefNode(DecisionNode):
-    def __init__(self, parent, planner):
-        super().__init__(parent, planner)
+    def __init__(self, parent, config):
+        super().__init__(parent, config)
         self.belief_params = None # this holds the belief parameters
 
-    def expand(self, state):
-        decision = self.planner.rng.choice(list(self.unexplored_decisions(state)))
-        self.children[decision] = SubChanceNode(self, self.planner)
+    def expand(self, available_decisions, rng):
+        decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
+        self.children[decision] = SubChanceNode(self, self.config)
         return self.children[decision], decision
 
-    def get_child(self, state, temperature=None):
-        if len(self.children) == len(self.planner.get_available_decisions(state)) \
+    def get_child(self, available_decisions, rng):
+        if len(self.children) == len(available_decisions) \
                 or self.k_decision*self.count**self.alpha_decision < len(self.children):
             # select one of previously expanded decisions
-            return self.selection_strategy(temperature)
+            return self.selection_strategy(rng)
         else:
             # insert a new aciton
-            return self.expand(state)
+            return self.expand(available_decisions, rng)
 
 
 
@@ -164,14 +205,14 @@ class BeliefNode(DecisionNode):
         return sampled_state
 
 class SubChanceNode(ChanceNode):
-    def __init__(self, parent, planner):
-        super().__init__(parent, planner)
+    def __init__(self, parent, config):
+        super().__init__(parent, config)
 
-    def get_child(self, observation):
+    def get_child(self, observation, rng):
         obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
         if obs_id not in self.children:
             if self.k_state*self.count**self.alpha_state < len(self.children):
-                obs_id = self.planner.rng.choice(list(self.children))
+                obs_id = rng.choice(list(self.children))
                 return self.children[obs_id]
             else:
                 # Add observation to the children set
@@ -180,5 +221,5 @@ class SubChanceNode(ChanceNode):
         return self.children[obs_id]
 
     def expand(self, obs_id):
-        belief_node = BeliefNode(self, self.planner)
+        belief_node = BeliefNode(self, self.config)
         self.children[obs_id] = belief_node

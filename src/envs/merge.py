@@ -1,23 +1,22 @@
 from importlib import reload
-from envs import env_initializor
-reload(env_initializor)
 from envs.env_initializor import EnvInitializor
 from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
+import json
 
 class EnvMerge():
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
+        with open('./src/envs/config.json', 'rb') as handle:
+            self.config = json.load(handle)
         self.usage = None
-
         self.dummy_stationary_car = IDMMOBILVehicleMerge(\
-                                'dummy', 2, config['merge_zone_end'], 0, None)
-        self.env_initializor = EnvInitializor(config)
+                                'dummy', 2, self.config['merge_zone_end'], 0, None)
 
     def initialize_env(self, episode_id):
         self.time_step = 0
-        self.env_initializor.next_vehicle_id = 1
-        self.env_initializor.dummy_stationary_car = self.dummy_stationary_car
-        self.vehicles = self.env_initializor.init_env(episode_id)
+        env_initializor = EnvInitializor(self.config)
+        env_initializor.next_vehicle_id = 1
+        env_initializor.dummy_stationary_car = self.dummy_stationary_car
+        self.vehicles = env_initializor.init_env(episode_id)
         self.lane_length = self.config['lane_length']
 
     def recorder(self, vehicles):

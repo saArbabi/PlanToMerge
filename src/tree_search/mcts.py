@@ -47,7 +47,7 @@ class MCTSDPW(AbstractPlanner):
         if not state.sdv.decision:
         # if not state.sdv.decision or state.sdv.decision == 2:
             return [2, 5]
-        
+
         elif state.sdv.decision == 2:
             return [2]
         # elif state.sdv.decision == 2:
@@ -114,11 +114,15 @@ class MCTSDPW(AbstractPlanner):
         self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, decision_node, terminal):
             # perform a decision followed by a transition
-            chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
-            # print('######### ', depth, ' ########################### in tree')
+            chance_node, decision = decision_node.get_child(
+                                        self.get_available_decisions(state),
+                                        self.rng)
+
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** depth * reward
-            decision_node = chance_node.get_child(observation)
+            decision_node = chance_node.get_child(
+                                            observation,
+                                            self.rng)
             depth += 1
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
@@ -169,35 +173,30 @@ class MCTSDPW(AbstractPlanner):
         return chosen_decision
 
 class DecisionNode(Node):
-    def __init__(self, parent, planner):
-        super(DecisionNode, self).__init__(parent, planner)
+    def __init__(self, parent, config):
+        super(DecisionNode, self).__init__(parent)
         self.value = 0
-        self.k_decision = self.planner.config["k_decision"]
-        self.alpha_decision = self.planner.config["alpha_decision"]
+        self.k_decision = config["k_decision"]
+        self.alpha_decision = config["alpha_decision"]
+        self.temperature = config["temperature"]
+        self.config = config
 
-    def unexplored_decisions(self, state):
-        if state is None:
-            raise Exception("The state should be set before expanding a node")
-        try:
-            decisions = self.planner.get_available_decisions(state)
-        except AttributeError:
-            decisions = self.planner.get_available_decisions(state)
-        return set(self.children.keys()).symmetric_difference(decisions)
+    def unexplored_decisions(self, available_decisions):
+        return set(self.children.keys()).symmetric_difference(available_decisions)
 
-    def expand(self, state):
-        # decision = self.planner.np_random.choice(list(self.unexplored_decisions(state)))
-        decision = self.planner.rng.choice(list(self.unexplored_decisions(state)))
-        self.children[decision] = ChanceNode(self, self.planner)
+    def expand(self, available_decisions, rng):
+        decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
+        self.children[decision] = ChanceNode(self, self.config)
         return self.children[decision], decision
 
-    def get_child(self, state, temperature=None):
-        if len(self.children) == len(self.planner.get_available_decisions(state)) \
+    def get_child(self, available_decisions, rng):
+        if len(self.children) == len(available_decisions) \
                 or self.k_decision*self.count**self.alpha_decision < len(self.children):
             # select one of previously expanded decisions
-            return self.selection_strategy(temperature)
+            return self.selection_strategy(rng)
         else:
             # insert a new aciton
-            return self.expand(state)
+            return self.expand(available_decisions, rng)
 
     def backup_to_root(self, total_reward):
         """
@@ -209,34 +208,24 @@ class DecisionNode(Node):
         if self.parent:
             self.parent.backup_to_root(total_reward)
 
-    def ucb_value(self, decision, temperature):
+    def ucb_value(self, decision):
         exploitation = self.children[decision].value
         exploration = np.sqrt(np.log(self.count) / self.children[decision].count)
-        ucb_val = exploitation + temperature * exploration
-        # ucb_val = exploitation
-        # print('###############')
-        # print('exploitation ', exploitation)
-        # print('exploration ', exploration)
+        ucb_val = exploitation + self.temperature * exploration
         return ucb_val
 
-        #
-        # # return self.value + temperature * self.prior * np.sqrt(np.log(self.parent.count) / self.count)
-        # return self.get_value() + temperature * len(self.parent.children) * self.prior/(self.count+1)
-
-    def selection_strategy(self, temperature):
+    def selection_strategy(self, rng):
         """
             Select an decision according to UCB.
-
-        :param temperature: the exploration parameter, positive or zero.
         :return: the selected decision with maximum value and exploration bonus.
         """
         decisions = list(self.children.keys())
         indexes = []
         for decision in decisions:
-            ucb_val = self.ucb_value(decision, temperature)
+            ucb_val = self.ucb_value(decision)
             indexes.append(ucb_val)
 
-        decision = decisions[self.random_argmax(indexes)]
+        decision = decisions[self.random_argmax(indexes, rng)]
         return self.children[decision], decision
 
     def selection_rule(self):
@@ -252,24 +241,25 @@ class DecisionNode(Node):
         return decisions[max(counts, key=(lambda i: self.children[decisions[i]].value))], decision_counts
 
 class ChanceNode(Node):
-    def __init__(self, parent, planner):
+    def __init__(self, parent, config):
         assert parent is not None
-        super().__init__(parent, planner)
+        super().__init__(parent)
         # state progressive widenning parameters
-        self.k_state = self.planner.config["k_state"]
-        self.alpha_state = self.planner.config["alpha_state"]
+        self.k_state = config["k_state"]
+        self.alpha_state = config["alpha_state"]
+        self.config = config
         self.value = 0
 
     def expand(self, obs_id):
-        self.children[obs_id] = DecisionNode(self, self.planner)
+        self.children[obs_id] = DecisionNode(self, self.config)
 
-    def get_child(self, observation):
+    def get_child(self, observation, rng):
         obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
         # print(len(self.children))
         # print(observation)
         if obs_id not in self.children:
             if self.k_state*self.count**self.alpha_state < len(self.children):
-                obs_id = self.planner.rng.choice(list(self.children))
+                obs_id = rng.choice(list(self.children))
                 return self.children[obs_id]
             else:
                 # Add observation to the children set

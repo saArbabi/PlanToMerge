@@ -6,7 +6,6 @@ import numpy as np
 class TrackedVehicle(IDMMOBILVehicleMerge):
     def __init__(self, id, lane_id, glob_x, speed, aggressiveness=None):
         super().__init__(id, lane_id, glob_x, speed, aggressiveness)
-        self.max_brake = 0
         self.samples_n = 1
         self.history_len = 30 # steps
         self.state_dim = 13
