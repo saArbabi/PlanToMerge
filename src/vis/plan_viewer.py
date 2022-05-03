@@ -14,7 +14,7 @@ class Viewer():
 
     def __init__(self, config):
         self.config  = config
-        self.fig = plt.figure(figsize=(10, 6))
+        self.fig = plt.figure(figsize=(6, 6))
         self.env_ax = self.fig.add_subplot(311)
         self.decision_ax = self.fig.add_subplot(312)
         self.var_ax = self.fig.add_subplot(313)
@@ -76,7 +76,7 @@ class Viewer():
                 print('ego_lane_id_target: ', vehicle.target_lane)
                 print('glob_y: ', vehicle.glob_y)
                 print('glob_x: ', round(vehicle.glob_x, 2))
-                print('ego_act: ', vehicle.act_long)
+                print('ego_act: ', vehicle.act_long_c)
                 print('steps_since_lc_initiation: ', vehicle.steps_since_lc_initiation)
                 print('driver_params: ', vehicle.driver_params)
                 print('###########################')
@@ -187,9 +187,9 @@ class Viewer():
     def log_var(self, vehicles):
         for vehicle in vehicles:
             if vehicle.id == 2:
-                self.logged_var['other'].append(vehicle.act_long)
+                self.logged_var['other'].append(vehicle.act_long_c)
             elif vehicle.id == 'sdv':
-                self.logged_var['sdv'].append(vehicle.act_long)
+                self.logged_var['sdv'].append(vehicle.act_long_c)
 
     def draw_var(self, ax):
         ax.clear()
@@ -204,10 +204,11 @@ class Viewer():
 
     def render(self, vehicles, planner):
         self.draw_highway(self.env_ax, vehicles)
-        self.draw_decision_counts(self.decision_ax, planner)
-        self.draw_plans(self.env_ax, planner)
-        self.draw_beliefs(self.env_ax, planner)
-        self.draw_var(self.var_ax)
+        if planner.decision_counts:
+            self.draw_decision_counts(self.decision_ax, planner)
+            self.draw_plans(self.env_ax, planner)
+            self.draw_beliefs(self.env_ax, planner)
+            self.draw_var(self.var_ax)
 
         self.fig.tight_layout()
         plt.pause(1e-10)

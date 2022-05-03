@@ -1,8 +1,6 @@
 import numpy as np
 from importlib import reload
-from vehicles import idmmobil_merge_vehicle
-reload(idmmobil_merge_vehicle)
-from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
+from vehicles.tracked_vehicle import TrackedVehicle
 # import time
 
 class EnvInitializor():
@@ -24,7 +22,7 @@ class EnvInitializor():
 
     def create_main_lane_vehicle(self, lead_vehicle, lane_id, glob_x, agg):
         init_speed = self.get_init_speed(agg)
-        new_vehicle = IDMMOBILVehicleMerge(\
+        new_vehicle = TrackedVehicle(\
                     self.next_vehicle_id, lane_id, glob_x,\
                                                 init_speed, agg)
         init_action = new_vehicle.idm_action(new_vehicle, lead_vehicle)
@@ -40,7 +38,7 @@ class EnvInitializor():
     def create_ramp_merge_vehicle(self, lane_id, glob_x, agg):
         lead_vehicle = self.dummy_stationary_car
         init_speed = self.get_init_speed(agg)
-        new_vehicle = IDMMOBILVehicleMerge(\
+        new_vehicle = TrackedVehicle(\
                     self.next_vehicle_id, lane_id, glob_x,\
                                                 init_speed, agg)
         init_action = new_vehicle.idm_action(new_vehicle, lead_vehicle)
@@ -59,7 +57,7 @@ class EnvInitializor():
         available_spacing = self.lane_length - self.merge_lane_start-50
         glob_x = available_spacing
         avg_spacing = available_spacing/traffic_density
-        aggs = [0.5, 0.9]
+        aggs = [0.5, 0.8]
 
         lead_vehicle = None
         new_vehicle = self.create_main_lane_vehicle(lead_vehicle, \

@@ -28,6 +28,11 @@ def load_planner():
     if planner_type == 'belief_search':
         from tree_search.belief_search import BeliefSearch
         planner = BeliefSearch()
+
+    if planner_type == 'qmdp':
+        from tree_search.qmdp import QMDP
+        planner = QMDP()
+
     return planner
 
 def main():
@@ -55,22 +60,31 @@ def main():
 
 
         obs = env.planner_observe()
-        if env.sdv.is_decision_time():
-
+        if planner.is_decision_time(env):
+            print('oh yes')
             t_0 = time.time()
             planner.plan(env, obs)
             decision = planner.get_decision()
             t_1 = time.time()
             print('compute time: ', t_1 - t_0)
 
-        else:
+        elif env.sdv.decision:
             decision = env.sdv.decision
-
+        else:
+            decision = 2
 
         all_cars = env.all_cars()
         viewer.log_var(all_cars)
         viewer.render(all_cars, planner)
         env.step(decision)
+
+        # for vehicle in env.vehicles:
+        #     # if vehicle.id == 2:
+        #     #     print(vehicle.obs_history)
+        #     if vehicle.id == 2 and vehicle.act_long_c < -5:
+        #         print('ooooh')
+
+
 
 if __name__=='__main__':
     main()

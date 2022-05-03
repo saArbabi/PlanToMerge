@@ -16,7 +16,7 @@ class EnvAutoMerge(EnvMerge):
         self.is_large_deceleration = False
 
     def initialize_env(self, episode_id):
-        """Initates the environment
+        """Initiates the environment
         """
         self.time_step = 0
         self.env_initializor.next_vehicle_id = 1
@@ -87,11 +87,9 @@ class EnvAutoMerge(EnvMerge):
         for vehicle, actions in zip(self.vehicles, joint_action):
             self.track_history(vehicle, actions)
             vehicle.step(actions)
-            vehicle.time_lapse += 1
 
         self.track_history(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
-        self.sdv.time_lapse += 1
         self.time_step += 1
 
     def planner_observe(self):

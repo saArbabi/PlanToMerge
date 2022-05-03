@@ -44,9 +44,12 @@ class MCTSDPW(AbstractPlanner):
     def get_available_decisions(self, state):
         # return [1, 2, 3, 4, 5, 6]
 
-        if not state.sdv.decision or state.sdv.decision == 2:
+        if not state.sdv.decision:
+        # if not state.sdv.decision or state.sdv.decision == 2:
             return [2, 5]
-
+        
+        elif state.sdv.decision == 2:
+            return [2]
         # elif state.sdv.decision == 2:
         #     return [2]
 

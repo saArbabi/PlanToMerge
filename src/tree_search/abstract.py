@@ -5,6 +5,8 @@ import numpy as np
 class AbstractPlanner(object):
     def __init__(self):
         self.root = None
+        self.steps_till_next_decision = 0
+        self.steps_per_decision = 10 # number of timesteps that lapce between each decision
         self.seed(2022)
 
     def seed(self, seed):
@@ -40,7 +42,7 @@ class AbstractPlanner(object):
         return decisions
 
     def step(self, state, decision):
-        for i in range(10):
+        for i in range(self.steps_per_decision):
             state.step(decision)
 
         observation = state.planner_observe()
