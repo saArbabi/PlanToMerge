@@ -12,6 +12,9 @@ class EnvAutoMerge(EnvMerge):
         self.env_initializor = EnvInitializor(config)
         self.seed(2022)
 
+    def env_reward_reset(self):
+        self.is_large_deceleration = False
+
     def initialize_env(self, episode_id):
         """Initates the environment
         """
@@ -20,7 +23,6 @@ class EnvAutoMerge(EnvMerge):
         self.env_initializor.dummy_stationary_car = self.dummy_stationary_car
         self.vehicles = self.env_initializor.init_env(episode_id)
         for i, vehicle in enumerate(self.vehicles):
-            vehicle.max_brake = 0
             if vehicle.lane_id == 2:
                 self.sdv = self.turn_sdv(vehicle)
                 del self.vehicles[i]
@@ -46,25 +48,33 @@ class EnvAutoMerge(EnvMerge):
         for vehicle in self.vehicles:
             vehicle.neighbours = vehicle.my_neighbours(self.all_cars() + \
                                                        [self.dummy_stationary_car])
-            # IDMMOBIL car
             actions = vehicle.act()
-            vehicle.act_long = actions[0]
-            self.max_brake(vehicle, vehicle.act_long)
-            # print('act_long ', vehicle.id, ' ', round(vehicle.act_long))
-            # actions[0] += self.rng.normal(0, 3)
             joint_action.append(actions)
+            act_long = actions[0]
+            if act_long < -5:
+                self.is_large_deceleration = True
+
+            if self.time_step > 0:
+                vehicle.act_long_p = vehicle.act_long_c
+            vehicle.act_long_c = act_long
+
+
         return joint_action
 
     def get_sdv_action(self, decision):
         self.sdv.neighbours = self.sdv.my_neighbours(self.vehicles+[self.dummy_stationary_car])
         actions = self.sdv.act(decision)
-        self.sdv.act_long = actions[0]
-
-        # if self.sdv.neighbours['att']:
-        #     print('sdv att ', self.sdv.neighbours['att'].id)
-        #     print('sdv targ ', self.sdv.target_lane)
+        act_long = actions[0]
+        if self.time_step > 0:
+            self.sdv.act_long_p = self.sdv.act_long_c
+        self.sdv.act_long_c = act_long
 
         return actions
+
+    def track_history(self, vehicle, actions):
+        if vehicle.id == 2:
+            obs = vehicle.neur_observe()
+            vehicle.update_obs_history(obs[0])
 
     def step(self, decision=None):
         """ steps the environment forward in time.
@@ -75,9 +85,11 @@ class EnvAutoMerge(EnvMerge):
         sdv_action = self.get_sdv_action(decision)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
+            self.track_history(vehicle, actions)
             vehicle.step(actions)
             vehicle.time_lapse += 1
 
+        self.track_history(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
         self.sdv.time_lapse += 1
         self.time_step += 1
@@ -90,12 +102,14 @@ class EnvAutoMerge(EnvMerge):
         #        'gloab_y':None,
         #        'delta_x_to_merge' :None,
         #        }
-        obs = 0
-        for vehicle in self.vehicles:
-            if vehicle.max_brake < -5:
-                obs += vehicle.glob_x
+        # obs = 0
+        # for vehicle in self.vehicles:
+        #     if vehicle.max_brake < -5:
+        #         obs += vehicle.glob_x
 
-        return obs
+        # return obs + np.random.normal()
+        # return obs + np.random.normal()
+        return np.random.choice(range(20))
         # return self.sdv.glob_y + self.rng.random()
         # return delta_x_to_merge
 
@@ -111,10 +125,6 @@ class EnvAutoMerge(EnvMerge):
         if self.sdv.is_merge_complete():
             return True
 
-    def max_brake(self, vehicle, act_long):
-        if act_long < vehicle.max_brake:
-            vehicle.max_brake = act_long
-
     def get_reward(self):
         """
         Reward is set to encourage the following behaviours:
@@ -125,9 +135,8 @@ class EnvAutoMerge(EnvMerge):
         if self.sdv.is_merge_complete():
             total_reward += 0.2
         #
-        for vehicle in self.vehicles:
-            if vehicle.max_brake < -5:
-                total_reward -= 0.2
+        if self.is_large_deceleration:
+            total_reward -= 0.2
 
         return total_reward
 
