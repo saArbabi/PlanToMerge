@@ -42,6 +42,7 @@ class AbstractPlanner(object):
         return decisions
 
     def step(self, state, decision):
+        state.env_reward_reset()
         for i in range(self.steps_per_decision):
             state.step(decision)
 

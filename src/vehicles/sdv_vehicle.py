@@ -22,12 +22,6 @@ class SDVehicle(IDMMOBILVehicleMerge):
             self.merge_lane_start = config['merge_lane_start']
             self.ramp_exit_start = config['ramp_exit_start']
 
-    def is_decision_time(self):
-        if self.time_lapse % self.decision_steps_n == 0:
-            return True
-        else:
-            return 
-
     def get_driver_param(self, param_name):
         if param_name in ['desired_v', 'max_act', 'min_act']:
             # the larger the param, the more aggressive the driver

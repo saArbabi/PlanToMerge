@@ -39,17 +39,18 @@ class MCTSDPW(AbstractPlanner):
     def reset(self):
         self.tree_info = []
         self.belief_info = {}
-        self.root = DecisionNode(parent=None, planner=self)
+        self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
         # return [1, 2, 3, 4, 5, 6]
 
-        if not state.sdv.decision:
-        # if not state.sdv.decision or state.sdv.decision == 2:
+        # return [2, 5]
+        # if not state.sdv.decision:
+        if not state.sdv.decision or state.sdv.decision == 2:
             return [2, 5]
 
-        elif state.sdv.decision == 2:
-            return [2]
+        # elif state.sdv.decision == 2:
+        #     return [2]
         # elif state.sdv.decision == 2:
         #     return [2]
 
@@ -171,6 +172,16 @@ class MCTSDPW(AbstractPlanner):
         """Only return the first decision, the rest is conditioned on observations"""
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
+
+    def is_decision_time(self, state):
+        """The planner computes a decision if certain number of
+        timesteps have elapsed from the last decision
+        """
+        if self.steps_till_next_decision == 0:
+            self.steps_till_next_decision = self.steps_per_decision
+            return True
+        else:
+            self.steps_till_next_decision -= 1
 
 class DecisionNode(Node):
     def __init__(self, parent, config):
