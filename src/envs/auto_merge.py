@@ -9,7 +9,7 @@ import sys
 class EnvAutoMerge(EnvMerge):
     def __init__(self):
         super().__init__()
-        # self.seed(2022)
+        self.seed(2022)
 
     def env_reward_reset(self):
         self.is_large_deceleration = False
@@ -105,7 +105,10 @@ class EnvAutoMerge(EnvMerge):
 
         # return obs + np.random.normal()
         # return obs + np.random.normal()
-        return np.random.choice(range(20))
+        # return np.random.choice(range(20))
+        return self.rng.randint(-20, 20)
+        # return np.random.choice(range(20))
+        # return 1
         # return self.sdv.glob_y + self.rng.random()
         # return delta_x_to_merge
 
