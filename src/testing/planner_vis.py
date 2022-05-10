@@ -61,7 +61,6 @@ def main():
 
         obs = env.planner_observe()
         if planner.is_decision_time(env):
-            print('oh yes')
             t_0 = time.time()
             planner.plan(env, obs)
             decision = planner.get_decision()
@@ -70,8 +69,6 @@ def main():
 
         elif env.sdv.decision:
             decision = env.sdv.decision
-        else:
-            decision = 2
 
         all_cars = env.all_cars()
         viewer.log_var(all_cars)
