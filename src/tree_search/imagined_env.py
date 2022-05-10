@@ -4,6 +4,7 @@ While in the simulator IDM determines vehicle action bassed on traffic
 state, here NIDM is used to output vehicle actions.
 """
 from envs.auto_merge import EnvAutoMerge
+import copy
 
 class ImaginedEnv(EnvAutoMerge):
     def __init__(self):
@@ -12,12 +13,8 @@ class ImaginedEnv(EnvAutoMerge):
     def copy_attrs(self, state):
         for attrname in ['vehicles', 'sdv', 'time_step']:
             attrvalue = getattr(state, attrname)
-            setattr(self, attrname, attrvalue)
+            setattr(self, attrname, copy.deepcopy(attrvalue))
 
-    # def aggregate_obs(self):
-    #     """
-    #
-    #     """
     def step(self, joint_action, decision=None):
         """ steps the environment forward in time.
         """
