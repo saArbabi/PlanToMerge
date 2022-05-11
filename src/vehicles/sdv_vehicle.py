@@ -11,6 +11,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
                5 : ['MERGE', 'IDLE'],
                6 : ['MERGE', 'DOWN']}
 
+
     def __init__(self, id):
         self.id = id
         self.decision_steps_n = 10 # timesteps with 0.1s step size
@@ -62,6 +63,10 @@ class SDVehicle(IDMMOBILVehicleMerge):
         elif driving_style == 'DOWN':
             aggressiveness = 0.4
         return aggressiveness
+
+    def is_merge_possible(self):
+        if self.glob_x > self.merge_lane_start:
+            return True
 
     def act(self, decision):
         # print(self.driver_params['aggressiveness'])
