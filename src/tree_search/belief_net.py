@@ -21,6 +21,7 @@ class BeliefNet():
         from models.neural_idm import  NeurIDMModel
         self.model = NeurIDMModel(config)
         self.model.load_weights(exp_path).expect_partial()
+        tf.random.set_seed(2022)
 
     def load_scalers(self):
         data_files_dir = './src/models/'
@@ -60,16 +61,15 @@ class BeliefNet():
         col_names = ['m_veh_action_p', 'm_veh_speed', 'em_delta_y', 'delta_x_to_merge']
         self.merger_indxs = self.names_to_index(col_names)
 
-    def driver_params_update(self, idm_params):
+    def driver_params_update(self, vehicle, idm_params):
+        # for key, val in vehicle.driver_params.items():
+        #     print(key, ' ', round(val, 2))
         idm_params = idm_params.numpy()[0, :]
-        self.driver_params['desired_v'] = idm_params[0]
-        self.driver_params['desired_tgap'] = idm_params[1]
-        self.driver_params['min_jamx'] = idm_params[2]
-        self.driver_params['max_act'] = idm_params[3]
-        self.driver_params['min_act'] = idm_params[4]
-
-    def belief_update(self, proj_latent):
-        self.proj_latent = tf.reshape(proj_latent, [self.samples_n, 1, 128])
+        vehicle.driver_params['desired_v'] = idm_params[0]
+        vehicle.driver_params['desired_tgap'] = idm_params[1]
+        vehicle.driver_params['min_jamx'] = idm_params[2]
+        vehicle.driver_params['max_act'] = idm_params[3]
+        vehicle.driver_params['min_act'] = idm_params[4]
 
     def scale_state(self, state, state_type):
         if state_type == 'full':
@@ -93,15 +93,15 @@ class BeliefNet():
     def get_neur_att(self, att_context):
         f_att_score, m_att_score = self.model.forward_sim.get_att(att_context)
         f_att_score, m_att_score = f_att_score.numpy()[0][0][0], m_att_score.numpy()[0][0][0]
-        f_att_score = (1 - self.m_veh_exists) + f_att_score*self.m_veh_exists
-        m_att_score = m_att_score*self.m_veh_exists
+        # f_att_score = (1 - self.m_veh_exists) + f_att_score*self.m_veh_exists
+        # m_att_score = m_att_score*self.m_veh_exists
         return f_att_score, m_att_score
 
     def action_clip(self, act_long):
         return min(max([-6, act_long]), 6)
 
-
     def latent_inference(self, vehicles):
+        print('latent_inference')
         # if self.time_lapse_since_last_param_update == 0:
         for vehicle in vehicles:
             if vehicle.id == 2:
@@ -111,14 +111,40 @@ class BeliefNet():
                 z_idm, z_att = self.model.belief_net.sample_z(latent_dis_param)
                 proj_idm = self.model.belief_net.z_proj_idm(z_idm)
                 proj_att = self.model.belief_net.z_proj_att(z_att)
-                self.belief_update(proj_att)
-                self.enc_h = tf.reshape(enc_h, [self.samples_n, 1, 128])
+                vehicle.proj_att = tf.reshape(proj_att, [self.samples_n, 1, 128])
+                vehicle.enc_h = tf.reshape(enc_h, [self.samples_n, 1, 128])
                 idm_params = self.model.idm_layer(proj_idm)
-                # self.driver_params_update(idm_params)
+                self.driver_params_update(vehicle, idm_params)
 
-    def estimate_vehicle_action(self):
+    def estimate_vehicle_action(self, vehicle):
         """
 
         """
-        
-    # def latent_inference(self):
+        m_veh_exists = [[[vehicle.m_veh_exists]]]
+        obs_t0 = vehicle.obs_history[:, -1:, :]
+        env_state = self.scale_state(obs_t0, 'env_state')
+        merger_c = self.scale_state(obs_t0, 'merger_c')
+        att_context = tf.concat([vehicle.proj_att , vehicle.enc_h, env_state, merger_c, \
+                                                        m_veh_exists], axis=-1)
+        f_att_score, m_att_score = self.get_neur_att(att_context)
+        ef_act = self.action_clip(vehicle.idm_action(vehicle, vehicle.neighbours['f']))
+
+        if vehicle.neighbours['m'] and vehicle.neighbours['m'].glob_x > vehicle.glob_x:
+            em_act = vehicle.idm_action(vehicle, vehicle.neighbours['m'])
+            # if self.id == 'neur_2':
+            #     print('em_act ', em_act)
+
+            if em_act < -20:
+                # not a feasible action
+                em_act = 0
+                m_att_score = 0
+            else:
+                em_act = self.action_clip(em_act)
+        else:
+            # no merger to attend to
+            em_act = 0
+            m_att_score = 0
+
+
+        act_long = f_att_score*ef_act + m_att_score*em_act
+        return [act_long, 0]

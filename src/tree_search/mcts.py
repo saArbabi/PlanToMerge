@@ -46,16 +46,20 @@ class MCTSDPW(AbstractPlanner):
 
         # return [2, 5]
         # if not state.sdv.decision:
-        if not state.sdv.decision or state.sdv.decision == 2:
-            return [2, 5]
+        if state.sdv.is_merge_possible():
+            if not state.sdv.decision or state.sdv.decision == 2:
+                return [2, 5]
+            elif state.sdv.decision == 5:
+                return [5]
+        else:
+            return [2]
 
         # elif state.sdv.decision == 2:
         #     return [2]
         # elif state.sdv.decision == 2:
         #     return [2]
 
-        elif state.sdv.decision == 5:
-            return [5]
+
 
         # if state.sdv.decision == 2 or not state.sdv.decision:
         #     return [2, 5]
@@ -173,15 +177,12 @@ class MCTSDPW(AbstractPlanner):
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 
-    def is_decision_time(self, state):
+    def is_decision_time(self):
         """The planner computes a decision if certain number of
         timesteps have elapsed from the last decision
         """
         if self.steps_till_next_decision == 0:
-            self.steps_till_next_decision = self.steps_per_decision
             return True
-        else:
-            self.steps_till_next_decision -= 1
 
 class DecisionNode(Node):
     def __init__(self, parent, config):

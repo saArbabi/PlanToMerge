@@ -69,7 +69,7 @@ class EnvAutoMerge(EnvMerge):
 
         return actions
 
-    def track_history(self, vehicle, actions):
+    def track_history(self, vehicle):
         if vehicle.id == 2:
             obs = vehicle.neur_observe()
             vehicle.update_obs_history(obs[0])
@@ -83,34 +83,17 @@ class EnvAutoMerge(EnvMerge):
         sdv_action = self.get_sdv_action(decision)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
-            self.track_history(vehicle, actions)
+            self.track_history(vehicle)
             vehicle.step(actions)
 
-        self.track_history(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
         self.time_step += 1
 
     def planner_observe(self):
-        """Observation used by the planner
+        """?
         """
-        # delta_x_to_merge = self.ramp_exit_start-self.glob_x
-        # obs = {
-        #        'gloab_y':None,
-        #        'delta_x_to_merge' :None,
-        #        }
-        # obs = 0
-        # for vehicle in self.vehicles:
-        #     if vehicle.max_brake < -5:
-        #         obs += vehicle.glob_x
-
-        # return obs + np.random.normal()
-        # return obs + np.random.normal()
-        # return np.random.choice(range(20))
-        return self.rng.randint(-20, 20)
-        # return np.random.choice(range(20))
-        # return 1
-        # return self.sdv.glob_y + self.rng.random()
-        # return delta_x_to_merge
+        # return self.rng.randint(-20, 20)
+        return self.sdv.glob_x
 
     def is_terminal(self):
         """ Set conditions for instance at which the episode is over
@@ -132,10 +115,10 @@ class EnvAutoMerge(EnvMerge):
         """
         total_reward = 0
         if self.sdv.is_merge_complete():
-            total_reward += 0.2
+            total_reward += 0.1
         #
         if self.is_large_deceleration:
-            total_reward -= 0.2
+            total_reward -= 0.7
 
         return total_reward
 

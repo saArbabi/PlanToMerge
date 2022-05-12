@@ -15,6 +15,16 @@ class ImaginedEnv(EnvAutoMerge):
             attrvalue = getattr(state, attrname)
             setattr(self, attrname, copy.deepcopy(attrvalue))
 
+    def uniform_prior(self):
+        """
+        Sets sdv's prior belief about other drivers
+        """
+        for vehicle in self.vehicles:
+            print('before ', vehicle.driver_params['aggressiveness'])
+            vehicle.driver_params['aggressiveness'] = self.rng.uniform(0.1, 0.9)
+            vehicle.set_driver_params()
+            print('after ', vehicle.driver_params['aggressiveness'])
+
     def step(self, joint_action, decision=None):
         """ steps the environment forward in time.
         """
