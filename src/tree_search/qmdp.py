@@ -6,7 +6,6 @@ import hashlib
 import numpy as np
 import sys
 from tree_search.imagined_env import ImaginedEnv
-from tree_search.belief_net import BeliefNet
 
 class QMDP(MCTSDPW):
     def __init__(self):
@@ -14,25 +13,13 @@ class QMDP(MCTSDPW):
         self.update_counts = 0
         self._enough_history = False
         self.decision_counts = False
-        self.nidm = BeliefNet()
+        self.nidm = self.load_nidm()
         self.img_state = ImaginedEnv()
 
     def reset(self):
         self.tree_info = []
         self.belief_info = {}
         self.root = BeliefNode(parent=None, config=self.config)
-
-    def is_decision_time(self, env):
-        """The planner computes a decision if:
-            1) enough history observations are collected
-            2) certain number of timesteps have elapsed from the last decision
-        """
-        if self.enough_history(env):
-            if self.steps_till_next_decision == 0:
-                self.steps_till_next_decision = self.steps_per_decision
-                return True
-            else:
-                self.steps_till_next_decision -= 1
 
     def enough_history(self, state):
         """
@@ -45,7 +32,7 @@ class QMDP(MCTSDPW):
                         self._enough_history = True
         return self._enough_history
 
-    def get_joint_action(self, state):
+    def predict_vehicle_actions(self, state):
         """
         Returns the joint action of all vehicles other than SDV on the road
         """
@@ -56,12 +43,11 @@ class QMDP(MCTSDPW):
 
 
             actions = vehicle.act()
-            # if vehicle.id == 2:
-            #     actions = vehicle.act()
-            #
-            # else:
-            #     actions = self.nidm.estimate_vehicle_action(vehicle)
+            if vehicle.id != 1 and vehicle.proj_att != None:
+                actions = self.nidm.estimate_vehicle_action(vehicle)
 
+            else:
+                actions = vehicle.act()
 
             joint_action.append(actions)
             act_long = actions[0]
@@ -72,13 +58,12 @@ class QMDP(MCTSDPW):
             if state.time_step > 0:
                 vehicle.act_long_p = vehicle.act_long_c
             vehicle.act_long_c = act_long
-
-
         return joint_action
+
     def step(self, state, decision):
         state.env_reward_reset()
         for i in range(self.steps_per_decision):
-            joint_action = self.get_joint_action(state)
+            joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action, decision)
             ##############
         observation = state.planner_observe()
@@ -86,20 +71,45 @@ class QMDP(MCTSDPW):
         terminal = state.is_terminal()
         return observation, reward, terminal
 
+    def load_nidm(self):
+        from tree_search.belief_net import BeliefNet
+        return BeliefNet()
+
+    def update_belief(self, belief_node, img_state):
+        """
+        Passes the sequence of past vehicle observations (vehicle standpoint)
+        and actions into an LSTM encoder. Then the encoded state is mapped to
+        the latent belief.
+        """
+        if not belief_node.img_state:
+            belief_node.img_state = img_state
+
+        if self.enough_history(img_state) and \
+                            not belief_node.belief_is_updated:
+                belief_node.belief_is_updated = True
+                self.nidm.latent_inference(img_state.vehicles)
+
+    def imagine_state(self, state):
+        """
+        Returns an "imagined" environment state, with uniform prior belief.
+        """
+        self.img_state.copy_attrs(state)
+        self.img_state.uniform_prior()
+        return self.img_state
+
     def run(self, belief_node):
         """
-        ?
+        Note: QMDP only holds belief in the first tree node
         """
         total_reward = 0
         depth = 0
-        # state.seed(self.rng.randint(1e5))
         terminal = False
         tree_states = {
                         'x':[], 'y':[],
                         'x_rollout':[], 'y_rollout':[]}
 
-
         state = belief_node.sample_belief()
+        state.seed(self.rng.randint(1e5))
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, belief_node, terminal):
@@ -121,38 +131,15 @@ class QMDP(MCTSDPW):
                                          tree_states,
                                           total_reward,
                                           depth=depth)
-        # print(total_reward)
         # Backup global statistics
         belief_node.backup_to_root(total_reward)
         self.extract_tree_info(tree_states)
 
-    def update_belief(self, belief_node, state):
-        """
-        Passes the sequence of past vehicle observations (vehicle viewpoint)
-        and actions into an LSTM encoder. Then the encoded state is mapped to
-        the latent belief.
-        """
-        if not belief_node.belief_params:
-            # self.planner.update_counts += 1
-            belief_node.belief_params = 1
-            belief_node.state = state
-        self.nidm.latent_inference(state.vehicles)
-
-    def imagine_state(self, state):
-        """
-        Returns an "imagined" environment.
-        """
-        self.img_state.copy_attrs(state)
-        return self.img_state
-
     def plan(self, state, observation):
-        """
-        need observation?
-        """
         self.reset()
-        state = self.imagine_state(state)
+        img_state = self.imagine_state(state)
         belief_node = self.root
-        self.update_belief(belief_node, state)
+        self.update_belief(belief_node, img_state)
         for plan_itr in range(self.config['budget']):
             # input('This is plan iteration '+ str(plan_itr))
             # t_0 = time.time()
@@ -162,12 +149,11 @@ class QMDP(MCTSDPW):
             self.run(belief_node)
             # print(self.update_counts)
 
-
-
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
-        self.belief_params = None # this holds the belief parameters
+        self.belief_is_updated = False
+        self.img_state = None
 
     def expand(self, available_decisions, rng):
         decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
@@ -183,22 +169,11 @@ class BeliefNode(DecisionNode):
             # insert a new aciton
             return self.expand(available_decisions, rng)
 
-
-
-
-                # vehicle.mu = vehicle.driver_params['aggressiveness']
-                # vehicle.var = 0.2
-            # print('id ', vehicle.id)
-            # print('vehicle.mu ', vehicle.mu)
-        # self.belief_params = [mu, var]
-        # self.state = [state, ]
-
-
     def sample_belief(self):
         """
         Returns a sample from the belief state
         """
-        sampled_state = safe_deepcopy_env(self.state)
+        sampled_state = safe_deepcopy_env(self.img_state)
         # for vehicle in sampled_state.vehicles:
         #     vehicle.driver_params['aggressiveness'] = 0.05
         #     vehicle.set_driver_params()
