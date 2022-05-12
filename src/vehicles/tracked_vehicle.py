@@ -11,6 +11,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
         self.state_dim = 13
         self.obs_history = np.empty([self.samples_n, self.history_len, self.state_dim])
         self.obs_history[:] = np.nan
+        self.proj_att = None
         with open('./src/models/dummy_value_set.pickle', 'rb') as handle:
             self.dummy_value_set = pickle.load(handle)
 
