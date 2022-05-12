@@ -12,25 +12,29 @@ import collections
 # sys.executable
 # %%
 class TreeVis():
+    def __init__(self):
+        self.decision_node_names = ['DecisionNode', 'BeliefNode']
+        self.chance_node_names = ['ChanceNode', 'SubChanceNode']
+
     def create_node_label(self, tree_node, node_title, node_type):
         """
         Labels are what is shown on each node.
         """
         count = tree_node.count
-        if node_type == 'DecisionNode':
+        if node_type in self.decision_node_names:
             node_label = str(count)
 
-        elif node_type == 'ChanceNode':
+        elif node_type in self.chance_node_names:
             value = round(tree_node.value, 2)
             node_label = f'{node_title}\n count; {count}\n value; {value}'
 
         return node_label
 
     def add_node_to_graph(self, child_node, most_visited, node_type, penwidth):
-        if node_type == 'DecisionNode':
+        if node_type in self.decision_node_names:
             self.graph.node(child_node.node_name, shape='circle', label=child_node.node_label, penwidth=penwidth)
 
-        elif node_type == 'ChanceNode':
+        elif node_type in self.chance_node_names:
             if most_visited:
                 self.graph.node(child_node.node_name, style='filled',
                        fillcolor='lightgreen',
