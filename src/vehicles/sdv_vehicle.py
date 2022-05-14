@@ -1,6 +1,5 @@
 from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
 import numpy as np
-
 import json
 
 class SDVehicle(IDMMOBILVehicleMerge):
@@ -9,8 +8,8 @@ class SDVehicle(IDMMOBILVehicleMerge):
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'UP'],
                5 : ['MERGE', 'IDLE'],
-               6 : ['MERGE', 'DOWN']}
-
+               6 : ['MERGE', 'DOWN'],
+               7 : ['ABORT', 'IDLE']}
 
     def __init__(self, id):
         self.id = id
@@ -18,6 +17,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.decisions_and_counts = None
         self.decision = None
         self.decision_cat = 'LANEKEEP'
+        self.abort_been_chosen = False
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
             self.merge_lane_start = config['merge_lane_start']
@@ -65,8 +65,12 @@ class SDVehicle(IDMMOBILVehicleMerge):
         return aggressiveness
 
     def is_merge_possible(self):
-        if self.glob_x > self.merge_lane_start:
+        if self.glob_x > self.merge_lane_start \
+                    and not self.is_merge_complete():
             return True
+
+    def is_merge_initiated(self):
+        return self.glob_y > 0.5*self.lane_width
 
     def act(self, decision):
         # print(self.driver_params['aggressiveness'])
@@ -78,16 +82,23 @@ class SDVehicle(IDMMOBILVehicleMerge):
             # print('decision ', decision)
             # print('aggressiveness ', self.driver_params['aggressiveness'])
 
-            self.driver_params['aggressiveness'] = self.change_driving_style(driving_style)
-            self.set_driver_params()
+            # self.driver_params['aggressiveness'] = self.change_driving_style(driving_style)
+            # self.set_driver_params()
 
             if merge_decision == 'MERGE':
                 self.lane_decision = 'move_left'
 
-            elif merge_decision == 'LANEKEEP' or merge_decision == 'ABORT':
+            elif merge_decision == 'LANEKEEP':
                 self.lane_decision = 'keep_lane'
                 if self.target_lane != self.lane_id:
                     self.target_lane = self.lane_id
+
+            elif merge_decision == 'ABORT':
+                self.lane_decision = 'keep_lane'
+                if self.target_lane != self.lane_id:
+                    self.target_lane = self.lane_id
+                if not self.abort_been_chosen:
+                    self.abort_been_chosen = True
 
         # if self.decision_cat == 'ABORT' and not self.neighbours['att']:
         #     if self.speed > 0:
