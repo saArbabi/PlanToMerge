@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-class BeliefNet():
+class NIDM():
     def __init__(self):
         self.load_nidm()
         self.load_scalers()
@@ -100,26 +100,23 @@ class BeliefNet():
     def action_clip(self, act_long):
         return min(max([-6, act_long]), 6)
 
-    def latent_inference(self, vehicles):
-        print('latent_inference')
-        # if self.time_lapse_since_last_param_update == 0:
-        for vehicle in vehicles:
-            if vehicle.id == 2:
-                obs_history = self.scale_state(vehicle.obs_history.copy(), 'full')
-                enc_h = self.model.h_seq_encoder(obs_history)
-                latent_dis_param = self.model.belief_net(enc_h , dis_type='prior')
-                z_idm, z_att = self.model.belief_net.sample_z(latent_dis_param)
-                proj_idm = self.model.belief_net.z_proj_idm(z_idm)
-                proj_att = self.model.belief_net.z_proj_att(z_att)
-                vehicle.proj_att = tf.reshape(proj_att, [self.samples_n, 1, 128])
-                vehicle.enc_h = tf.reshape(enc_h, [self.samples_n, 1, 128])
-                idm_params = self.model.idm_layer(proj_idm)
-                self.driver_params_update(vehicle, idm_params)
+    def latent_inference(self, vehicle):
+        obs_history = self.scale_state(vehicle.obs_history.copy(), 'full')
+        enc_h = self.model.h_seq_encoder(obs_history)
+        vehicle.enc_h = tf.reshape(enc_h, [self.samples_n, 1, 128])
+        vehicle.latent_dis_param = self.model.belief_net(enc_h , dis_type='prior')
+
+    def sample_latent(self, vehicle):
+        z_idm, z_att = self.model.belief_net.sample_z(vehicle.latent_dis_param)
+        return z_idm, z_att
+
+    def apply_projections(self, vehicle, z_idm, z_att):
+        proj_idm = self.model.belief_net.z_proj_idm(z_idm)
+        proj_att = self.model.belief_net.z_proj_att(z_att)
+        vehicle.proj_att = tf.reshape(proj_att, [self.samples_n, 1, 128])
+        return proj_idm
 
     def estimate_vehicle_action(self, vehicle):
-        """
-
-        """
         m_veh_exists = [[[vehicle.m_veh_exists]]]
         obs_t0 = vehicle.obs_history[:, -1:, :]
         env_state = self.scale_state(obs_t0, 'env_state')
