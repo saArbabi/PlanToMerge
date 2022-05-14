@@ -41,23 +41,12 @@ class QMDP(MCTSDPW):
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
 
-
-            actions = vehicle.act()
-            if vehicle.id != 1 and vehicle.proj_att != None:
+            if vehicle.id != 1 and vehicle.enc_h != None:
                 actions = self.nidm.estimate_vehicle_action(vehicle)
-
             else:
                 actions = vehicle.act()
 
             joint_action.append(actions)
-            act_long = actions[0]
-
-            if act_long < -5:
-                state.is_large_deceleration = True
-
-            if state.time_step > 0:
-                vehicle.act_long_p = vehicle.act_long_c
-            vehicle.act_long_c = act_long
         return joint_action
 
     def step(self, state, decision):
@@ -65,15 +54,14 @@ class QMDP(MCTSDPW):
         for i in range(self.steps_per_decision):
             joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action, decision)
-            ##############
         observation = state.planner_observe()
         reward = state.get_reward()
         terminal = state.is_terminal()
         return observation, reward, terminal
 
     def load_nidm(self):
-        from tree_search.belief_net import BeliefNet
-        return BeliefNet()
+        from tree_search.nidm import NIDM
+        return NIDM()
 
     def update_belief(self, belief_node, img_state):
         """
@@ -86,8 +74,32 @@ class QMDP(MCTSDPW):
 
         if self.enough_history(img_state) and \
                             not belief_node.belief_is_updated:
-                belief_node.belief_is_updated = True
-                self.nidm.latent_inference(img_state.vehicles)
+            belief_node.belief_is_updated = True
+            for vehicle in img_state.vehicles:
+                if vehicle.id != 1:
+                    self.nidm.latent_inference(vehicle)
+
+    def sample_belief(self, belief_node):
+        """
+        Returns a sample from the belief state.
+        Procedure:
+        For each vehicle:
+            (1) sample from latent dis
+            (2) using the sampled latent, obtain relevant projections
+            (3) assign the sampled driver params to each vehicle
+        """
+        sampled_state = safe_deepcopy_env(belief_node.img_state)
+        if belief_node.belief_is_updated:
+            # you need enough history for this
+            for vehicle in sampled_state.vehicles:
+                if vehicle.id != 1:
+                    z_idm, z_att = self.nidm.sample_latent(vehicle)
+                    proj_idm = self.nidm.apply_projections(vehicle, z_idm, z_att)
+                    idm_params = self.nidm.model.idm_layer(proj_idm)
+                    self.nidm.driver_params_update(vehicle, idm_params)
+        else:
+            sampled_state.uniform_prior()
+        return sampled_state
 
     def imagine_state(self, state):
         """
@@ -104,12 +116,12 @@ class QMDP(MCTSDPW):
         total_reward = 0
         depth = 0
         terminal = False
+        state = self.sample_belief(belief_node)
+        state.seed(self.rng.randint(1e5))
+
         tree_states = {
                         'x':[], 'y':[],
                         'x_rollout':[], 'y_rollout':[]}
-
-        state = belief_node.sample_belief()
-        state.seed(self.rng.randint(1e5))
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, belief_node, terminal):
@@ -135,7 +147,7 @@ class QMDP(MCTSDPW):
         belief_node.backup_to_root(total_reward)
         self.extract_tree_info(tree_states)
 
-    def plan(self, state, observation):
+    def plan(self, state):
         self.reset()
         img_state = self.imagine_state(state)
         belief_node = self.root
@@ -168,16 +180,6 @@ class BeliefNode(DecisionNode):
         else:
             # insert a new aciton
             return self.expand(available_decisions, rng)
-
-    def sample_belief(self):
-        """
-        Returns a sample from the belief state
-        """
-        sampled_state = safe_deepcopy_env(self.img_state)
-        # for vehicle in sampled_state.vehicles:
-        #     vehicle.driver_params['aggressiveness'] = 0.05
-        #     vehicle.set_driver_params()
-        return sampled_state
 
 class SubChanceNode(ChanceNode):
     def __init__(self, parent, config):
