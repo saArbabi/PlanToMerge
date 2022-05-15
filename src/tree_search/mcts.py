@@ -179,7 +179,6 @@ class MCTSDPW(AbstractPlanner):
             state_node = chance_node.get_child(
                                             observation,
                                             self.rng)
-            print(depth, ' ', state.sdv.glob_x)
             depth += 1
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
