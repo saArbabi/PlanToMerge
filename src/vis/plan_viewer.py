@@ -10,7 +10,8 @@ class Viewer():
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'UP'],
                5 : ['MERGE', 'IDLE'],
-               6 : ['MERGE', 'DOWN']}
+               6 : ['MERGE', 'DOWN'],
+               7 : ['ABURT', 'IDLE']}
 
     def __init__(self, config):
         self.config  = config
@@ -182,7 +183,8 @@ class Viewer():
                             'LANEKEEP \n DOWN',
                             'MERGE \n UP',
                             'MERGE \n IDLE',
-                            'MERGE \n DOWN'])
+                            'MERGE \n DOWN',
+                            'ABORT \n IDLE'])
 
     def log_var(self, vehicles):
         for vehicle in vehicles:
@@ -202,13 +204,14 @@ class Viewer():
         ax.legend()
         ax.grid()
 
+    # def env_render():
     def render(self, vehicles, planner):
         self.draw_highway(self.env_ax, vehicles)
+        self.draw_var(self.var_ax)
         if planner.decision_counts:
             self.draw_decision_counts(self.decision_ax, planner)
             self.draw_plans(self.env_ax, planner)
-            self.draw_beliefs(self.env_ax, planner)
-            self.draw_var(self.var_ax)
+        #     self.draw_beliefs(self.env_ax, planner)
 
         self.fig.tight_layout()
         plt.pause(1e-10)

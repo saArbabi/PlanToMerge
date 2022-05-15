@@ -57,7 +57,7 @@ class EnvInitializor():
         available_spacing = self.lane_length - self.merge_lane_start-50
         glob_x = available_spacing
         avg_spacing = available_spacing/traffic_density
-        aggs = [0.5, 0.8]
+        aggs = [0.5, 0.2]
 
         lead_vehicle = None
         new_vehicle = self.create_main_lane_vehicle(lead_vehicle, \
@@ -65,7 +65,7 @@ class EnvInitializor():
         vehicles.append(new_vehicle)
 
         lead_vehicle = vehicles[-1]
-        glob_x = 190
+        glob_x = 50
         new_vehicle = self.create_main_lane_vehicle(lead_vehicle, \
                                         lane_id, glob_x, aggs[1])
 
@@ -76,8 +76,8 @@ class EnvInitializor():
 
         # ramp vehicles
         lane_id = 2
-        aggs = 0.5
-        glob_x = 210
+        aggs = 0.9
+        glob_x = 100
         new_vehicle = self.create_ramp_merge_vehicle(lane_id, glob_x, aggs)
         vehicles.append(new_vehicle)
         return vehicles

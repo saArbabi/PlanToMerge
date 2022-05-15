@@ -59,22 +59,30 @@ def main():
                 pass
 
 
-        obs = env.planner_observe()
         if planner.is_decision_time():
             t_0 = time.time()
-            planner.plan(env, obs)
-            decision = planner.get_decision()
+            planner.plan(env)
+            _decision = planner.get_decision()
             t_1 = time.time()
             print('compute time: ', t_1 - t_0)
-            planner.steps_till_next_decision = planner.steps_per_decision
         else:
             decision = env.sdv.decision
-            planner.steps_till_next_decision -= 1
 
         all_cars = env.all_cars()
         viewer.log_var(all_cars)
         viewer.render(all_cars, planner)
+
+        if planner.steps_till_next_decision == planner.steps_per_decision:
+            decision = input(' give me a decision ')
+            if decision:
+                decision = int(decision)
+            else:
+                decision = _decision
+        else:
+            decision = env.sdv.decision
+
         env.step(decision)
+        planner.steps_till_next_decision -= 1
 
         # for vehicle in env.vehicles:
         #     # if vehicle.id == 2:

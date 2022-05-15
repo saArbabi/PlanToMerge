@@ -5,7 +5,6 @@ import time
 import hashlib
 import numpy as np
 import sys
-from tree_search.imagined_env import ImaginedEnv
 
 class QMDP(MCTSDPW):
     def __init__(self):
@@ -14,7 +13,6 @@ class QMDP(MCTSDPW):
         self._enough_history = False
         self.decision_counts = False
         self.nidm = self.load_nidm()
-        self.img_state = ImaginedEnv()
 
     def reset(self):
         self.tree_info = []
@@ -100,14 +98,6 @@ class QMDP(MCTSDPW):
         else:
             sampled_state.uniform_prior()
         return sampled_state
-
-    def imagine_state(self, state):
-        """
-        Returns an "imagined" environment state, with uniform prior belief.
-        """
-        self.img_state.copy_attrs(state)
-        self.img_state.uniform_prior()
-        return self.img_state
 
     def run(self, belief_node):
         """
