@@ -2,6 +2,7 @@ import numpy as np
 import time
 from tree_search.factory import safe_deepcopy_env
 from tree_search.abstract import AbstractPlanner, Node
+from tree_search.imagined_env import ImaginedEnv
 import hashlib
 import json
 
@@ -27,6 +28,7 @@ class MCTSDPW(AbstractPlanner):
         :param rollout_policy: the rollout policy used to estimate the value of a leaf node
         """
         self.config = self.default_config()
+        self.img_state = ImaginedEnv()
         super(MCTSDPW, self).__init__()
         self.reset()
 
@@ -42,15 +44,34 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
+        # return [2]
         # return [1, 2, 3, 4, 5, 6]
-
+        # if state.sdv.glob_x > 200:
+        #     return [5]
         # return [2, 5]
         # if not state.sdv.decision:
+        # return [5]
+
         if state.sdv.is_merge_possible():
             if not state.sdv.decision or state.sdv.decision == 2:
                 return [2, 5]
-            elif state.sdv.decision == 5:
+
+            elif state.sdv.is_merge_initiated():
                 return [5]
+
+            elif state.sdv.decision == 7:
+                if state.sdv.neighbours['rl']:
+                    return [7]
+                else:
+                    return [5, 7]
+
+            elif state.sdv.decision == 5:
+                return [5, 7]
+
+
+
+            # elif state.sdv.decision == 7:
+                # return [7]
         else:
             return [2]
 
@@ -71,22 +92,33 @@ class MCTSDPW(AbstractPlanner):
         #     return self.OPTIONS_CAT['LANEKEE-ONLY']
         # return self.OPTIONS_CAT[state.sdv.decision_cat]
 
-    def extract_belief_info(self, state, depth):
-        vehicle_id = 2
-        if depth not in self.belief_info:
-            self.belief_info[depth] = {}
-            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == vehicle_id]
-            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == vehicle_id]
-        else:
-            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == vehicle_id])
-            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == vehicle_id])
 
-    def extract_tree_info(self, tree_states):
-        self.tree_info.append(tree_states)
+    def predict_vehicle_actions(self, state):
+        """
+        Returns the joint action of all vehicles other than SDV on the road
+        """
+        joint_action = []
+        for vehicle in state.vehicles:
+            vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
+                                                       [state.dummy_stationary_car])
+            actions = vehicle.act()
+            joint_action.append(actions)
+        return joint_action
 
-    def not_exit_tree(self, depth, decision_node, terminal):
+    def step(self, state, decision):
+        state.env_reward_reset()
+        state.uniform_prior()
+        for i in range(self.steps_per_decision):
+            joint_action = self.predict_vehicle_actions(state)
+            state.step(joint_action, decision)
+        observation = state.planner_observe()
+        reward = state.get_reward()
+        terminal = state.is_terminal()
+        return observation, reward, terminal
+
+    def not_exit_tree(self, depth, state_node, terminal):
         not_exit = depth < self.config['horizon'] and \
-                (decision_node.count != 0 or decision_node == self.root) and not terminal
+                (state_node.count != 0 or state_node == self.root) and not terminal
         return not_exit
 
     def log_visited_sdv_state(self, state, tree_states, mcts_stage):
@@ -100,34 +132,54 @@ class MCTSDPW(AbstractPlanner):
 
         return tree_states
 
-    def run(self, state, observation):
+    def imagine_state(self, state):
+        """
+        Returns an "imagined" environment state, with uniform prior belief.
+        """
+        self.img_state.copy_attrs(state)
+        self.img_state.uniform_prior()
+        return self.img_state
+
+    def extract_belief_info(self, state, depth):
+        vehicle_id = 2
+        if depth not in self.belief_info:
+            self.belief_info[depth] = {}
+            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == vehicle_id]
+            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == vehicle_id]
+        else:
+            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == vehicle_id])
+            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == vehicle_id])
+
+    def extract_tree_info(self, tree_states):
+        self.tree_info.append(tree_states)
+
+    def run(self, state, state_node):
         """
             Run an iteration of MCTSDPW, starting from a given state
         :param state: the initial environment state
-        :param observation: the corresponding observation
         """
-        decision_node = self.root
         total_reward = 0
         depth = 0
         state.seed(self.rng.randint(1e5))
         terminal = False
+
         tree_states = {
                         'x':[], 'y':[],
                         'x_rollout':[], 'y_rollout':[]}
-
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
-        while self.not_exit_tree(depth, decision_node, terminal):
+        while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
-            chance_node, decision = decision_node.get_child(
+            chance_node, decision = state_node.get_child(
                                         self.get_available_decisions(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** depth * reward
-            decision_node = chance_node.get_child(
+            state_node = chance_node.get_child(
                                             observation,
                                             self.rng)
+            print(depth, ' ', state.sdv.glob_x)
             depth += 1
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
@@ -137,9 +189,8 @@ class MCTSDPW(AbstractPlanner):
                                          tree_states,
                                           total_reward,
                                           depth=depth)
-        # print(total_reward)
         # Backup global statistics
-        decision_node.backup_to_root(total_reward)
+        state_node.backup_to_root(total_reward)
         self.extract_tree_info(tree_states)
 
     def evaluate(self, state, tree_states, total_reward=0, depth=0):
@@ -167,10 +218,12 @@ class MCTSDPW(AbstractPlanner):
 
         return tree_states, total_reward
 
-    def plan(self, state, observation):
+    def plan(self, state):
         self.reset()
+        img_state = self.imagine_state(state)
+        state_node = self.root
         for plan_itr in range(self.config['budget']):
-            self.run(safe_deepcopy_env(state), observation)
+            self.run(safe_deepcopy_env(img_state), state_node)
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""
@@ -182,6 +235,7 @@ class MCTSDPW(AbstractPlanner):
         timesteps have elapsed from the last decision
         """
         if self.steps_till_next_decision == 0:
+            self.steps_till_next_decision = self.steps_per_decision
             return True
 
 class DecisionNode(Node):
