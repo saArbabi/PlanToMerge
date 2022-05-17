@@ -25,6 +25,7 @@ class EnvInitializor():
         new_vehicle = TrackedVehicle(\
                     self.next_vehicle_id, lane_id, glob_x,\
                                                 init_speed, agg)
+        new_vehicle.set_driver_params(self.rng)
         init_action = new_vehicle.idm_action(new_vehicle, lead_vehicle)
         while init_action < -new_vehicle.driver_params['min_act']:
             new_vehicle.glob_x -= 10
@@ -41,6 +42,8 @@ class EnvInitializor():
         new_vehicle = TrackedVehicle(\
                     self.next_vehicle_id, lane_id, glob_x,\
                                                 init_speed, agg)
+
+        new_vehicle.set_driver_params(self.rng)
         init_action = new_vehicle.idm_action(new_vehicle, lead_vehicle)
         if init_action >= new_vehicle.driver_params['safe_braking']:
             self.next_vehicle_id += 1
@@ -48,7 +51,8 @@ class EnvInitializor():
 
     def init_env(self, episode_id):
         print('episode_id: ', episode_id)
-        np.random.seed(episode_id)
+        self.rng = np.random.RandomState(episode_id)
+
         # main road vehicles
         lane_id = 1
         vehicles = []

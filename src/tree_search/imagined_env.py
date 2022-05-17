@@ -16,7 +16,7 @@ class ImaginedEnv(EnvAutoMerge):
         self.bad_action_in_env = False
 
     def copy_attrs(self, state):
-        for attrname in ['vehicles', 'sdv', 'time_step']:
+        for attrname in ['vehicles', 'sdv', 'time_step', 'rng']:
             attrvalue = getattr(state, attrname)
             setattr(self, attrname, copy.deepcopy(attrvalue))
 
@@ -26,7 +26,7 @@ class ImaginedEnv(EnvAutoMerge):
         """
         for vehicle in self.vehicles:
             vehicle.driver_params['aggressiveness'] = self.rng.uniform(0.01, 0.99)
-            vehicle.set_driver_params()
+            vehicle.set_driver_params(self.rng)
 
     def is_bad_action(self, vehicle, actions):
         return vehicle.id != 1 and actions[0] < -5
@@ -63,7 +63,7 @@ class ImaginedEnv(EnvAutoMerge):
     def get_reward(self):
         """
         Reward is set to encourage the following behaviours:
-        1) perform merge successfully  
+        1) perform merge successfully
         2) avoid reckless decisions
         """
         total_reward = 0

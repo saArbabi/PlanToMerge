@@ -67,3 +67,34 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
         obs_t0.append(m_veh_exists)
         self.m_veh_exists = m_veh_exists
         return [np.array([[obs_t0]]), [[[float(m_veh_exists)]]]]
+
+    def get_driver_param(self, param_name, rng):
+        if param_name in ['desired_v', 'max_act', 'min_act']:
+            # the larger the param, the more aggressive the driver
+            min_value = self.parameter_range['least_aggressvie'][param_name]
+            max_value = self.parameter_range['most_aggressive'][param_name]
+            return  min_value + self.sample_driver_param(rng)*(max_value-min_value)
+
+        elif param_name in ['desired_tgap', 'min_jamx', 'politeness',
+                                                'act_threshold', 'safe_braking']:
+            # the larger the param, the more timid the driver
+            min_value = self.parameter_range['most_aggressive'][param_name]
+            max_value = self.parameter_range['least_aggressvie'][param_name]
+            return  max_value - self.sample_driver_param(rng)*(max_value-min_value)
+
+    def set_driver_params(self, rng):
+        # IDM params
+        self.driver_params['desired_v'] = self.get_driver_param('desired_v', rng)
+        self.driver_params['desired_tgap'] = self.get_driver_param('desired_tgap', rng)
+        self.driver_params['min_jamx'] = self.get_driver_param('min_jamx', rng)
+        self.driver_params['max_act'] = self.get_driver_param('max_act', rng)
+        self.driver_params['min_act'] = self.get_driver_param('min_act', rng)
+        # MOBIL params
+        self.driver_params['politeness'] = self.get_driver_param('politeness', rng)
+        self.driver_params['safe_braking'] = self.get_driver_param('safe_braking', rng)
+        self.driver_params['act_threshold'] = self.get_driver_param('act_threshold', rng)
+
+    def sample_driver_param(self, rng):
+        alpha_param = self.beta_precision*self.driver_params['aggressiveness']
+        beta_param = self.beta_precision*(1-self.driver_params['aggressiveness'])
+        return rng.beta(alpha_param, beta_param)
