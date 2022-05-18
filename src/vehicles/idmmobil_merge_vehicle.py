@@ -1,12 +1,10 @@
 from importlib import reload
-from vehicles import idmmobil_vehicle
-reload(idmmobil_vehicle)
-from vehicles.idmmobil_vehicle import IDMMOBILVehicle
+from vehicles.vehicle import Vehicle
 import json
 
-class IDMMOBILVehicleMerge(IDMMOBILVehicle):
+class IDMMOBILVehicleMerge(Vehicle):
     def __init__(self, id, lane_id, glob_x, speed, aggressiveness=None):
-        super().__init__(id, lane_id, glob_x, speed, aggressiveness)
+        super().__init__(id, lane_id, glob_x, speed)
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
 
@@ -14,7 +12,70 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         self.act_long_p = None # last action
         self.merge_lane_start = config['merge_lane_start']
         self.ramp_exit_start = config['ramp_exit_start']
-        self.min_act_long = 0
+        self.beta_precision = 15
+        self.lane_id = lane_id
+        self.lane_width = 3.75
+        self.lanes_n = 2
+        self.glob_y = (self.lanes_n-lane_id+1)*self.lane_width-self.lane_width/2
+        self.target_lane = lane_id
+        self.lane_decision = 'keep_lane'
+        self.neighbours = {veh_name: None for veh_name in\
+                            ['f', 'fl', 'rl', 'r', 'rr', 'fr', 'm', 'att']}
+        self.perception_range = 500 #
+        self.lateral_actions = {'move_left':0.75,
+                                'move_right':-0.75,
+                                'keep_lane':0}
+        self.parameter_range = {'most_aggressive': {
+                                        'desired_v':25, # m/s
+                                        'desired_tgap': 0.5, # s
+                                        'min_jamx':1, # m
+                                        'max_act':4, # m/s^2
+                                        'min_act':4, # m/s^2
+                                        'politeness':0.,
+                                        'safe_braking':-5,
+                                        'act_threshold':0
+                                        },
+                         'least_aggressvie': {
+                                        'desired_v':15, # m/s
+                                        'desired_tgap':2, # s
+                                        'min_jamx':5, # m
+                                        'max_act':2, # m/s^2
+                                        'min_act':2, # m/s^2
+                                        'politeness':1,
+                                        'safe_braking':-3,
+                                        'act_threshold':0.2
+                                         }}
+        self.driver_params = {}
+        self.driver_params['aggressiveness'] = aggressiveness  # in range [0, 1]
+
+    def observe(self, follower, leader):
+        if not follower or not leader:
+            return [0, 1000]
+        delta_v = follower.speed-leader.speed
+        delta_x = leader.glob_x-follower.glob_x
+        assert delta_x > 0, 'leader {l_id} is behind follower {f_id}'.format(\
+                                        l_id=leader.id, f_id=follower.id)
+        return [delta_v, delta_x]
+
+    def idm_action(self, follower, leader):
+        """
+        Note: Follower is not always the ego, it can be the ego's neighbour(use:MOBIL)
+        """
+        if not follower:
+            return 0
+        delta_v, delta_x = self.observe(follower, leader)
+        desired_gap = follower.driver_params['min_jamx'] + \
+                        max(0,
+                        follower.driver_params['desired_tgap']*\
+                        follower.speed+(follower.speed*delta_v)/ \
+                        (2*(follower.driver_params['max_act']*\
+                        follower.driver_params['min_act'])**0.5))
+
+        act_long = follower.driver_params['max_act']*\
+                    (1-(follower.speed/follower.driver_params['desired_v'])**4-\
+                                                        (desired_gap/(delta_x))**2)
+
+        return max(-7, min(act_long, 5))
 
     def my_neighbours(self, vehicles):
         """
@@ -169,6 +230,14 @@ class IDMMOBILVehicleMerge(IDMMOBILVehicle):
         if self.lane_id > 1 and self.glob_x > self.merge_lane_start and \
                 self.driver_params['safe_braking'] <= act_rl_lc:
             return True
+
+    def mobil_condition(self, actions_gains):
+        """To decide if changing lane is worthwhile.
+        """
+        ego_gain, new_follower_gain, old_follower_gain = actions_gains
+        lc_condition = ego_gain+self.driver_params['politeness']*(new_follower_gain+\
+                                                                old_follower_gain )
+        return lc_condition
 
     def idm_mobil_act(self):
         act_long = self.idm_action(self, self.neighbours['att'])
