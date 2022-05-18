@@ -15,8 +15,18 @@ class ImaginedEnv(EnvAutoMerge):
         """
         self.bad_action_in_env = False
 
+    def copy_this_state(self):
+        """Note: rng is not copied to ensure state
+        transitions remain stochastic.
+        """
+        copy_state = self
+        for attrname in ['vehicles', 'sdv', 'time_step']:
+            attrvalue = getattr(self, attrname)
+            setattr(copy_state, attrname, copy.deepcopy(attrvalue))
+        return copy_state
+
     def copy_attrs(self, state):
-        for attrname in ['vehicles', 'sdv', 'time_step', 'rng']:
+        for attrname in ['vehicles', 'sdv', 'time_step']:
             attrvalue = getattr(state, attrname)
             setattr(self, attrname, copy.deepcopy(attrvalue))
 
@@ -83,5 +93,3 @@ class ImaginedEnv(EnvAutoMerge):
             x_road += vehicle.glob_x
         return x_road
         # return self.rng.randint(-100, 100)
-        # return self.sdv.glob_x
-        # return self

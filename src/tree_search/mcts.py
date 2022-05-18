@@ -45,13 +45,6 @@ class MCTSDPW(AbstractPlanner):
 
     def get_available_decisions(self, state):
         # return [2]
-        # return [1, 2, 3, 4, 5, 6]
-        # if state.sdv.glob_x > 200:
-        #     return [5]
-        # return [2, 5]
-        # if not state.sdv.decision:
-        # return [5]
-
         if state.sdv.is_merge_possible():
             if not state.sdv.decision or state.sdv.decision == 2:
                 return [2, 5]
@@ -64,33 +57,10 @@ class MCTSDPW(AbstractPlanner):
                     return [7]
                 else:
                     return [5, 7]
-
             elif state.sdv.decision == 5:
                 return [5, 7]
-
-
-
-            # elif state.sdv.decision == 7:
-                # return [7]
         else:
             return [2]
-
-        # elif state.sdv.decision == 2:
-        #     return [2]
-        # elif state.sdv.decision == 2:
-        #     return [2]
-
-
-
-        # if state.sdv.decision == 2 or not state.sdv.decision:
-        #     return [2, 5]
-        # else:
-        #     return [5]
-        #
-        # return [1, 4]
-        # if state.sdv.glob_x < state.sdv.merge_lane_start:
-        #     return self.OPTIONS_CAT['LANEKEE-ONLY']
-        # return self.OPTIONS_CAT[state.sdv.decision_cat]
 
 
     def predict_vehicle_actions(self, state):
@@ -137,6 +107,7 @@ class MCTSDPW(AbstractPlanner):
         Returns an "imagined" environment state, with uniform prior belief.
         """
         self.img_state.copy_attrs(state)
+        self.img_state.seed(self.rng.randint(1e5))
         self.img_state.uniform_prior()
         return self.img_state
 
@@ -161,7 +132,6 @@ class MCTSDPW(AbstractPlanner):
         total_reward = 0
         depth = 0
         state = self.get_env_state(state_node)
-        state.seed(self.rng.randint(1e5))
         terminal = False
 
         tree_states = {
@@ -210,10 +180,8 @@ class MCTSDPW(AbstractPlanner):
         """
 
         self.log_visited_sdv_state(state, tree_states, 'rollout')
-        # self.extract_belief_info(state, depth)
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
-            # print('######### ', rollout_depth, ' ########################### in rollout')
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
@@ -224,19 +192,14 @@ class MCTSDPW(AbstractPlanner):
 
         return tree_states, total_reward
 
-    def new_root_node(self, state):
-        state = self.imagine_state(state)
-        state_node = self.root
-        state_node.state = state
-        return state_node
-
     def get_env_state(self, state_node):
-        return safe_deepcopy_env(state_node.state)
+        return state_node.state.copy_this_state()
 
     def plan(self, state):
         self.reset()
-        state_node = self.new_root_node(state)
+        state_node = self.root
         for plan_itr in range(self.config['budget']):
+            state_node.state = self.imagine_state(state)
             self.run(state_node)
 
     def get_decision(self):
@@ -348,6 +311,9 @@ class ChanceNode(Node):
                 child_type = 'new'
                 self.expand(state, obs_id)
                 return child_type, self.children[obs_id]
+        else:
+            child_type = 'old'
+            return child_type, self.children[obs_id]
 
     def backup_to_root(self, total_reward):
         """
