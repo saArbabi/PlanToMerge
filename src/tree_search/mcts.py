@@ -95,7 +95,6 @@ class MCTSDPW(AbstractPlanner):
         """
         self.img_state.copy_attrs(state)
         self.img_state.seed(self.rng.randint(1e5))
-        self.img_state.uniform_prior()
         return self.img_state
 
     def run(self, state_node):
@@ -105,7 +104,7 @@ class MCTSDPW(AbstractPlanner):
         """
         total_reward = 0
         depth = 0
-        state = self.get_env_state(state_node)
+        state = self.sample_belief(state_node)
         terminal = False
 
         while self.not_exit_tree(depth, state_node, terminal):
@@ -120,7 +119,7 @@ class MCTSDPW(AbstractPlanner):
                                             observation,
                                             self.rng)
 
-            state = self.get_env_state(state_node)
+            state = state_node.state.copy_this_state()
             if child_type == 'old':
                 reward = state_node.state.get_reward()
 
@@ -152,8 +151,10 @@ class MCTSDPW(AbstractPlanner):
 
         return total_reward
 
-    def get_env_state(self, state_node):
-        return state_node.state.copy_this_state()
+    def sample_belief(self, belief_node):
+        belief_node.state.uniform_prior()
+        sampled_state = belief_node.state.copy_this_state()
+        return sampled_state
 
     def plan(self, state):
         self.reset()

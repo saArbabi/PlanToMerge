@@ -1,8 +1,13 @@
-from tree_search.mcts import MCTSDPW
+from tree_search.mcts import MCTSDPW, DecisionNode
 
 class MCTSDPWLogger(MCTSDPW):
     def __init__(self):
         super(MCTSDPWLogger, self).__init__()
+
+    def reset(self):
+        self.tree_info = []
+        self.belief_info = {}
+        self.root = DecisionNode(parent=None, config=self.config)
 
     def log_visited_sdv_state(self, state, tree_states, mcts_stage):
         """ Use this for visualising tree """
@@ -35,7 +40,7 @@ class MCTSDPWLogger(MCTSDPW):
         """
         total_reward = 0
         depth = 0
-        state = self.get_env_state(state_node)
+        state = self.sample_belief(state_node)
         terminal = False
 
         tree_states = {
@@ -55,7 +60,7 @@ class MCTSDPWLogger(MCTSDPW):
                                             observation,
                                             self.rng)
 
-            state = self.get_env_state(state_node)
+            state = state_node.state.copy_this_state()
             if child_type == 'old':
                 reward = state_node.state.get_reward()
 
