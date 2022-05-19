@@ -22,8 +22,8 @@ def load_planner():
         planner = Omniscient()
 
     if planner_type == 'mcts':
-        from tree_search.mcts import MCTSDPW
-        planner = MCTSDPW()
+        from tree_search.mcts_with_logger import MCTSDPWLogger
+        planner = MCTSDPWLogger()
 
     if planner_type == 'belief_search':
         from tree_search.belief_search import BeliefSearch

@@ -16,7 +16,7 @@ class EnvInitializor():
         self.desired_v_range = self.max_v-self.min_v
 
     def get_init_speed(self, aggressiveness):
-        init_speed = np.random.uniform(self.min_v, \
+        init_speed = self.rng.uniform(self.min_v, \
                             self.min_v+aggressiveness*self.desired_v_range)
         return init_speed
 
@@ -75,7 +75,7 @@ class EnvInitializor():
 
         vehicles.append(new_vehicle)
 
-        lead_car_speed = np.random.uniform(self.min_v, self.max_v)
+        lead_car_speed = self.rng.uniform(self.min_v, self.max_v)
         vehicles[0].speed = vehicles[0].driver_params['desired_v'] = lead_car_speed
 
         # ramp vehicles
