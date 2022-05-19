@@ -9,7 +9,6 @@ import json
 class MCEVAL():
     def __init__(self, eval_config):
         self.env = EnvAutoMerge()
-        # self.env.metric_collection_mode = True
         self.eval_config = eval_config
 
     def create_empty(self):
@@ -83,6 +82,7 @@ class MCEVAL():
             self.env.step(decision)
             self.planner.steps_till_next_decision -= 1
             print(self.env.time_step)
+
 
         # collect metrics
         timesteps_to_merge = self.env.time_step

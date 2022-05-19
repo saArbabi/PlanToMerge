@@ -39,7 +39,8 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.set_driver_params(self.rng)
 
     def is_bad_action(self, vehicle, actions):
-        return vehicle.id != 1 and actions[0] < -5
+        return not self.bad_action_in_env and \
+                    vehicle.id != 1 and actions[0] < -5
 
     def step(self, joint_action, decision=None):
         """ steps the environment forward in time.
@@ -53,6 +54,12 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.bad_action_in_env = True
+                # print('#######')
+                # print(actions[0])
+                # print(vehicle.neighbours['att'].id)
+                # print('att_globxxx ', vehicle.neighbours['att'].glob_x)
+                # print('my_globx ', vehicle.glob_x)
+
 
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
@@ -68,6 +75,9 @@ class ImaginedEnv(EnvAutoMerge):
         """
         # return False
         if self.sdv.is_merge_complete():
+            # print('yay ', self.sdv.glob_x)
+            print('yay ', self.sdv.glob_x)
+
             return True
 
     def get_reward(self):
