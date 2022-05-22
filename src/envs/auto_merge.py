@@ -9,7 +9,6 @@ import sys
 class EnvAutoMerge(EnvMerge):
     def __init__(self):
         super().__init__()
-        self.seed(2022)
 
     def initialize_env(self, episode_id):
         """Initiates the environment

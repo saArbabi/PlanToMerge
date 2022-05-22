@@ -83,7 +83,6 @@ class MCEVAL():
             self.planner.steps_till_next_decision -= 1
             print(self.env.time_step)
 
-
         # collect metrics
         timesteps_to_merge = self.env.time_step
         time_per_decision = cumulative_decision_time/cumulative_decision_count
