@@ -7,28 +7,16 @@ from envs.auto_merge import EnvAutoMerge
 import copy
 
 class ImaginedEnv(EnvAutoMerge):
-    def __init__(self):
+    def __init__(self, state):
         super().__init__()
+        for attrname in ['vehicles', 'sdv', 'time_step']:
+            attrvalue = getattr(state, attrname)
+            setattr(self, attrname, copy.deepcopy(attrvalue))
 
     def env_reward_reset(self):
         """This is reset with every planner timestep
         """
         self.bad_action_in_env = False
-
-    def copy_this_state(self):
-        """Note: rng is not copied to ensure state
-        transitions remain stochastic.
-        """
-        copy_state = self
-        for attrname in ['vehicles', 'sdv', 'time_step']:
-            attrvalue = getattr(self, attrname)
-            setattr(copy_state, attrname, copy.deepcopy(attrvalue))
-        return copy_state
-
-    def copy_attrs(self, state):
-        for attrname in ['vehicles', 'sdv', 'time_step']:
-            attrvalue = getattr(state, attrname)
-            setattr(self, attrname, copy.deepcopy(attrvalue))
 
     def uniform_prior(self):
         """
@@ -76,8 +64,6 @@ class ImaginedEnv(EnvAutoMerge):
         # return False
         if self.sdv.is_merge_complete():
             # print('yay ', self.sdv.glob_x)
-            print('yay ', self.sdv.glob_x)
-
             return True
 
     def get_reward(self):

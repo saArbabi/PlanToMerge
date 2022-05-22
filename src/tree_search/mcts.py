@@ -28,9 +28,7 @@ class MCTSDPW(AbstractPlanner):
         :param rollout_policy: the rollout policy used to estimate the value of a leaf node
         """
         self.config = self.default_config()
-        self.img_state = ImaginedEnv()
         super(MCTSDPW, self).__init__()
-        self.reset()
 
     @classmethod
     def default_config(cls):
@@ -71,6 +69,8 @@ class MCTSDPW(AbstractPlanner):
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
             actions = vehicle.act()
+            actions[0] += self.rng.normal()
+
             joint_action.append(actions)
         return joint_action
 
@@ -89,14 +89,6 @@ class MCTSDPW(AbstractPlanner):
                 (state_node.count != 0 or state_node == self.root) and not terminal
         return not_exit
 
-    def imagine_state(self, state):
-        """
-        Returns an "imagined" environment state, with uniform prior belief.
-        """
-        self.img_state.copy_attrs(state)
-        self.img_state.seed(self.rng.randint(1e5))
-        return self.img_state
-
     def run(self, state_node):
         """
             Run an iteration of MCTSDPW, starting from a given state
@@ -104,8 +96,8 @@ class MCTSDPW(AbstractPlanner):
         """
         total_reward = 0
         depth = 0
-        state = self.sample_belief(state_node)
         terminal = False
+        state = state_node.draw_sample(self.rng)
 
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
@@ -119,7 +111,7 @@ class MCTSDPW(AbstractPlanner):
                                             observation,
                                             self.rng)
 
-            state = state_node.state.copy_this_state()
+            state = state_node.fetch_state()
             if child_type == 'old':
                 reward = state_node.state.get_reward()
 
@@ -151,16 +143,11 @@ class MCTSDPW(AbstractPlanner):
 
         return total_reward
 
-    def sample_belief(self, belief_node):
-        belief_node.state.uniform_prior()
-        sampled_state = belief_node.state.copy_this_state()
-        return sampled_state
-
     def plan(self, state):
         self.reset()
         state_node = self.root
+        state_node.state = ImaginedEnv(state)
         for plan_itr in range(self.config['budget']):
-            state_node.state = self.imagine_state(state)
             self.run(state_node)
 
     def get_decision(self):
@@ -244,11 +231,22 @@ class DecisionNode(Node):
 
         return decisions[max(counts, key=(lambda i: self.children[decisions[i]].value))], decision_counts
 
+    def fetch_state(self):
+        assert self.state, 'This node has no state attribute'
+        img_state = ImaginedEnv(self.state)
+        return img_state
+
+    def draw_sample(self, rng):
+        img_state = ImaginedEnv(self.state)
+        # img_state.seed(rng.randint(1e5))
+        # img_state.uniform_prior()
+        return img_state
+
 class ChanceNode(Node):
     def __init__(self, parent, config):
         assert parent is not None
         super().__init__(parent)
-        # state progressive widenning parameters
+        # state progressisve widenning parameters
         self.k_state = config["k_state"]
         self.alpha_state = config["alpha_state"]
         self.config = config

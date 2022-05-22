@@ -40,9 +40,8 @@ class MCTSDPWLogger(MCTSDPW):
         """
         total_reward = 0
         depth = 0
-        state = self.sample_belief(state_node)
         terminal = False
-
+        state = state_node.draw_sample(self.rng)
         tree_states = {
                         'x':[], 'y':[],
                         'x_rollout':[], 'y_rollout':[]}
@@ -60,7 +59,7 @@ class MCTSDPWLogger(MCTSDPW):
                                             observation,
                                             self.rng)
 
-            state = state_node.state.copy_this_state()
+            state = state_node.fetch_state()
             if child_type == 'old':
                 reward = state_node.state.get_reward()
 
