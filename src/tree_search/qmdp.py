@@ -1,6 +1,7 @@
 from tree_search.mcts import MCTSDPW, DecisionNode, ChanceNode
 from tree_search.abstract import AbstractPlanner, Node
 from tree_search.factory import safe_deepcopy_env
+from tree_search.imagined_env import ImaginedEnv
 import time
 import hashlib
 import numpy as np
@@ -11,7 +12,6 @@ class QMDP(MCTSDPW):
         super(QMDP, self).__init__()
         self.update_counts = 0
         self._enough_history = False
-        self.decision_counts = False
         self.nidm = self.load_nidm()
 
     def reset(self):
@@ -47,33 +47,20 @@ class QMDP(MCTSDPW):
             joint_action.append(actions)
         return joint_action
 
-    def step(self, state, decision):
-        state.env_reward_reset()
-        for i in range(self.steps_per_decision):
-            joint_action = self.predict_vehicle_actions(state)
-            state.step(joint_action, decision)
-        observation = state.planner_observe()
-        reward = state.get_reward()
-        terminal = state.is_terminal()
-        return observation, reward, terminal
-
     def load_nidm(self):
         from tree_search.nidm import NIDM
         return NIDM()
 
-    def update_belief(self, belief_node, img_state):
+    def update_belief(self, belief_node):
         """
         Passes the sequence of past vehicle observations (vehicle standpoint)
         and actions into an LSTM encoder. Then the encoded state is mapped to
         the latent belief.
         """
-        if not belief_node.img_state:
-            belief_node.img_state = img_state
-
-        if self.enough_history(img_state) and \
+        if self.enough_history(belief_node.state) and \
                             not belief_node.belief_is_updated:
             belief_node.belief_is_updated = True
-            for vehicle in img_state.vehicles:
+            for vehicle in belief_node.state.vehicles:
                 if vehicle.id != 1:
                     self.nidm.latent_inference(vehicle)
 
@@ -86,18 +73,19 @@ class QMDP(MCTSDPW):
             (2) using the sampled latent, obtain relevant projections
             (3) assign the sampled driver params to each vehicle
         """
-        sampled_state = safe_deepcopy_env(belief_node.img_state)
+        img_state = ImaginedEnv(belief_node.state)
         if belief_node.belief_is_updated:
             # you need enough history for this
-            for vehicle in sampled_state.vehicles:
+            for vehicle in img_state.vehicles:
                 if vehicle.id != 1:
                     z_idm, z_att = self.nidm.sample_latent(vehicle)
                     proj_idm = self.nidm.apply_projections(vehicle, z_idm, z_att)
                     idm_params = self.nidm.model.idm_layer(proj_idm)
                     self.nidm.driver_params_update(vehicle, idm_params)
         else:
-            sampled_state.uniform_prior()
-        return sampled_state
+            img_state.seed(self.rng.randint(1e5))
+            img_state.uniform_prior()
+        return img_state
 
     def run(self, belief_node):
         """
@@ -107,7 +95,6 @@ class QMDP(MCTSDPW):
         depth = 0
         terminal = False
         state = self.sample_belief(belief_node)
-        state.seed(self.rng.randint(1e5))
 
         tree_states = {
                         'x':[], 'y':[],
@@ -119,10 +106,14 @@ class QMDP(MCTSDPW):
             chance_node, decision = belief_node.get_child(
                                         self.get_available_decisions(state),
                                         self.rng)
+
             observation, reward, terminal = self.step(state, decision)
-            belief_node = chance_node.get_child(observation,
+            child_type, belief_node = chance_node.get_child(
+                                                state,
+                                                observation,
                                                 self.rng)
 
+            state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
             self.log_visited_sdv_state(state, tree_states, 'selection')
@@ -139,54 +130,27 @@ class QMDP(MCTSDPW):
 
     def plan(self, state):
         self.reset()
-        img_state = self.imagine_state(state)
         belief_node = self.root
-        self.update_belief(belief_node, img_state)
+        belief_node.state = ImaginedEnv(state)
+        self.update_belief(belief_node)
         for plan_itr in range(self.config['budget']):
-            # input('This is plan iteration '+ str(plan_itr))
-            # t_0 = time.time()
-            # t_1 = time.time()
-            # print('copy time: ', t_1 - t_0)
-
             self.run(belief_node)
-            # print(self.update_counts)
 
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
         self.belief_is_updated = False
-        self.img_state = None
+        self.state = None
 
     def expand(self, available_decisions, rng):
         decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
         self.children[decision] = SubChanceNode(self, self.config)
         return self.children[decision], decision
 
-    def get_child(self, available_decisions, rng):
-        if len(self.children) == len(available_decisions) \
-                or self.k_decision*self.count**self.alpha_decision < len(self.children):
-            # select one of previously expanded decisions
-            return self.selection_strategy(rng)
-        else:
-            # insert a new aciton
-            return self.expand(available_decisions, rng)
-
 class SubChanceNode(ChanceNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
 
-    def get_child(self, observation, rng):
-        obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
-        if obs_id not in self.children:
-            if self.k_state*self.count**self.alpha_state < len(self.children):
-                obs_id = rng.choice(list(self.children))
-                return self.children[obs_id]
-            else:
-                # Add observation to the children set
-                self.expand(obs_id)
-
-        return self.children[obs_id]
-
-    def expand(self, obs_id):
-        belief_node = BeliefNode(self, self.config)
-        self.children[obs_id] = belief_node
+    def expand(self, state, obs_id):
+        self.children[obs_id] = BeliefNode(self, self.config)
+        self.children[obs_id].state = state

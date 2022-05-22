@@ -30,8 +30,8 @@ def load_planner():
         planner = BeliefSearch()
 
     if planner_type == 'qmdp':
-        from tree_search.qmdp import QMDP
-        planner = QMDP()
+        from tree_search.qmdp_with_logger import QMDPLogger
+        planner = QMDPLogger()
 
     return planner
 
@@ -57,7 +57,6 @@ def main():
                 viewer.focus_on_this_vehicle = user_input
             except:
                 pass
-
 
         if planner.is_decision_time():
             t_0 = time.time()
