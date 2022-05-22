@@ -238,8 +238,8 @@ class DecisionNode(Node):
 
     def draw_sample(self, rng):
         img_state = ImaginedEnv(self.state)
-        # img_state.seed(rng.randint(1e5))
-        # img_state.uniform_prior()
+        img_state.seed(rng.randint(1e5))
+        img_state.uniform_prior()
         return img_state
 
 class ChanceNode(Node):
