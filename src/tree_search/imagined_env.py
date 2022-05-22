@@ -17,7 +17,6 @@ class ImaginedEnv(EnvAutoMerge):
         """This is reset with every planner timestep
         """
         self.got_bad_action = False
-        self.got_bad_speed = False
 
     def uniform_prior(self):
         """
@@ -30,9 +29,6 @@ class ImaginedEnv(EnvAutoMerge):
     def is_bad_action(self, vehicle, actions):
         return not self.got_bad_action and \
                     vehicle.id != 1 and actions[0] < -5
-
-    def is_bad_speed(self):
-        return not self.got_bad_speed and self.sdv.speed <= 15
 
     def step(self, joint_action, decision=None):
         """ steps the environment forward in time.
@@ -55,10 +51,6 @@ class ImaginedEnv(EnvAutoMerge):
 
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
-
-        if self.is_bad_speed():
-            self.got_bad_speed = True
-
         self.time_step += 1
 
     def is_terminal(self):
@@ -81,15 +73,15 @@ class ImaginedEnv(EnvAutoMerge):
         2) avoid reckless decisions
         """
         total_reward = 0
+
         if self.sdv.is_merge_complete():
             if not self.sdv.abort_been_chosen:
                 total_reward += 0.3
             else:
                 total_reward += 0.1
+
         if self.got_bad_action:
             total_reward -= 0.6
-        if self.got_bad_speed:
-            total_reward -= 0.1
 
         return total_reward
 

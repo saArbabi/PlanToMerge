@@ -7,29 +7,30 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import json
+planner_name = 'mcts'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
         cfg = json.load(handle)
-        planner_type = cfg['planner_type']
+        print('### Planner name is: ', planner_name)
 
-    if planner_type == 'uninformed':
+    if planner_name == 'uninformed':
         from tree_search.uninformed import Uninformed
         planner = Uninformed()
 
-    if planner_type == 'omniscient':
+    if planner_name == 'omniscient':
         from tree_search.omniscient import Omniscient
         planner = Omniscient()
 
-    if planner_type == 'mcts':
+    if planner_name == 'mcts':
         from tree_search.mcts_with_logger import MCTSDPWLogger
         planner = MCTSDPWLogger()
 
-    if planner_type == 'belief_search':
+    if planner_name == 'belief_search':
         from tree_search.belief_search import BeliefSearch
         planner = BeliefSearch()
 
-    if planner_type == 'qmdp':
+    if planner_name == 'qmdp':
         from tree_search.qmdp_with_logger import QMDPLogger
         planner = QMDPLogger()
 

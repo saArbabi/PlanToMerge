@@ -38,6 +38,7 @@ class MCEVAL():
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
     def load_planner(self, planner_name):
+        print('### Planner name is: ', planner_name)
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
             self.planner = QMDP()
