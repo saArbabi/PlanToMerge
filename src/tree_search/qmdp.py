@@ -96,11 +96,6 @@ class QMDP(MCTSDPW):
         terminal = False
         state = self.sample_belief(belief_node)
 
-        tree_states = {
-                        'x':[], 'y':[],
-                        'x_rollout':[], 'y_rollout':[]}
-        self.extract_belief_info(state, 0)
-        self.log_visited_sdv_state(state, tree_states, 'selection')
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
@@ -116,17 +111,13 @@ class QMDP(MCTSDPW):
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
-            self.log_visited_sdv_state(state, tree_states, 'selection')
-            self.extract_belief_info(state, depth)
 
         if not terminal:
-            tree_states, total_reward = self.evaluate(state,
-                                         tree_states,
+            total_reward = self.evaluate(state,
                                           total_reward,
                                           depth=depth)
         # Backup global statistics
         belief_node.backup_to_root(total_reward)
-        self.extract_tree_info(tree_states)
 
     def plan(self, state):
         self.reset()
