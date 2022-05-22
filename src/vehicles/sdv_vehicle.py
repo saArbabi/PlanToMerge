@@ -1,6 +1,5 @@
 from vehicles.idmmobil_merge_vehicle import IDMMOBILVehicleMerge
 import numpy as np
-
 import json
 
 class SDVehicle(IDMMOBILVehicleMerge):
@@ -9,7 +8,8 @@ class SDVehicle(IDMMOBILVehicleMerge):
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'UP'],
                5 : ['MERGE', 'IDLE'],
-               6 : ['MERGE', 'DOWN']}
+               6 : ['MERGE', 'DOWN'],
+               7 : ['ABORT', 'IDLE']}
 
     def __init__(self, id):
         self.id = id
@@ -17,39 +17,11 @@ class SDVehicle(IDMMOBILVehicleMerge):
         self.decisions_and_counts = None
         self.decision = None
         self.decision_cat = 'LANEKEEP'
-        self.load_planner()
+        self.abort_been_chosen = False
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
             self.merge_lane_start = config['merge_lane_start']
             self.ramp_exit_start = config['ramp_exit_start']
-
-    def load_planner(self):
-        with open('./src/tree_search/config_files/config.json', 'rb') as handle:
-            cfg = json.load(handle)
-            planner_type = cfg['planner_type']
-
-        if planner_type == 'uninformed':
-            from tree_search.uninformed import Uninformed
-            self.planner = Uninformed()
-
-        if planner_type == 'omniscient':
-            from tree_search.omniscient import Omniscient
-            self.planner = Omniscient()
-
-        if planner_type == 'mcts':
-            from tree_search.mcts import MCTSDPW
-            self.planner = MCTSDPW()
-
-    def get_sdv_decision(self, env_state, obs):
-        if self.time_lapse % self.decision_steps_n == 0:
-            available_dec = self.planner.get_available_decisions(env_state)
-            if len(available_dec) == 1:
-                return available_dec[0]
-            self.planner.plan(env_state, obs)
-            decision, self.decisions_and_counts = self.planner.get_decision()
-            # self.decision = 0
-            return decision
-        return self.decision
 
     def get_driver_param(self, param_name):
         if param_name in ['desired_v', 'max_act', 'min_act']:
@@ -92,6 +64,14 @@ class SDVehicle(IDMMOBILVehicleMerge):
             aggressiveness = 0.4
         return aggressiveness
 
+    def is_merge_possible(self):
+        if self.glob_x > self.merge_lane_start \
+                    and not self.is_merge_complete():
+            return True
+
+    def is_merge_initiated(self):
+        return self.glob_y > 0.5*self.lane_width
+
     def act(self, decision):
         # print(self.driver_params['aggressiveness'])
         if not self.decision or self.decision != decision:
@@ -102,16 +82,23 @@ class SDVehicle(IDMMOBILVehicleMerge):
             # print('decision ', decision)
             # print('aggressiveness ', self.driver_params['aggressiveness'])
 
-            self.driver_params['aggressiveness'] = self.change_driving_style(driving_style)
-            self.set_driver_params()
+            # self.driver_params['aggressiveness'] = self.change_driving_style(driving_style)
+            # self.set_driver_params()
 
             if merge_decision == 'MERGE':
                 self.lane_decision = 'move_left'
 
-            elif merge_decision == 'LANEKEEP' or merge_decision == 'ABORT':
+            elif merge_decision == 'LANEKEEP':
                 self.lane_decision = 'keep_lane'
                 if self.target_lane != self.lane_id:
                     self.target_lane = self.lane_id
+
+            elif merge_decision == 'ABORT':
+                self.lane_decision = 'keep_lane'
+                if self.target_lane != self.lane_id:
+                    self.target_lane = self.lane_id
+                if not self.abort_been_chosen:
+                    self.abort_been_chosen = True
 
         # if self.decision_cat == 'ABORT' and not self.neighbours['att']:
         #     if self.speed > 0:
