@@ -8,10 +8,8 @@ class Viewer():
     OPTIONS = {1 : ['LANEKEEP', 'UP'],
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
-               4 : ['MERGE', 'UP'],
-               5 : ['MERGE', 'IDLE'],
-               6 : ['MERGE', 'DOWN'],
-               7 : ['ABURT', 'IDLE']}
+               4 : ['MERGE', 'IDLE'],
+               5 : ['ABORT', 'IDLE']}
 
     def __init__(self, config):
         self.config  = config
@@ -175,15 +173,13 @@ class Viewer():
             ax.bar(decision, count, 0.5, \
                     label=self.OPTIONS[decision][1], color=color)
         ax.set_ylim([0, 40])
-        ax.set_xlim([0, 7])
+        ax.set_xlim([0, 6])
 
         ax.set_xticks(list(self.OPTIONS.keys()))
         ax.set_xticklabels(['LANEKEEP \n UP',
                             'LANEKEEP \n IDLE',
                             'LANEKEEP \n DOWN',
-                            'MERGE \n UP',
                             'MERGE \n IDLE',
-                            'MERGE \n DOWN',
                             'ABORT \n IDLE'])
 
     def log_var(self, vehicles):
@@ -204,7 +200,6 @@ class Viewer():
         ax.legend()
         ax.grid()
 
-    # def env_render():
     def render(self, vehicles, planner):
         self.draw_highway(self.env_ax, vehicles)
         self.draw_var(self.var_ax)

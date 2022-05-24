@@ -72,7 +72,7 @@ class MCTSDPWLogger(MCTSDPW):
             tree_states, total_reward = self.evaluate(state,
                                          tree_states,
                                           total_reward,
-                                          depth=depth)
+                                          depth)
         # Backup global statistics
         state_node.backup_to_root(total_reward)
         self.extract_tree_info(tree_states)

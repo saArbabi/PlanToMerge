@@ -48,9 +48,9 @@ class EnvAutoMerge(EnvMerge):
             joint_action.append(actions)
         return joint_action
 
-    def get_sdv_action(self, decision):
+    def get_sdv_action(self):
         self.sdv.neighbours = self.sdv.my_neighbours(self.vehicles+[self.dummy_stationary_car])
-        actions = self.sdv.act(decision)
+        actions = self.sdv.act()
         return actions
 
     def log_actions(self, vehicle, actions):
@@ -66,12 +66,12 @@ class EnvAutoMerge(EnvMerge):
             obs = vehicle.neur_observe()
             vehicle.update_obs_history(obs[0])
 
-    def step(self, decision=None):
+    def step(self):
         """ steps the environment forward in time.
         """
         assert self.vehicles, 'Environment not yet initialized'
         joint_action = self.get_joint_action()
-        sdv_action = self.get_sdv_action(decision)
+        sdv_action = self.get_sdv_action()
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
 

@@ -63,34 +63,23 @@ def main():
             t_0 = time.time()
             planner.plan(env)
             _decision = planner.get_decision()
+            avg_reward = planner.get_avg_reward(_decision)
             t_1 = time.time()
             print('compute time: ', t_1 - t_0)
-        else:
-            decision = env.sdv.decision
+            print('Avg reward: ', avg_reward)
+            decision = input(' give me a decision ')
+            try:
+                decision = int(decision)
+            except:
+                decision = _decision
+            env.sdv.update_decision(decision)
 
         all_cars = env.all_cars()
         viewer.log_var(all_cars)
         viewer.render(all_cars, planner)
 
-        if planner.steps_till_next_decision == planner.steps_per_decision:
-            decision = input(' give me a decision ')
-            if decision:
-                decision = int(decision)
-            else:
-                decision = _decision
-        else:
-            decision = env.sdv.decision
-
-        env.step(decision)
+        env.step()
         planner.steps_till_next_decision -= 1
-
-        # for vehicle in env.vehicles:
-        #     # if vehicle.id == 2:
-        #     #     print(vehicle.obs_history)
-        #     if vehicle.id == 2 and vehicle.act_long_c < -5:
-        #         print('ooooh')
-
-
 
 if __name__=='__main__':
     main()

@@ -11,23 +11,19 @@ class MCTSDPW(AbstractPlanner):
        An implementation of Monte-Carlo Tree Search with Upper Confidence Tree exploration
        and Double Progressive Widenning.
     """
-    # OPTIONS_CAT = {
-    #             'LANEKEEP' : [1, 2, 3, 4, 5, 6],
-    #             'LANEKEE-ONLY' : [1, 2, 3],
-    #             'MERGE' : [4, 5, 6]}
-    OPTIONS_CAT = {
-                'LANEKEEP' : [1, 4],
-                'LANEKEE-ONLY' : [1],
-                'MERGE' : [4]}
-
-    def __init__(self):
+    def __init__(self, config=None):
         """
             New MCTSDPW instance.
 
         :param config: the mcts configuration. Use default if None.
         :param rollout_policy: the rollout policy used to estimate the value of a leaf node
         """
-        self.config = self.default_config()
+        if not config:
+            self.config = self.default_config()
+            print('Default planner params: ')
+            print(self.config)
+        else:
+            self.config = config
         super(MCTSDPW, self).__init__()
 
     @classmethod
@@ -42,23 +38,31 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
-        if state.sdv.is_merge_possible():
-            if not state.sdv.decision or state.sdv.decision == 2:
-                return [2, 5]
-
-            elif state.sdv.is_merge_initiated():
+        if state.sdv.decision == 5:
+            if state.sdv.neighbours['rl']:
                 return [5]
-
-            elif state.sdv.decision == 7:
-                if state.sdv.neighbours['rl']:
-                    return [7]
-                else:
-                    return [5, 7]
-            elif state.sdv.decision == 5:
-                return [5, 7]
+            else:
+                return [4, 5]
         else:
-            return [2]
-
+            if state.sdv.is_merge_initiated():
+                return [4]
+            elif state.sdv.decision_cat == 'LANEKEEP':
+                if state.sdv.is_merge_possible():
+                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                        return [1, 2, 4]
+                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                        return [3, 2, 4]
+                    else:
+                        return [1, 2, 3, 4]
+                else:
+                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                        return [1, 2]
+                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                        return [3, 2]
+                    else:
+                        return [1, 2, 3]
+            elif state.sdv.decision_cat == 'MERGE':
+                return [4, 5]
 
     def predict_vehicle_actions(self, state):
         """
@@ -69,16 +73,18 @@ class MCTSDPW(AbstractPlanner):
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
             actions = vehicle.act()
-            actions[0] += self.rng.normal()
+            actions[0] += 0.5 * self.rng.normal()
 
             joint_action.append(actions)
         return joint_action
 
     def step(self, state, decision):
         state.env_reward_reset()
+        state.sdv.update_decision(decision)
+
         for i in range(self.steps_per_decision):
             joint_action = self.predict_vehicle_actions(state)
-            state.step(joint_action, decision)
+            state.step(joint_action)
         observation = state.planner_observe()
         reward = state.get_reward()
         terminal = state.is_terminal()
@@ -152,8 +158,15 @@ class MCTSDPW(AbstractPlanner):
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""
+
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
+
+    def get_avg_reward(self, decision):
+        chance_node = self.root.children[decision]
+        state_nodes = chance_node.children.values()
+        state_rewards = [state_node.state.state_reward for state_node in state_nodes]
+        return sum(state_rewards)/len(state_rewards)
 
     def is_decision_time(self):
         """The planner computes a decision if certain number of

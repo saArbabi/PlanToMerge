@@ -12,6 +12,12 @@ import collections
 # sys.executable
 # %%
 class TreeVis():
+    OPTIONS = {1 : ['LANEKEEP', 'UP'],
+               2 : ['LANEKEEP', 'IDLE'],
+               3 : ['LANEKEEP', 'DOWN'],
+               4 : ['MERGE', 'IDLE'],
+               5 : ['ABORT', 'IDLE']}
+
     def __init__(self):
         self.decision_node_names = ['DecisionNode', 'BeliefNode']
         self.chance_node_names = ['ChanceNode', 'SubChanceNode']
@@ -52,20 +58,17 @@ class TreeVis():
 
     def add_branch_to_graph(self, parent_node):
         """ The parent must already have been added to the tree
-        (with its gicen node_label and node_name). Here its children are added.
+        (with its given node_label and node_name). Here its children are added.
         """
         counts = [child_node.count for child_node in parent_node.children.values()]
         max_count = max(counts)
         parent_node.children = collections.OrderedDict(sorted(parent_node.children.items()))
 
         for key, child_node in parent_node.children.items():
-            if key == 5:
-                node_title = 'LC'
-            elif key == 2:
-                node_title = 'LK'
-            else:
+            try:
+                node_title = self.OPTIONS[key][0]+'_'+self.OPTIONS[key][1]
+            except:
                 node_title = None
-
 
             node_type = type(child_node).__name__
             child_node.node_label = self.create_node_label(child_node, node_title, node_type)

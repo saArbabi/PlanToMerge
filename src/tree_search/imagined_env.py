@@ -30,11 +30,11 @@ class ImaginedEnv(EnvAutoMerge):
         return not self.got_bad_action and \
                     vehicle.id != 1 and actions[0] < -5
 
-    def step(self, joint_action, decision=None):
+    def step(self, joint_action):
         """ steps the environment forward in time.
         """
         assert self.vehicles, 'Environment not yet initialized'
-        sdv_action = self.get_sdv_action(decision)
+        sdv_action = self.get_sdv_action()
 
         for vehicle, actions in zip(self.vehicles, joint_action):
             self.log_actions(vehicle, actions)
@@ -42,12 +42,6 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
-                # print('#######')
-                # print(actions[0])
-                # print(vehicle.neighbours['att'].id)
-                # print('att_globxxx ', vehicle.neighbours['att'].glob_x)
-                # print('my_globx ', vehicle.glob_x)
-
 
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
@@ -61,9 +55,7 @@ class ImaginedEnv(EnvAutoMerge):
         Episode is complete if:
         (1) agent successfully performs a merge
         """
-        # return False
         if self.sdv.is_merge_complete():
-            # print('yay ', self.sdv.glob_x)
             return True
 
     def get_reward(self):
@@ -73,16 +65,16 @@ class ImaginedEnv(EnvAutoMerge):
         2) avoid reckless decisions
         """
         total_reward = 0
-
         if self.sdv.is_merge_complete():
-            if not self.sdv.abort_been_chosen:
-                total_reward += 0.3
+            if self.sdv.abort_been_chosen:
+                total_reward += 1
             else:
-                total_reward += 0.1
+                total_reward += 3
 
         if self.got_bad_action:
-            total_reward -= 0.6
+            total_reward -= 5
 
+        self.state_reward = total_reward
         return total_reward
 
     def planner_observe(self):
