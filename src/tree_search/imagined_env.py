@@ -28,7 +28,8 @@ class ImaginedEnv(EnvAutoMerge):
 
     def is_bad_action(self, vehicle, actions):
         return not self.got_bad_action and \
-                    vehicle.id != 1 and actions[0] < -5
+                        self.sdv.lane_decision != 'keep_lane' and \
+                        vehicle.id != 1 and actions[0] < -5
 
     def step(self, joint_action):
         """ steps the environment forward in time.

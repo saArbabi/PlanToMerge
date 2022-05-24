@@ -17,11 +17,11 @@ class MCEVAL():
         """
         self.mc_collection = {}
 
-    def update_eval_config(self, planner_name):
+    def update_eval_config(self, exp_name):
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         mc_config = self.eval_config['mc_config']
-        progress_logging = self.eval_config['progress_logging'][planner_name]
+        progress_logging = self.eval_config['progress_logging'][exp_name]
         progress_logging['last_update'] = dt_string
         progress_logging['current_episode_count'] = \
                                     f'{self.current_episode_count}/{mc_config["episodes_n"]}'
@@ -33,25 +33,25 @@ class MCEVAL():
         else:
             self.eval_config['status'] = 'IN PROGRESS ...'
 
-        self.eval_config['progress_logging'][planner_name] = progress_logging
+        self.eval_config['progress_logging'][exp_name] = progress_logging
         with open(self.eval_config_dir, 'w', encoding='utf-8') as f:
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
-    def load_planner(self, planner_name):
+    def load_planner(self, planner_info, planner_name):
         print('### Planner name is: ', planner_name)
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
-            self.planner = QMDP()
+            self.planner = QMDP(planner_info)
         elif planner_name == 'mcts':
             from tree_search.mcts import MCTSDPW
-            self.planner = MCTSDPW()
+            self.planner = MCTSDPW(planner_info)
         else:
             print('No such planner exists yet. Check the evaluation config file')
 
 
-    def dump_mc_logs(self, planner_name):
+    def dump_mc_logs(self, exp_name, planner_name):
         exp_dir = './src/evaluation/experiments/'+planner_name
-        with open(exp_dir+'/mc_collection.pickle', 'wb') as handle:
+        with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
             pickle.dump(self.mc_collection, handle)
 
     def run_episode(self, episode_id):
@@ -61,6 +61,7 @@ class MCEVAL():
 
         cumulative_decision_count = 0
         cumulative_decision_time = 0
+        cumulative_reward = 0
         hard_brake_count = 0
 
         while not self.env.sdv.is_merge_complete():
@@ -70,17 +71,17 @@ class MCEVAL():
                 self.planner.plan(self.env)
                 decision = self.planner.get_decision()
                 t_1 = time.time()
+
+                self.env.sdv.update_decision(decision)
                 cumulative_decision_count += 1
                 cumulative_decision_time += (t_1 - t_0)
-
-            else:
-                decision = self.env.sdv.decision
+                cumulative_reward += self.planner.get_avg_reward(decision)
 
             for vehicle in self.env.vehicles:
                 if vehicle.act_long_c and vehicle.act_long_c < -5:
                     hard_brake_count += 1
 
-            self.env.step(decision)
+            self.env.step()
             self.planner.steps_till_next_decision -= 1
             print(self.env.time_step)
 
@@ -88,6 +89,7 @@ class MCEVAL():
         timesteps_to_merge = self.env.time_step
         time_per_decision = cumulative_decision_time/cumulative_decision_count
         self.mc_collection[episode_id] = [
+                                        cumulative_reward,
                                         timesteps_to_merge,
                                         time_per_decision,
                                         hard_brake_count]
@@ -105,19 +107,24 @@ class MCEVAL():
         progress_logging['last_update'] = 'NA'
         self.eval_config['progress_logging'][planner_name] = progress_logging
 
-    def load_collections(self, planner_name):
-        exp_dir = './src/evaluation/experiments/'+ planner_name
-        with open(exp_dir+'/mc_collection.pickle', 'rb') as handle:
+    def load_collections(self, exp_name, planner_name):
+        exp_dir = './src/evaluation/experiments/'+planner_name
+        with open(exp_dir+'/'+exp_name+'.pickle', 'rb') as handle:
             self.mc_collection = pickle.load(handle)
 
-    def is_eval_complete(self, planner_name):
+    def dump_mc_logs(self, exp_name, planner_name):
+        exp_dir = './src/evaluation/experiments/'+planner_name
+        with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
+            pickle.dump(self.mc_collection, handle)
+
+    def is_eval_complete(self, exp_name):
         """Check if this planner has been fully evaluated.
         """
-        if not planner_name in self.eval_config['progress_logging']:
-            self.initiate_eval(planner_name)
+        if not exp_name in self.eval_config['progress_logging']:
+            self.initiate_eval(exp_name)
             return False
 
-        progress_logging = self.eval_config['progress_logging'][planner_name]
+        progress_logging = self.eval_config['progress_logging'][exp_name]
         mc_config = self.eval_config['mc_config']
         epis_n_left = 0 # remaining episodes ot compelte
 
@@ -128,23 +135,27 @@ class MCEVAL():
         if epis_n_left == 0:
             return True
         else:
-            self.load_collections(planner_name)
+            self.load_collections(exp_name, planner_name)
             self.episode_id = progress_logging['episode_in_prog']
             progress_logging['current_episode_count'] = \
                         f'{self.current_episode_count}/{mc_config["episodes_n"]}'
             self.target_episode =  self.episode_id + epis_n_left
-            self.update_eval_config(planner_name)
+            self.update_eval_config(exp_name)
             return False
 
     def run(self):
-        planner_names = self.eval_config['planner_names']
+        planner_info = self.eval_config['planner_info']
+        planner_names = planner_info['planner_names']
+        budgets = planner_info['budgets']
         for planner_name in planner_names:
-            if self.is_eval_complete(planner_name):
-                continue
-            self.load_planner(planner_name)
-            print('Planner being evaluated: ', planner_name)
-            while self.episode_id < self.target_episode:
-                self.run_episode(self.episode_id)
-                self.dump_mc_logs(planner_name)
-                self.update_eval_config(planner_name)
-                self.episode_id += 1
+            for budget in budgets:
+                exp_name = f'{planner_name}-budget-{budget}'
+                if self.is_eval_complete(exp_name):
+                    continue
+                planner_info['budget'] = budget
+                self.load_planner(planner_info, planner_name)
+                while self.episode_id < self.target_episode:
+                    self.run_episode(self.episode_id)
+                    self.dump_mc_logs(exp_name, planner_name)
+                    self.update_eval_config(exp_name)
+                    self.episode_id += 1

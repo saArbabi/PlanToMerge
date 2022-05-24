@@ -81,7 +81,6 @@ class MCTSDPW(AbstractPlanner):
     def step(self, state, decision):
         state.env_reward_reset()
         state.sdv.update_decision(decision)
-
         for i in range(self.steps_per_decision):
             joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action)
