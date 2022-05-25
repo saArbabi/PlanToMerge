@@ -27,9 +27,9 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.set_driver_params(self.rng)
 
     def is_bad_action(self, vehicle, actions):
-        return not self.got_bad_action and \
-                        self.sdv.lane_decision != 'keep_lane' and \
-                        vehicle.id != 1 and actions[0] < -5
+        return not self.got_bad_action and vehicle.neighbours['m'] and \
+                vehicle.neighbours['m'].id == 'sdv' and \
+                self.sdv.lane_decision != 'keep_lane' and actions[0] < -5
 
     def step(self, joint_action):
         """ steps the environment forward in time.
@@ -43,6 +43,16 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
+
+            #
+            # if actions[0] < -5:
+            #     print(self.got_bad_action)
+            #     print('self.sdv.lane_decision' , self.sdv.lane_decision)
+            #     print('vehicle.id' , vehicle.id)
+            #     print('vehicle.glob_x' , vehicle.glob_x)
+            #     print('vehicle.neighbours--att' , vehicle.neighbours['att'].id)
+            #     print('vehicle.neighbours--m' , vehicle.neighbours['m'].id)
+            #     print(vehicle.neighbours['m'] == 'sdv')
 
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
@@ -79,8 +89,4 @@ class ImaginedEnv(EnvAutoMerge):
         return total_reward
 
     def planner_observe(self):
-        x_road = 0
-        for vehicle in self.vehicles:
-            x_road += vehicle.glob_x
-        return x_road
-        # return self.rng.randint(-100, 100)
+        return self.vehicles[0].glob_x
