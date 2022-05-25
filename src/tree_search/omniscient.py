@@ -1,38 +1,30 @@
 from tree_search.mcts import MCTSDPW
+from tree_search.mcts import MCTSDPW, DecisionNode, ChanceNode
+from tree_search.imagined_env import ImaginedEnv
 
 class Omniscient(MCTSDPW):
-    def __init__(self):
-        super(Omniscience, self).__init__()
+    def __init__(self, config=None):
+        super(Omniscient, self).__init__(config)
 
-    def run(self, state, observation):
-        decision_node = self.root
-        total_reward = 0
-        depth = 0
-        # state.seed(self.rng.randint(1e5))
-        terminal = False
-        tree_states = {
-                        'x':[], 'y':[],
-                        'x_rollout':[], 'y_rollout':[]}
+    def reset(self):
+        self.tree_info = []
+        self.belief_info = {}
+        self.root = OmniDecisionNode(parent=None, config=self.config)
 
-        self.extract_belief_info(state, 0)
-        self.log_visited_sdv_state(state, tree_states, 'selection')
-        while self.not_exit_tree(depth, decision_node, terminal):
-            # perform a decision followed by a transition
-            chance_node, decision = decision_node.get_child(state, temperature=self.config['temperature'])
-            # print('######### ', depth, ' ########################### in tree')
-            observation, reward, terminal = self.step(state, decision)
-            total_reward += self.config["gamma"] ** depth * reward
-            decision_node = chance_node.get_child(observation)
-            depth += 1
-            self.log_visited_sdv_state(state, tree_states, 'selection')
-            self.extract_belief_info(state, depth)
+class OmniDecisionNode(DecisionNode):
+    def __init__(self, parent, config):
+        super().__init__(parent, config)
 
-        if not terminal:
-            tree_states, total_reward = self.evaluate(state,
-                                         tree_states,
-                                          total_reward,
-                                          depth=depth)
-        # print(total_reward)
-        # Backup global statistics
-        decision_node.backup_to_root(total_reward)
-        self.extract_tree_info(tree_states)
+    def draw_sample(self, rng):
+        """Note: Unlike mcts, here there is no uniform sampling of driver parameters.
+        """
+        img_state = ImaginedEnv(self.state)
+        return img_state
+
+class OmniChanceNode(ChanceNode):
+    def __init__(self, parent, config):
+        super().__init__(parent, config)
+
+    def expand(self, state, obs_id):
+        self.children[obs_id] = OmniDecisionNode(self, self.config)
+        self.children[obs_id].state = state
