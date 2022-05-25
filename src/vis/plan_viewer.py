@@ -76,7 +76,6 @@ class Viewer():
                 print('glob_y: ', vehicle.glob_y)
                 print('glob_x: ', round(vehicle.glob_x, 2))
                 print('ego_act: ', vehicle.act_long_c)
-                print('steps_since_lc_initiation: ', vehicle.steps_since_lc_initiation)
                 print('driver_params: ', vehicle.driver_params)
                 print('###########################')
 
@@ -176,11 +175,11 @@ class Viewer():
         ax.set_xlim([0, 6])
 
         ax.set_xticks(list(self.OPTIONS.keys()))
-        ax.set_xticklabels(['LANEKEEP \n UP',
-                            'LANEKEEP \n IDLE',
-                            'LANEKEEP \n DOWN',
-                            'MERGE \n IDLE',
-                            'ABORT \n IDLE'])
+        ax.set_xticklabels(['LANEKEEP \n UP (1)',
+                            'LANEKEEP \n IDLE (2)',
+                            'LANEKEEP \n DOWN (3)',
+                            'MERGE \n IDLE (4)',
+                            'ABORT \n IDLE (5)'])
 
     def log_var(self, vehicles):
         for vehicle in vehicles:
@@ -191,22 +190,34 @@ class Viewer():
 
     def draw_var(self, ax):
         ax.clear()
-        ax.plot(self.logged_var['sdv'], color='red', label='Merger')
-        ax.plot(self.logged_var['other'], color='blue', label='Yielder')
-        ax.set_xlim(0, 180)
+        log_len = len(self.logged_var['sdv'])
+        if log_len < 150:
+            ax.plot(self.logged_var['sdv'][-150:], color='red', label='Merger')
+            ax.plot(self.logged_var['other'][-150:], color='blue', label='Yielder')
+            ax.set_xlim(0, 180)
+        else:
+            ax.plot(self.logged_var['sdv'], color='red', label='Merger')
+            ax.plot(self.logged_var['other'], color='blue', label='Yielder')
+            ax.set_xlim(log_len-150, log_len+30)
+
         ax.set_ylim(-7, 7)
         ax.set_ylabel('long.acc ($ms^{-2}$)')
         ax.set_xlabel('step')
         ax.legend()
         ax.grid()
 
-    def render(self, vehicles, planner):
-        self.draw_highway(self.env_ax, vehicles)
-        self.draw_var(self.var_ax)
+    def render_plans(self, planner):
         if planner.decision_counts:
             self.draw_decision_counts(self.decision_ax, planner)
             self.draw_plans(self.env_ax, planner)
-        #     self.draw_beliefs(self.env_ax, planner)
+            plt.pause(1e-10)
 
+    def render_logs(self, avg_step_reward_steps, avg_step_rewards):
+        self.draw_var(self.var_ax)
+        for time_step, reward in zip(avg_step_reward_steps, avg_step_rewards):
+            self.var_ax.text(time_step, 5.1, str(round(reward, 1)), fontsize='xx-small')
+
+    def render_env(self, vehicles):
+        self.draw_highway(self.env_ax, vehicles)
         self.fig.tight_layout()
         plt.pause(1e-10)
