@@ -73,10 +73,12 @@ class MCTSDPW(AbstractPlanner):
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
             actions = vehicle.act()
-            actions[0] += 0.5 * self.rng.normal()
-
             joint_action.append(actions)
         return joint_action
+
+    def add_position_noise(self, state):
+        for vehicle in state.vehicles:
+            vehicle.glob_x += self.rng.normal()
 
     def step(self, state, decision):
         state.env_reward_reset()
@@ -84,6 +86,8 @@ class MCTSDPW(AbstractPlanner):
         for i in range(self.steps_per_decision):
             joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action)
+
+        self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward()
         terminal = state.is_terminal()
