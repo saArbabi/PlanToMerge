@@ -55,8 +55,10 @@ planner_name = 'omniscient'
 exp_dir = './src/evaluation/experiments/'+planner_name
 budgets, exp_names = get_budgets(exp_dir)
 # %%
+episode_id = 500
+# %%
 for planner_name in planner_names:
-    timesteps_to_merge = [metrics[3][0] for metrics in exp_logs[planner_name]['mc_collection']]
+    timesteps_to_merge = [metrics[episode_id][0] for metrics in exp_logs[planner_name]['mc_collection']]
     budgets = exp_logs[planner_name]['budgets']
     plt.plot(budgets, timesteps_to_merge, 'o-', label=planner_name)
 plt.xlabel('Budget')
@@ -66,7 +68,7 @@ plt.grid()
 
 # %%
 for planner_name in planner_names:
-    timesteps_to_merge = [metrics[3][1] for metrics in exp_logs[planner_name]['mc_collection']]
+    timesteps_to_merge = [metrics[episode_id][1] for metrics in exp_logs[planner_name]['mc_collection']]
     budgets = exp_logs[planner_name]['budgets']
     plt.plot(budgets, timesteps_to_merge, 'o-', label=planner_name)
 plt.xlabel('Budget')
@@ -75,7 +77,7 @@ plt.legend()
 plt.grid()
 
 # %%
-timesteps_to_merge = [metrics[3][1] for metrics in mc_collection]
+timesteps_to_merge = [metrics[episode_id][1] for metrics in mc_collection]
 plt.plot(budgets, timesteps_to_merge, 'o-', label='With yield car')
 # plt.plot(budgets, [170]*7, 'o-', label='With yield car')
 plt.xlabel('Budget')

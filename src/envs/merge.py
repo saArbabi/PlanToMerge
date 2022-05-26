@@ -80,6 +80,5 @@ class EnvMerge():
             self.recorder(self.vehicles+[self.dummy_stationary_car])
         for vehicle, actions in zip(self.vehicles, joint_action):
             vehicle.step(actions)
-            vehicle.time_lapse += 1
 
         self.time_step += 1

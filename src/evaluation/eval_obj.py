@@ -65,6 +65,7 @@ class MCEVAL():
         cumulative_decision_time = 0
         cumulative_reward = 0
         hard_brake_count = 0
+        decisions_made = []
 
         while not self.env.sdv.is_merge_complete():
         # while self.env.time_step < 40:
@@ -79,6 +80,7 @@ class MCEVAL():
                 cumulative_decision_time += (t_1 - t_0)
                 cumulative_reward += self.env.get_reward()
                 self.env.env_reward_reset()
+                decisions_made.append(decision)
 
             for vehicle in self.env.vehicles:
                 if vehicle.act_long_c and vehicle.act_long_c < -5:
@@ -95,13 +97,14 @@ class MCEVAL():
                                         cumulative_reward,
                                         timesteps_to_merge,
                                         time_per_decision,
-                                        hard_brake_count]
+                                        hard_brake_count,
+                                        decisions_made]
 
     def initiate_eval(self, planner_name):
         self.current_episode_count = 0
         self.create_empty()
         progress_logging = {}
-        self.episode_id = 3
+        self.episode_id = 500
         self.target_episode = self.eval_config['mc_config']['episodes_n'] + \
                                                             self.episode_id
 
@@ -121,7 +124,7 @@ class MCEVAL():
             pickle.dump(self.mc_collection, handle)
         print('### Dumping mc_logs: ', exp_name)
 
-    def is_eval_complete(self, exp_name):
+    def is_eval_complete(self, exp_name, planner_name):
         """Check if this planner has been fully evaluated.
         """
         if not exp_name in self.eval_config['progress_logging']:
@@ -140,7 +143,7 @@ class MCEVAL():
             return True
         else:
             self.load_collections(exp_name, planner_name)
-            self.episode_id = progress_logging['episode_in_prog']
+            self.episode_id = progress_logging['episode_in_prog'] + 1
             progress_logging['current_episode_count'] = \
                         f'{self.current_episode_count}/{mc_config["episodes_n"]}'
             self.target_episode =  self.episode_id + epis_n_left
@@ -154,7 +157,7 @@ class MCEVAL():
         for planner_name in planner_names:
             for budget in budgets:
                 exp_name = f'{planner_name}-budget-{budget}'
-                if self.is_eval_complete(exp_name):
+                if self.is_eval_complete(exp_name, planner_name):
                     continue
                 planner_info['budget'] = budget
                 self.load_planner(planner_info, planner_name)

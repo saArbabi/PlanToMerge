@@ -2,8 +2,8 @@ from envs.merge import EnvMerge
 from vehicles.sdv_vehicle import SDVehicle
 import numpy as np
 import copy
-from envs.env_initializor_test import EnvInitializor
-# from envs.env_initializor import EnvInitializor
+# from envs.env_initializor_test import EnvInitializor
+from envs.env_initializor import EnvInitializor
 import sys
 
 class EnvAutoMerge(EnvMerge):
