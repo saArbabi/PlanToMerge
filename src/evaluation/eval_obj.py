@@ -38,7 +38,6 @@ class MCEVAL():
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
     def load_planner(self, planner_info, planner_name):
-        print('### Planner name is: ', planner_name)
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
             self.planner = QMDP(planner_info)
@@ -87,8 +86,8 @@ class MCEVAL():
 
             self.env.step()
             self.planner.steps_till_next_decision -= 1
-            print(self.env.time_step)
 
+        cumulative_reward += self.env.get_reward()
         # collect metrics
         timesteps_to_merge = self.env.time_step
         time_per_decision = cumulative_decision_time/cumulative_decision_count
@@ -120,6 +119,7 @@ class MCEVAL():
         exp_dir = './src/evaluation/experiments/'+planner_name
         with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
             pickle.dump(self.mc_collection, handle)
+        print('### Dumping mc_logs: ', exp_name)
 
     def is_eval_complete(self, exp_name):
         """Check if this planner has been fully evaluated.
