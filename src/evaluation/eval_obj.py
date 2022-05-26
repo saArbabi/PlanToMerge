@@ -45,6 +45,9 @@ class MCEVAL():
         elif planner_name == 'mcts':
             from tree_search.mcts import MCTSDPW
             self.planner = MCTSDPW(planner_info)
+        elif planner_name == 'omniscient':
+            from tree_search.omniscient import Omniscient
+            self.planner = Omniscient(planner_info)
         else:
             print('No such planner exists yet. Check the evaluation config file')
 
@@ -75,7 +78,8 @@ class MCEVAL():
                 self.env.sdv.update_decision(decision)
                 cumulative_decision_count += 1
                 cumulative_decision_time += (t_1 - t_0)
-                cumulative_reward += self.planner.get_avg_reward(decision)
+                cumulative_reward += self.env.get_reward()
+                self.env.env_reward_reset()
 
             for vehicle in self.env.vehicles:
                 if vehicle.act_long_c and vehicle.act_long_c < -5:

@@ -14,6 +14,7 @@ class EnvAutoMerge(EnvMerge):
         """Initiates the environment
         """
         self.time_step = 0
+        self.env_reward_reset()
         env_initializor = EnvInitializor(self.config)
         env_initializor.next_vehicle_id = 1
         env_initializor.dummy_stationary_car = self.dummy_stationary_car
@@ -25,6 +26,11 @@ class EnvAutoMerge(EnvMerge):
 
     def seed(self, seed):
         self.rng = np.random.RandomState(seed)
+
+    def env_reward_reset(self):
+        """This is reset with every planner timestep
+        """
+        self.got_bad_action = False
 
     def turn_sdv(self, vehicle):
         """Keep the initial state of the vehicle, but let tree search
@@ -53,6 +59,11 @@ class EnvAutoMerge(EnvMerge):
         actions = self.sdv.act()
         return actions
 
+    def is_bad_action(self, vehicle, actions):
+        return not self.got_bad_action and vehicle.neighbours['m'] and \
+                vehicle.neighbours['m'].id == 'sdv' and \
+                self.sdv.lane_decision != 'keep_lane' and actions[0] < -5
+
     def log_actions(self, vehicle, actions):
         act_long = actions[0]
         if vehicle.act_long_c:
@@ -79,6 +90,9 @@ class EnvAutoMerge(EnvMerge):
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
             vehicle.step(actions)
+            if self.is_bad_action(vehicle, actions):
+                self.got_bad_action = True
+
         self.time_step += 1
 
     def all_cars(self):
@@ -86,3 +100,21 @@ class EnvAutoMerge(EnvMerge):
         returns the list of all the cars on the road
         """
         return self.vehicles + [self.sdv]
+
+    def get_reward(self):
+        """
+        Reward is set to encourage the following behaviours:
+        1) perform merge successfully
+        2) avoid reckless decisions
+        """
+        total_reward = 0
+        if self.sdv.is_merge_complete():
+            if self.sdv.abort_been_chosen:
+                total_reward += 1
+            else:
+                total_reward += 3
+
+        if self.got_bad_action:
+            total_reward -= 5
+
+        return total_reward

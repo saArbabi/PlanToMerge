@@ -165,12 +165,6 @@ class MCTSDPW(AbstractPlanner):
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 
-    def get_avg_reward(self, decision):
-        chance_node = self.root.children[decision]
-        state_nodes = chance_node.children.values()
-        state_rewards = [state_node.state.state_reward for state_node in state_nodes]
-        return sum(state_rewards)/len(state_rewards)
-
     def is_decision_time(self):
         """The planner computes a decision if certain number of
         timesteps have elapsed from the last decision
