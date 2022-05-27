@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import json
 import pickle
 import os
+import numpy as np
 
 
 # %%
@@ -35,22 +36,85 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
-planner_names = ['mcts', 'omniscient']
-exp_logs = {}
-for planner_name in planner_names:
-    exp_logs[planner_name] = {}
 
+
+# %%
+metric_dict = {}
+decision_logs = {}
 for planner_name in planner_names:
-    # planner_name = 'mcts'
+    metrics = []
+    decision_logs[planner_name] = {}
     exp_dir = './src/evaluation/experiments/'+planner_name
     budgets, exp_names = get_budgets(exp_dir)
     mc_collection = get_mc_collection(exp_dir, exp_names)
-    exp_logs[planner_name]['exp_names'] = exp_names
-    exp_logs[planner_name]['budgets'] = budgets
-    exp_logs[planner_name]['mc_collection'] = mc_collection
-exp_logs[planner_name]['mc_collection']
+    for i, budget in enumerate(budgets):
+        decision_logs[planner_name][budget] = []
+        budget_metric = []
+        for episode, epis_metric in mc_collection[i].items():
+            decision_logs[planner_name][budget] += epis_metric[-1]
+            budget_metric.append([budget, episode]+epis_metric[0:-1])
+        metrics.append(budget_metric)
 
-# %%\
+    metric_dict[planner_name] = np.array(metrics)
+
+
+# %%
+ metrics.shape
+# %%
+indexs = {}
+metric_labels = ['budget', 'episode', 'cumulative_reward', 'timesteps_to_merge', \
+                  'time_per_decision', 'hard_brake_count', 'decisions_made']
+
+for i in range(6):
+    indexs[metric_labels[i]] = i
+indexs
+# %%
+subplot_xcount = 2
+subplot_ycount = 2
+fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
+axs[1, 0].set_xlabel('Iterations')
+axs[1, 1].set_xlabel('Iterations')
+
+def add_plot_to_fig(metrics, ax, kpi):
+    # ax.plot(x_y[0], x_y[1][:, -1], \
+    #                'o-', label=planner_name)
+    ax.plot(x_y[0], x_y[1].mean(axis=1), \
+                   'o-', label=planner_name)
+    ax.legend()
+    ax.set_title(kpi)
+
+for planner_name in planner_names:
+    metrics = metric_dict[planner_name]
+
+    kpi = 'cumulative_reward'
+    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
+    ax = axs[0, 0]
+    add_plot_to_fig(x_y, ax, kpi)
+    kpi = 'timesteps_to_merge'
+    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
+    ax = axs[0, 1]
+    add_plot_to_fig(x_y, ax, kpi)
+    kpi = 'time_per_decision'
+    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
+    ax = axs[1, 0]
+    add_plot_to_fig(x_y, ax, kpi)
+    kpi = 'hard_brake_count'
+    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
+    ax = axs[1, 1]
+    add_plot_to_fig(x_y, ax, kpi)
+
+# %%
+metric_dict['omniscient'][0, :, indexs['timesteps_to_merge']]
+metric_dict['omniscient'][0, :, indexs['cumulative_reward']]
+metric_dict['mcts'][0, :, indexs['cumulative_reward']]
+
+metric_dict['mcts'][:, :, indexs['timesteps_to_merge']]
+metric_dict['omniscient'][:, :, indexs['timesteps_to_merge']]
+metric_dict['omniscient'][:, :, 3].mean(axis=1)
+metric_dict['omniscient'][:, 0, 3]
+metric_dict['omniscient'][:, 1, 3]
+# %%
+
 planner_name = 'omniscient'
 exp_dir = './src/evaluation/experiments/'+planner_name
 budgets, exp_names = get_budgets(exp_dir)

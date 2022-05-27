@@ -78,18 +78,16 @@ class MCEVAL():
                 self.env.sdv.update_decision(decision)
                 cumulative_decision_count += 1
                 cumulative_decision_time += (t_1 - t_0)
-                cumulative_reward += self.env.get_reward()
-                self.env.env_reward_reset()
+                cumulative_reward += self.env.get_reward(decision)
                 decisions_made.append(decision)
-
-            for vehicle in self.env.vehicles:
-                if vehicle.act_long_c and vehicle.act_long_c < -5:
+                if self.env.got_bad_action:
                     hard_brake_count += 1
+                self.env.env_reward_reset()
 
             self.env.step()
             self.planner.steps_till_next_decision -= 1
 
-        cumulative_reward += self.env.get_reward()
+        cumulative_reward += self.env.get_reward(decision)
         # collect metrics
         timesteps_to_merge = self.env.time_step
         time_per_decision = cumulative_decision_time/cumulative_decision_count

@@ -11,7 +11,7 @@ class Uninformed(MCTSDPW):
             state.step(decision)
 
         observation = state.planner_observe()
-        reward = state.get_reward()
+        reward = state.get_reward(decision)
         terminal = state.is_terminal()
         return observation, reward, terminal
 

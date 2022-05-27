@@ -61,7 +61,7 @@ class MCTSDPWLogger(MCTSDPW):
 
             state = state_node.fetch_state()
             if child_type == 'old':
-                reward = state_node.state.get_reward()
+                reward = state_node.state.get_reward(decision)
 
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1

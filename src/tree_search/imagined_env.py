@@ -49,7 +49,5 @@ class ImaginedEnv(EnvAutoMerge):
         if self.sdv.is_merge_complete():
             return True
 
-
-
     def planner_observe(self):
         return self.vehicles[0].glob_x

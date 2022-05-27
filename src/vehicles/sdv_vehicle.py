@@ -76,7 +76,6 @@ class SDVehicle(IDMMOBILVehicleMerge):
                 self.target_lane = self.lane_id
 
         elif merge_decision == 'ABORT':
-            self.abort_been_chosen = True
             self.lane_decision = 'keep_lane'
             if self.target_lane != self.lane_id:
                 self.target_lane = self.lane_id

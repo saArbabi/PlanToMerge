@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import json
-# planner_name = 'mcts'
+planner_name = 'mcts'
 planner_name = 'omniscient'
 
 def load_planner():
@@ -41,7 +41,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 501
+    episode_id = 500
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
@@ -66,21 +66,19 @@ def main():
                 pass
 
         if planner.is_decision_time():
-            # avg_step_rewards.append(avg_step_reward)
-            avg_step_reward = env.get_reward()
+            t_0 = time.time()
+            planner.plan(env)
+            _decision = planner.get_decision()
+            t_1 = time.time()
+            print('compute time: ', t_1 - t_0)
+
+            avg_step_reward = env.get_reward(_decision)
             cumulative_reward += avg_step_reward
             avg_step_rewards.append(avg_step_reward)
             avg_step_reward_steps.append(env.time_step)
             env.env_reward_reset()
             print('Avg step reward: ', avg_step_reward)
             print('Cummulative reward: ', cumulative_reward)
-
-            t_0 = time.time()
-            planner.plan(env)
-            _decision = planner.get_decision()
-            t_1 = time.time()
-
-            print('compute time: ', t_1 - t_0)
 
             viewer.render_plans(planner)
             decision = input('Give me a decision ')

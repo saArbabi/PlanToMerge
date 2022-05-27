@@ -183,7 +183,7 @@ class Viewer():
 
     def log_var(self, vehicles):
         for vehicle in vehicles:
-            if vehicle.id == 2:
+            if vehicle.id == 3:
                 self.logged_var['other'].append(vehicle.act_long_c)
             elif vehicle.id == 'sdv':
                 self.logged_var['sdv'].append(vehicle.act_long_c)

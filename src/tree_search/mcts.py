@@ -89,7 +89,7 @@ class MCTSDPW(AbstractPlanner):
 
         self.add_position_noise(state)
         observation = state.planner_observe()
-        reward = state.get_reward()
+        reward = state.get_reward(decision)
         terminal = state.is_terminal()
         return observation, reward, terminal
 
@@ -122,7 +122,7 @@ class MCTSDPW(AbstractPlanner):
 
             state = state_node.fetch_state()
             if child_type == 'old':
-                reward = state_node.state.get_reward()
+                reward = state_node.state.get_reward(decision)
 
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
@@ -153,11 +153,13 @@ class MCTSDPW(AbstractPlanner):
         return total_reward
 
     def plan(self, state):
-        self.reset()
-        state_node = self.root
-        state_node.state = ImaginedEnv(state)
-        for plan_itr in range(self.config['budget']):
-            self.run(state_node)
+        available_decisions = self.get_available_decisions(state)
+        if len(available_decisions) > 1:
+            self.reset()
+            state_node = self.root
+            state_node.state = ImaginedEnv(state)
+            for plan_itr in range(self.config['budget']):
+                self.run(state_node)
 
     def get_decision(self):
         """Only return the first decision, the rest is conditioned on observations"""

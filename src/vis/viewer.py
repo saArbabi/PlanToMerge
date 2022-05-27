@@ -83,7 +83,6 @@ class Viewer():
                 print('glob_y: ', vehicle.glob_y)
                 print('glob_x: ', round(vehicle.glob_x, 2))
                 print('ego_act: ', vehicle.act_long_c)
-                print('steps_since_lc_initiation: ', vehicle.steps_since_lc_initiation)
                 # print('lane_y: ', vehicle.lane_y)
                 print('driver_params: ', vehicle.driver_params)
 
@@ -215,7 +214,6 @@ class ViewerMC(Viewer):
                 print('ego_lane_id: ', vehicle.lane_id)
                 print('lane_y: ', round(vehicle.lane_y, 2))
                 print('ego_act: ', vehicle.act_long_c)
-                print('steps_since_lc_initiation: ', vehicle.steps_since_lc_initiation)
                 # print('lane_y: ', vehicle.lane_y)
                 print('driver_params: ', vehicle.driver_params)
 
