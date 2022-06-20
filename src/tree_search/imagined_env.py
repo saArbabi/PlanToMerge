@@ -21,6 +21,13 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.driver_params['aggressiveness'] = self.rng.uniform(0.01, 0.99)
             vehicle.set_driver_params(self.rng)
 
+    def give_des(self, vehicle):
+        des = 0
+        for i in vehicle.driver_params.values():
+            des += i
+        return des
+
+
     def step(self, joint_action):
         """ steps the environment forward in time.
         """
@@ -30,9 +37,37 @@ class ImaginedEnv(EnvAutoMerge):
         for vehicle, actions in zip(self.vehicles, joint_action):
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
-            vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
+                # print('########################')
+                # print('id ', vehicle.id)
+                # print('act ', actions[0])
+                # print('attend_veh ', vehicle.neighbours['att'].id)
+                # print('time_step ', self.time_step)
+            if vehicle.id == 3 and 40 > self.time_step > 20:
+                if self.got_bad_action:
+                    print('*',
+                          self.time_step, ' ',
+                          ' ego att: ', vehicle.neighbours['att'].id,
+                          ' ego act: ', vehicle.act_long_c, ' ',
+                          ' sdv act: ', self.sdv.act_long_c, ' ',
+                          ' sdv dec: ', self.sdv.decision)
+
+                else:
+                    print(
+                          self.time_step, ' ',
+                          ' ego att: ', vehicle.neighbours['att'].id,
+                          ' ego act: ', vehicle.act_long_c, ' ',
+                          ' sdv act: ', self.sdv.act_long_c, ' ',
+                          ' sdv dec: ', self.sdv.decision)
+            vehicle.step(actions)
+
+                # if vehicle.am_i_attending(vehicle.neighbours['m'], \
+                #                        vehicle.neighbours['f']):
+                #     print('yess')
+                #     print(vehicle.idm_action(vehicle, vehicle.neighbours['m']))
+                # else:
+                #     print('No')
 
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)

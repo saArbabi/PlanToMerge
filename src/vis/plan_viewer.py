@@ -194,10 +194,14 @@ class Viewer():
         if log_len < 150:
             ax.plot(self.logged_var['sdv'][-150:], color='red', label='Merger')
             ax.plot(self.logged_var['other'][-150:], color='blue', label='Yielder')
+            ax.scatter(np.arange(0, len(self.logged_var['other']), 10), \
+                       self.logged_var['other'][::10], color='blue', label='Yielder')
             ax.set_xlim(0, 180)
         else:
             ax.plot(self.logged_var['sdv'], color='red', label='Merger')
             ax.plot(self.logged_var['other'], color='blue', label='Yielder')
+            ax.scatter(np.arange(0, len(self.logged_var['other']), 10), \
+                       self.logged_var['other'][::10], color='blue', label='Yielder')
             ax.set_xlim(log_len-150, log_len+30)
 
         ax.set_ylim(-7, 7)

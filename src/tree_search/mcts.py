@@ -24,6 +24,7 @@ class MCTSDPW(AbstractPlanner):
             print(self.config)
         else:
             self.config = config
+        self.decision_counts = None
         super(MCTSDPW, self).__init__()
 
     @classmethod
@@ -38,42 +39,59 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
-        if state.sdv.decision == 5:
-            if state.sdv.neighbours['rl']:
-                return [5]
-            else:
-                return [4, 5]
+        if state.sdv.decision == 4:
+            return [4]
+
+        if state.sdv.is_merge_possible():
+            return [2, 4]
         else:
-            if state.sdv.is_merge_initiated():
-                return [4]
-            elif state.sdv.decision_cat == 'LANEKEEP':
-                if state.sdv.is_merge_possible():
-                    if state.sdv.driver_params['aggressiveness'] < 0.05:
-                        return [1, 2, 4]
-                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
-                        return [3, 2, 4]
-                    else:
-                        return [1, 2, 3, 4]
-                else:
-                    if state.sdv.driver_params['aggressiveness'] < 0.05:
-                        return [1, 2]
-                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
-                        return [3, 2]
-                    else:
-                        return [1, 2, 3]
-            elif state.sdv.decision_cat == 'MERGE':
-                return [4, 5]
+            return [2]
+
+
+
+
+        # if state.sdv.decision == 5:
+        #     if state.sdv.neighbours['rl']:
+        #         return [5]
+        #     else:
+        #         return [4, 5]
+        # else:
+        #     if state.sdv.is_merge_initiated():
+        #         return [4]
+        #     elif state.sdv.decision_cat == 'LANEKEEP':
+        #         if state.sdv.is_merge_possible():
+        #             if state.sdv.driver_params['aggressiveness'] < 0.05:
+        #                 return [1, 2, 4]
+        #             elif state.sdv.driver_params['aggressiveness'] > 0.95:
+        #                 return [3, 2, 4]
+        #             else:
+        #                 return [1, 2, 3, 4]
+        #         else:
+        #             if state.sdv.driver_params['aggressiveness'] < 0.05:
+        #                 return [1, 2]
+        #             elif state.sdv.driver_params['aggressiveness'] > 0.95:
+        #                 return [3, 2]
+        #             else:
+        #                 return [1, 2, 3]
+        #     elif state.sdv.decision_cat == 'MERGE':
+        #         return [4, 5]
 
     def predict_vehicle_actions(self, state):
         """
         Returns the joint action of all vehicles other than SDV on the road
         """
         joint_action = []
+        # print(state.time_step,  ' #######')
+        # print('before ', state.vehicles[2].neighbours['att'].id)
         for vehicle in state.vehicles:
+            # if vehicle.id == 3:
+                # print('sdv dec before ', state.sdv.lane_decision)
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
             actions = vehicle.act()
             joint_action.append(actions)
+
+        # print('after ', state.vehicles[2].neighbours['att'].id)
         return joint_action
 
     def add_position_noise(self, state):
@@ -87,7 +105,7 @@ class MCTSDPW(AbstractPlanner):
             joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action)
 
-        self.add_position_noise(state)
+        # self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
         terminal = state.is_terminal()
@@ -107,7 +125,7 @@ class MCTSDPW(AbstractPlanner):
         depth = 0
         terminal = False
         state = state_node.draw_sample(self.rng)
-
+        # print('>>>>>> ', state.time_step)
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(
@@ -128,6 +146,7 @@ class MCTSDPW(AbstractPlanner):
             depth += 1
 
         if not terminal:
+            # print('>>>>>> ', state.time_step)
             total_reward = self.evaluate(state,
                                           total_reward,
                                           depth=depth)
@@ -143,13 +162,53 @@ class MCTSDPW(AbstractPlanner):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
+        print('###################### EVAL ########################')
+        good_to_print = False
+        # print('###### Reward before: ', total_reward)
+
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
+
+
+            state.env_reward_reset()
+            state_before = safe_deepcopy_env(state)
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** rollout_depth * reward
+
+            # if state.got_bad_action:
+            #     good_to_print = True
+
+            if good_to_print:
+                print('###### BEFORE ########')
+                try:
+                    print('effected_vehicle: ' , state_before.effected_vehicle.id)
+                    print('effected_vehicle_act: ' , state_before.effected_vehicle_act)
+                    print('delta x: ' , state_before.sdv.glob_x - state_before.effected_vehicle.glob_x)
+                except:
+                    pass
+                print('decision: ' , decision)
+                print('lane_decision: ' , state_before.sdv.lane_decision)
+                print('timestep: ' , state_before.time_step)
+                for vehicle in state_before.vehicles:
+                    if vehicle.id != 1:
+                        print('veh ', vehicle.id, ' ', vehicle.neighbours['att'].id, ' ', vehicle.act_long_c)
+
+                print('###### AFTER ########')
+                print('###### Reward after: ', reward)
+                print('###### rollout_depth: ', rollout_depth)
+                try:
+                    print('effected_vehicle: ' , state.effected_vehicle.id)
+                    print('effected_vehicle_act: ' , state.effected_vehicle_act)
+                    print('effected_vehicle_att: ' , state.effected_vehicle.neighbours['att'].id)
+                    print('effected_vehicle_m: ' , state.effected_vehicle.neighbours['m'].id)
+                    print('delta x: ' , state.sdv.glob_x - state.effected_vehicle.glob_x)
+                except:
+                    pass
+                print('timestep: ' , state.time_step)
+                print('lane_decision: ' , state.sdv.lane_decision)
+
             if terminal:
                 break
-
         return total_reward
 
     def plan(self, state):
@@ -159,11 +218,14 @@ class MCTSDPW(AbstractPlanner):
             state_node = self.root
             state_node.state = ImaginedEnv(state)
             for plan_itr in range(self.config['budget']):
+                print(plan_itr, '  ###################### SEARCH ########################')
                 self.run(state_node)
 
-    def get_decision(self):
+    def get_decision(self, state):
         """Only return the first decision, the rest is conditioned on observations"""
-
+        available_decisions = self.get_available_decisions(state)
+        if len(available_decisions) == 1:
+            return available_decisions[0]
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 
@@ -246,6 +308,7 @@ class DecisionNode(Node):
     def fetch_state(self):
         assert self.state, 'This node has no state attribute'
         img_state = ImaginedEnv(self.state)
+        # return self.state
         return img_state
 
     def draw_sample(self, rng):
