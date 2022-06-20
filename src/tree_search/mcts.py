@@ -24,6 +24,7 @@ class MCTSDPW(AbstractPlanner):
             print(self.config)
         else:
             self.config = config
+        self.decision_counts = None
         super(MCTSDPW, self).__init__()
 
     @classmethod
@@ -63,6 +64,13 @@ class MCTSDPW(AbstractPlanner):
                         return [1, 2, 3]
             elif state.sdv.decision_cat == 'MERGE':
                 return [4, 5]
+        # if state.sdv.decision == 4:
+        #     return [4]
+        #
+        # if state.sdv.is_merge_possible():
+        #     return [2, 4]
+        # else:
+        #     return [2]
 
     def predict_vehicle_actions(self, state):
         """
@@ -107,7 +115,6 @@ class MCTSDPW(AbstractPlanner):
         depth = 0
         terminal = False
         state = state_node.draw_sample(self.rng)
-
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(
@@ -145,11 +152,15 @@ class MCTSDPW(AbstractPlanner):
         """
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
+
+
+            state.env_reward_reset()
+            state_before = safe_deepcopy_env(state)
             observation, reward, terminal = self.step(state, decision)
             total_reward += self.config["gamma"] ** rollout_depth * reward
+
             if terminal:
                 break
-
         return total_reward
 
     def plan(self, state):
@@ -161,9 +172,11 @@ class MCTSDPW(AbstractPlanner):
             for plan_itr in range(self.config['budget']):
                 self.run(state_node)
 
-    def get_decision(self):
+    def get_decision(self, state):
         """Only return the first decision, the rest is conditioned on observations"""
-
+        available_decisions = self.get_available_decisions(state)
+        if len(available_decisions) == 1:
+            return available_decisions[0]
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 
@@ -246,6 +259,7 @@ class DecisionNode(Node):
     def fetch_state(self):
         assert self.state, 'This node has no state attribute'
         img_state = ImaginedEnv(self.state)
+        # return self.state
         return img_state
 
     def draw_sample(self, rng):
@@ -270,8 +284,6 @@ class ChanceNode(Node):
 
     def get_child(self, state, observation, rng):
         obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
-        # print(len(self.children))
-        # print(observation)
         if obs_id not in self.children:
             if self.k_state*self.count**self.alpha_state < len(self.children):
                 obs_id = rng.choice(list(self.children))

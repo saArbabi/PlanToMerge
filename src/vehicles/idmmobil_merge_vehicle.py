@@ -191,7 +191,8 @@ class IDMMOBILVehicleMerge(Vehicle):
                             or (m_veh.glob_x < self.merge_lane_start) \
                             or m_veh.lane_decision == 'keep_lane':
             return False
-        elif m_veh == self.neighbours['att']:
+
+        elif self.neighbours['att'] and m_veh.id == self.neighbours['att'].id:
             return True
         elif m_veh.lane_id == self.lane_id:
             # print('lane-based ########')

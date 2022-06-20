@@ -59,7 +59,7 @@ for planner_name in planner_names:
 
 
 # %%
- metrics.shape
+metric_dict[planner_name].shape
 # %%
 indexs = {}
 metric_labels = ['budget', 'episode', 'cumulative_reward', 'timesteps_to_merge', \
@@ -103,6 +103,55 @@ for planner_name in planner_names:
     ax = axs[1, 1]
     add_plot_to_fig(x_y, ax, kpi)
 
+# %%
+"""
+Performance comparison for each episode.
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+
+plt.rcdefaults()
+fig, ax = plt.subplots()
+
+# Example data
+people = ('Tom', 'Dick', 'Harry', 'Slim', 'Jim')
+y_pos = np.arange(len(people))
+performance = 3 + 10 * np.random.rand(len(people))
+error = np.random.rand(len(people))
+
+ax.barh(y_pos, performance, xerr=error, align='center')
+ax.set_yticks(y_pos, labels=people)
+ax.invert_yaxis()  # labels read top-to-bottom
+ax.set_xlabel('Performance')
+ax.set_title('How fast do you want to go today?')
+
+plt.show()
+"""
+fig, ax = plt.subplots(figsize=(5, 10))
+episodes_considered = range(500, 510)
+y_pos = np.arange(len(episodes_considered))*3
+kpi = 'cumulative_reward'
+kpi = 'timesteps_to_merge'
+
+for i, planner_name in enumerate(planner_names):
+    metrics = metric_dict[planner_name]
+    kpi_val = metrics[1, :, indexs[kpi]]
+    ax.barh(y_pos + i, kpi_val, label=planner_name)
+
+labels = [str(epis) for epis in episodes_considered]
+ax.set_yticks(y_pos)
+ax.set_yticklabels(labels)
+ax.legend()
+plt.plot([0, 0], \
+          [-1, 30], color = 'black')
+
+
+# %%
+
+
+
+x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
 # %%
 metric_dict['omniscient'][0, :, indexs['timesteps_to_merge']]
 metric_dict['omniscient'][0, :, indexs['cumulative_reward']]

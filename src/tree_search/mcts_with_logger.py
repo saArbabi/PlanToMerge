@@ -86,7 +86,6 @@ class MCTSDPWLogger(MCTSDPW):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
@@ -97,5 +96,4 @@ class MCTSDPWLogger(MCTSDPW):
 
             if terminal:
                 break
-
         return tree_states, total_reward

@@ -60,9 +60,11 @@ class EnvAutoMerge(EnvMerge):
         return actions
 
     def is_bad_action(self, vehicle, actions):
-        return not self.got_bad_action and vehicle.neighbours['m'] and \
+        cond = not self.got_bad_action and vehicle.neighbours['m'] and \
                 vehicle.neighbours['m'].id == 'sdv' and \
                 self.sdv.lane_decision != 'keep_lane' and actions[0] < -5
+        if cond:
+            return True
 
     def log_actions(self, vehicle, actions):
         act_long = actions[0]
@@ -92,7 +94,6 @@ class EnvAutoMerge(EnvMerge):
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
-
         self.time_step += 1
 
     def all_cars(self):
@@ -110,14 +111,13 @@ class EnvAutoMerge(EnvMerge):
         total_reward = 0
         if not self.sdv.abort_been_chosen and decision == 5:
             self.sdv.abort_been_chosen = True
-            total_reward -= 2
+            # total_reward -= 2
 
         if self.sdv.is_merge_complete():
             if self.sdv.abort_been_chosen:
                 total_reward += 1
             else:
                 total_reward += 3
-
 
         if self.got_bad_action:
             total_reward -= 5

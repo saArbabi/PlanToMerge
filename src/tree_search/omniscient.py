@@ -16,7 +16,8 @@ class OmniDecisionNode(DecisionNode):
         super().__init__(parent, config)
 
     def draw_sample(self, rng):
-        """Note: Unlike mcts, here there is no uniform sampling of driver parameters.
+        """Note: Unlike mcts, here there is no uniform re-sampling of driver parameters.
+            There is however stochasticity in the state transisions (action noise). 
         """
         img_state = ImaginedEnv(self.state)
         return img_state

@@ -69,7 +69,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
         if merge_decision == 'MERGE':
             self.lane_decision = 'move_left'
-
+                
         elif merge_decision == 'LANEKEEP':
             self.lane_decision = 'keep_lane'
             if self.target_lane != self.lane_id:
