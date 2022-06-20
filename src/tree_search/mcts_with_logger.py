@@ -86,26 +86,14 @@ class MCTSDPWLogger(MCTSDPW):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-
-        # print('###### EVAL ########')
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
             observation, reward, terminal = self.step(state, decision)
-            if state.got_bad_action:
-                print('effected_vehicle: ' , state.effected_vehicle)
-                print('effected_vehicle_act: ' , state.effected_vehicle_act)
-                print('timestep: ' , state.time_step)
-
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
             self.extract_belief_info(state, rollout_depth)
 
             if terminal:
                 break
-        # if total_reward < -5:
-        #     print('total_reward')
-        #     print(total_reward)
-        #     print('##########')
-
         return tree_states, total_reward

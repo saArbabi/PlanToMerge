@@ -31,8 +31,6 @@ class EnvAutoMerge(EnvMerge):
         """This is reset with every planner timestep
         """
         self.got_bad_action = False
-        self.effected_vehicle = False
-        self.effected_vehicle_act = False
 
     def turn_sdv(self, vehicle):
         """Keep the initial state of the vehicle, but let tree search
@@ -66,8 +64,6 @@ class EnvAutoMerge(EnvMerge):
                 vehicle.neighbours['m'].id == 'sdv' and \
                 self.sdv.lane_decision != 'keep_lane' and actions[0] < -5
         if cond:
-            self.effected_vehicle = vehicle
-            self.effected_vehicle_act = actions[0]
             return True
 
     def log_actions(self, vehicle, actions):
@@ -98,9 +94,6 @@ class EnvAutoMerge(EnvMerge):
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
-
-
-
         self.time_step += 1
 
     def all_cars(self):

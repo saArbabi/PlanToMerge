@@ -80,13 +80,5 @@ class EnvMerge():
             self.recorder(self.vehicles+[self.dummy_stationary_car])
         for vehicle, actions in zip(self.vehicles, joint_action):
             vehicle.step(actions)
-
-            if vehicle.id == 4:
-                if vehicle.am_i_attending(vehicle.neighbours['m'], \
-                                       vehicle.neighbours['f']):
-                    print('yess')
-                    print('nice ', vehicle.idm_action(vehicle, vehicle.neighbours['m']))
-                    print('actual ', actions[0])
-                else:
-                    print('No')
+ 
         self.time_step += 1
