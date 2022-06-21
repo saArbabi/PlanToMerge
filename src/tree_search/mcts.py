@@ -34,41 +34,39 @@ class MCTSDPW(AbstractPlanner):
             return cfg
 
     def reset(self):
-        self.tree_info = []
-        self.belief_info = {}
+        self.seed(2022)
         self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
-        if self.last_decision == 4:
-            if state.sdv.is_merge_initiated():
-                return [4]
-            return [4, 5]
-
         if state.sdv.decision == 5:
             if state.sdv.neighbours['rl']:
                 return [5]
             else:
                 return [4, 5]
-
-
-        if state.sdv.decision_cat == 'LANEKEEP':
-            if state.sdv.is_merge_possible():
-                if state.sdv.driver_params['aggressiveness'] < 0.05:
-                    return [1, 2, 4]
-                elif state.sdv.driver_params['aggressiveness'] > 0.95:
-                    return [3, 2, 4]
+        else:
+            if state.sdv.is_merge_initiated():
+                return [4]
+            elif state.sdv.decision_cat == 'LANEKEEP':
+                if state.sdv.is_merge_possible():
+                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                        return [1, 2, 4]
+                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                        return [3, 2, 4]
+                    else:
+                        return [1, 2, 3, 4]
                 else:
-                    return [1, 2, 3, 4]
-            else:
-                if state.sdv.driver_params['aggressiveness'] < 0.05:
-                    return [1, 2]
-                elif state.sdv.driver_params['aggressiveness'] > 0.95:
-                    return [3, 2]
+                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                        return [1, 2]
+                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                        return [3, 2]
+                    else:
+                        return [1, 2, 3]
+            elif state.sdv.decision_cat == 'MERGE':
+                if self.last_decision == 4 and state.time_step == self.current_time_step:
+                    return [4, 5]
                 else:
-                    return [1, 2, 3]
+                    return [4]
 
-        elif state.sdv.decision_cat == 'MERGE':
-            return [4]
 
     def predict_vehicle_actions(self, state):
         """
@@ -93,7 +91,7 @@ class MCTSDPW(AbstractPlanner):
             joint_action = self.predict_vehicle_actions(state)
             state.step(joint_action)
 
-        # self.add_position_noise(state)
+        self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
         terminal = state.is_terminal()
@@ -161,6 +159,7 @@ class MCTSDPW(AbstractPlanner):
 
     def plan(self, state):
         self.last_decision = state.sdv.decision
+        self.current_time_step = state.time_step
         available_decisions = self.get_available_decisions(state)
         if len(available_decisions) > 1:
             self.reset()

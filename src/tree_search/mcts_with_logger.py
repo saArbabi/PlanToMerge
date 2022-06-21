@@ -5,6 +5,7 @@ class MCTSDPWLogger(MCTSDPW):
         super(MCTSDPWLogger, self).__init__()
 
     def reset(self):
+        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = DecisionNode(parent=None, config=self.config)

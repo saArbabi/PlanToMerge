@@ -7,7 +7,6 @@ class AbstractPlanner(object):
         self.root = None
         self.steps_till_next_decision = 0
         self.steps_per_decision = 10 # number of timesteps that lapce between each decision
-        self.seed(2022)
 
     def seed(self, seed):
         """

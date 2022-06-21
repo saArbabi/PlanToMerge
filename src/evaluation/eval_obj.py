@@ -50,19 +50,14 @@ class MCEVAL():
         else:
             print('No such planner exists yet. Check the evaluation config file')
 
-
-    def dump_mc_logs(self, exp_name, planner_name):
-        exp_dir = './src/evaluation/experiments/'+planner_name
-        with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
-            pickle.dump(self.mc_collection, handle)
-
     def run_episode(self, episode_id):
+        # episode_id = 502
         print('Running episode: ', episode_id)
         self.current_episode_count += 1
         self.env.initialize_env(episode_id)
 
         cumulative_decision_count = 0
-        cumulative_decision_time = 0
+        decision_times = []
         cumulative_reward = 0
         hard_brake_count = 0
         decisions_made = []
@@ -72,12 +67,12 @@ class MCEVAL():
             if self.planner.is_decision_time():
                 t_0 = time.time()
                 self.planner.plan(self.env)
-                decision = self.planner.get_decision()
+                decision = self.planner.get_decision(self.env)
                 t_1 = time.time()
 
                 self.env.sdv.update_decision(decision)
                 cumulative_decision_count += 1
-                cumulative_decision_time += (t_1 - t_0)
+                decision_times.append(t_1 - t_0)
                 cumulative_reward += self.env.get_reward(decision)
                 decisions_made.append(decision)
                 if self.env.got_bad_action:
@@ -85,16 +80,17 @@ class MCEVAL():
                 self.env.env_reward_reset()
 
             self.env.step()
+            # print(self.env.time_step)
             self.planner.steps_till_next_decision -= 1
 
         cumulative_reward += self.env.get_reward(decision)
         # collect metrics
         timesteps_to_merge = self.env.time_step
-        time_per_decision = cumulative_decision_time/cumulative_decision_count
+        max_decision_time = max(decision_times)
         self.mc_collection[episode_id] = [
                                         cumulative_reward,
                                         timesteps_to_merge,
-                                        time_per_decision,
+                                        max_decision_time,
                                         hard_brake_count,
                                         decisions_made]
 
@@ -118,9 +114,11 @@ class MCEVAL():
 
     def dump_mc_logs(self, exp_name, planner_name):
         exp_dir = './src/evaluation/experiments/'+planner_name
+        if not os.path.exists(exp_dir):
+            os.mkdir(exp_dir)
         with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
             pickle.dump(self.mc_collection, handle)
-        print('### Dumping mc_logs: ', exp_name)
+        print('################## Dumping mc_logs: ', exp_name)
 
     def is_eval_complete(self, exp_name, planner_name):
         """Check if this planner has been fully evaluated.

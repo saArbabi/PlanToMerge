@@ -6,7 +6,23 @@ class Omniscient(MCTSDPW):
     def __init__(self, config=None):
         super(Omniscient, self).__init__(config)
 
+    def step(self, state, decision):
+        """
+        With determinstic transitions.
+        """
+        state.env_reward_reset()
+        state.sdv.update_decision(decision)
+        for i in range(self.steps_per_decision):
+            joint_action = self.predict_vehicle_actions(state)
+            state.step(joint_action)
+
+        observation = state.planner_observe()
+        reward = state.get_reward(decision)
+        terminal = state.is_terminal()
+        return observation, reward, terminal
+
     def reset(self):
+        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = OmniDecisionNode(parent=None, config=self.config)
@@ -17,7 +33,6 @@ class OmniDecisionNode(DecisionNode):
 
     def draw_sample(self, rng):
         """Note: Unlike mcts, here there is no uniform re-sampling of driver parameters.
-            There is however stochasticity in the state transisions (action noise). 
         """
         img_state = ImaginedEnv(self.state)
         return img_state

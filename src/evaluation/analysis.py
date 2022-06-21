@@ -6,14 +6,6 @@ import numpy as np
 
 
 # %%
-
-# %%
-
-eval_config = read_eval_config()
-
-exp_names
-# %%
-
 eval_config_dir = './src/evaluation/experiments/eval_config.json'
 def get_mc_collection(exp_dir, exp_names):
     mc_collection = []
@@ -36,9 +28,8 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
-
-
 # %%
+planner_names = ["mcts", "omniscient"]
 metric_dict = {}
 decision_logs = {}
 for planner_name in planner_names:
@@ -57,23 +48,28 @@ for planner_name in planner_names:
 
     metric_dict[planner_name] = np.array(metrics)
 
+metric_dict[planner_name].shape
+# dims: [budgets, episodes, logged_states]
 
 # %%
-metric_dict[planner_name].shape
-# %%
+
 indexs = {}
-metric_labels = ['budget', 'episode', 'cumulative_reward', 'timesteps_to_merge', \
-                  'time_per_decision', 'hard_brake_count', 'decisions_made']
+metric_labels = ['budget', 'epi sode', 'cumulative_reward', 'timesteps_to_merge', \
+                  'max_decision_time', 'hard_brake_count', 'decisions_made']
 
 for i in range(6):
     indexs[metric_labels[i]] = i
 indexs
+
 # %%
 subplot_xcount = 2
 subplot_ycount = 2
 fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
 axs[1, 0].set_xlabel('Iterations')
 axs[1, 1].set_xlabel('Iterations')
+for ax in axs.flatten():
+    ax.set_xticks([10, 30])
+
 
 def add_plot_to_fig(metrics, ax, kpi):
     # ax.plot(x_y[0], x_y[1][:, -1], \
@@ -94,7 +90,7 @@ for planner_name in planner_names:
     x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[0, 1]
     add_plot_to_fig(x_y, ax, kpi)
-    kpi = 'time_per_decision'
+    kpi = 'max_decision_time'
     x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[1, 0]
     add_plot_to_fig(x_y, ax, kpi)
@@ -106,30 +102,10 @@ for planner_name in planner_names:
 # %%
 """
 Performance comparison for each episode.
-
-# Fixing random state for reproducibility
-np.random.seed(19680801)
-
-
-plt.rcdefaults()
-fig, ax = plt.subplots()
-
-# Example data
-people = ('Tom', 'Dick', 'Harry', 'Slim', 'Jim')
-y_pos = np.arange(len(people))
-performance = 3 + 10 * np.random.rand(len(people))
-error = np.random.rand(len(people))
-
-ax.barh(y_pos, performance, xerr=error, align='center')
-ax.set_yticks(y_pos, labels=people)
-ax.invert_yaxis()  # labels read top-to-bottom
-ax.set_xlabel('Performance')
-ax.set_title('How fast do you want to go today?')
-
-plt.show()
 """
 fig, ax = plt.subplots(figsize=(5, 10))
-episodes_considered = range(500, 510)
+episodes_considered = range(500, 500+metric_dict[planner_name].shape[1])
+
 y_pos = np.arange(len(episodes_considered))*3
 kpi = 'cumulative_reward'
 kpi = 'timesteps_to_merge'
@@ -139,8 +115,12 @@ for i, planner_name in enumerate(planner_names):
     kpi_val = metrics[1, :, indexs[kpi]]
     ax.barh(y_pos + i, kpi_val, label=planner_name)
 
+metric_dict['mcts'][1, :, indexs[kpi]]
+metric_dict['omniscient'][1, :, indexs[kpi]]
+
 labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
+# ax.set_ylim([490, 520])
 ax.set_yticklabels(labels)
 ax.legend()
 plt.plot([0, 0], \
