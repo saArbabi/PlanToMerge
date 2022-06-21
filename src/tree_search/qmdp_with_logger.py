@@ -54,17 +54,20 @@ class QMDPLogger(QMDP):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            observation, reward, terminal = self.step(state, decision)
-            child_type, belief_node = chance_node.get_child(
-                                                state,
-                                                observation,
-                                                self.rng)
-            if child_type == 'old':
+            if chance_node.should_expand():
+                observation, reward, terminal = self.step(state, decision)
+                belief_node = chance_node.expand_child(
+                                                    state,
+                                                    observation,
+                                                    self.rng)
+            else:
+                belief_node = chance_node.select_visited_child(self.rng)
                 reward = belief_node.state.get_reward(decision)
+
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
-            
+
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
 

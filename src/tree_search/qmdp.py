@@ -101,13 +101,16 @@ class QMDP(MCTSDPW):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            observation, reward, terminal = self.step(state, decision)
-            child_type, belief_node = chance_node.get_child(
-                                                state,
-                                                observation,
-                                                self.rng)
-            if child_type == 'old':
+            if chance_node.should_expand():
+                observation, reward, terminal = self.step(state, decision)
+                belief_node = chance_node.expand_child(
+                                                    state,
+                                                    observation,
+                                                    self.rng)
+            else:
+                belief_node = chance_node.select_visited_child(rng)
                 reward = belief_node.state.get_reward(decision)
+
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
@@ -143,6 +146,7 @@ class BeliefNode(DecisionNode):
         self.children[decision] = SubChanceNode(self, self.config)
         return self.children[decision], decision
 
+
 class SubChanceNode(ChanceNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
@@ -150,3 +154,17 @@ class SubChanceNode(ChanceNode):
     def expand(self, state, obs_id):
         self.children[obs_id] = BeliefNode(self, self.config)
         self.children[obs_id].state = state
+
+    def expand_child(self, state, observation, rng):
+        obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
+        self.expand(state, obs_id)
+        return self.children[obs_id]
+
+    def select_visited_child(self, rng):
+        obs_id = rng.choice(list(self.children))
+        return self.children[obs_id]
+
+    def should_expand(self):
+        if len(self.children) == 0:
+            return True
+        return self.k_state*self.count**self.alpha_state > len(self.children)
