@@ -6,6 +6,7 @@ class QMDPLogger(QMDP):
         super(QMDPLogger, self).__init__()
 
     def reset(self):
+        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = BeliefNode(parent=None, config=self.config)
@@ -58,10 +59,12 @@ class QMDPLogger(QMDP):
                                                 state,
                                                 observation,
                                                 self.rng)
-
+            if child_type == 'old':
+                reward = belief_node.state.get_reward(decision)
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
+            
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
 

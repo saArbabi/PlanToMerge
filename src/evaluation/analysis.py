@@ -29,7 +29,13 @@ def get_budgets(exp_dir):
     return budgets, exp_names
 
 # %%
+planner_names = ["mcts", "omniscient", "qmdp"]
 planner_names = ["mcts", "omniscient"]
+planner_names = ["mcts_rand", "mcts_know", "omniscient"]
+planner_names = ["mcts_rand", "mcts_know", "omniscient", "qmdp"]
+# planner_names = ["mcts"]
+# planner_names = ["qmdp"]
+
 metric_dict = {}
 decision_logs = {}
 for planner_name in planner_names:
@@ -42,13 +48,17 @@ for planner_name in planner_names:
         decision_logs[planner_name][budget] = []
         budget_metric = []
         for episode, epis_metric in mc_collection[i].items():
+            if episode != 500:
+                continue
             decision_logs[planner_name][budget] += epis_metric[-1]
             budget_metric.append([budget, episode]+epis_metric[0:-1])
         metrics.append(budget_metric)
 
     metric_dict[planner_name] = np.array(metrics)
+    print(planner_name,' shape: ', metric_dict[planner_name].shape)
 
-metric_dict[planner_name].shape
+# metric_dict[planner_name].shape
+# metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
 
 # %%
@@ -74,8 +84,12 @@ for ax in axs.flatten():
 def add_plot_to_fig(metrics, ax, kpi):
     # ax.plot(x_y[0], x_y[1][:, -1], \
     #                'o-', label=planner_name)
-    ax.plot(x_y[0], x_y[1].mean(axis=1), \
-                   'o-', label=planner_name)
+    if planner_name == 'omniscient':
+        ax.plot(x_y[0], x_y[1].mean(axis=1), \
+                       'o-', label=planner_name, color='red')
+    else:
+        ax.plot(x_y[0], x_y[1].mean(axis=1), \
+                       'o-', label=planner_name)
     ax.legend()
     ax.set_title(kpi)
 

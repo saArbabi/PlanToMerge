@@ -8,15 +8,14 @@ import numpy as np
 import sys
 
 class QMDP(MCTSDPW):
-    def __init__(self):
-        super(QMDP, self).__init__()
+    def __init__(self, config=None):
+        super(QMDP, self).__init__(config)
         self.update_counts = 0
         self._enough_history = False
         self.nidm = self.load_nidm()
 
     def reset(self):
-        self.tree_info = []
-        self.belief_info = {}
+        self.seed(2022)
         self.root = BeliefNode(parent=None, config=self.config)
 
     def enough_history(self, state):
@@ -107,7 +106,8 @@ class QMDP(MCTSDPW):
                                                 state,
                                                 observation,
                                                 self.rng)
-
+            if child_type == 'old':
+                reward = belief_node.state.get_reward(decision)
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
@@ -120,12 +120,17 @@ class QMDP(MCTSDPW):
         belief_node.backup_to_root(total_reward)
 
     def plan(self, state):
-        self.reset()
-        belief_node = self.root
-        belief_node.state = ImaginedEnv(state)
-        self.update_belief(belief_node)
-        for plan_itr in range(self.config['budget']):
-            self.run(belief_node)
+        self.last_decision = state.sdv.decision
+        self.current_time_step = state.time_step
+        available_decisions = self.get_available_decisions(state)
+        if len(available_decisions) > 1:
+            self.reset()
+            belief_node = self.root
+            belief_node.state = ImaginedEnv(state)
+            self.update_belief(belief_node)
+            for plan_itr in range(self.config['budget']):
+                self.run(belief_node)
+
 
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):
