@@ -55,7 +55,7 @@ class QMDPLogger(QMDP):
                                         self.rng)
 
             if chance_node.should_expand():
-                observation, reward, terminal = self.step(state, decision)
+                observation, reward, terminal = self.step(state, decision, 'search')
                 belief_node = chance_node.expand_child(
                                                     state,
                                                     observation,
@@ -89,11 +89,10 @@ class QMDPLogger(QMDP):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'random_rollout')
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
             self.extract_belief_info(state, rollout_depth)

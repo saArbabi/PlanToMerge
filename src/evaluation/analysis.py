@@ -34,7 +34,9 @@ planner_names = ["mcts", "omniscient"]
 planner_names = ["mcts_rand", "mcts_know", "omniscient"]
 planner_names = ["mcts_rand", "mcts_know", "omniscient", "qmdp"]
 # planner_names = ["mcts"]
-# planner_names = ["qmdp"]
+planner_names = ["mcts_step_1", "mcts_step_2"]
+planner_names = ["mcts_step1", "mcts_step2"]
+planner_names = ["qmdp_simple"]
 
 metric_dict = {}
 decision_logs = {}
@@ -129,8 +131,8 @@ for i, planner_name in enumerate(planner_names):
     kpi_val = metrics[1, :, indexs[kpi]]
     ax.barh(y_pos + i, kpi_val, label=planner_name)
 
-metric_dict['mcts'][1, :, indexs[kpi]]
-metric_dict['omniscient'][1, :, indexs[kpi]]
+# metric_dict['mcts'][1, :, indexs[kpi]]
+# metric_dict['omniscient'][1, :, indexs[kpi]]
 
 labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)

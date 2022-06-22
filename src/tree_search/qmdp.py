@@ -102,13 +102,13 @@ class QMDP(MCTSDPW):
                                         self.rng)
 
             if chance_node.should_expand():
-                observation, reward, terminal = self.step(state, decision)
+                observation, reward, terminal = self.step(state, decision, 'search')
                 belief_node = chance_node.expand_child(
                                                     state,
                                                     observation,
                                                     self.rng)
             else:
-                belief_node = chance_node.select_visited_child(rng)
+                belief_node = chance_node.select_visited_child(self.rng)
                 reward = belief_node.state.get_reward(decision)
 
             state = belief_node.fetch_state()
