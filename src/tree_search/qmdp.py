@@ -11,11 +11,10 @@ class QMDP(MCTSDPW):
     def __init__(self, config=None):
         super(QMDP, self).__init__(config)
         self.update_counts = 0
-        self._enough_history = False
         self.nidm = self.load_nidm()
+        self._enough_history = False
 
     def reset(self):
-        self.seed(2022)
         self.root = BeliefNode(parent=None, config=self.config)
 
     def enough_history(self, state):
@@ -133,7 +132,6 @@ class QMDP(MCTSDPW):
             self.update_belief(belief_node)
             for plan_itr in range(self.config['budget']):
                 self.run(belief_node)
-
 
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):

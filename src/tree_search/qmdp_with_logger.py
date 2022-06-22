@@ -1,12 +1,12 @@
 from tree_search.mcts import MCTSDPW, DecisionNode
 from tree_search.qmdp import QMDP, BeliefNode
+import tensorflow as tf
 
 class QMDPLogger(QMDP):
     def __init__(self):
         super(QMDPLogger, self).__init__()
 
     def reset(self):
-        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = BeliefNode(parent=None, config=self.config)

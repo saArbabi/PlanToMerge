@@ -34,7 +34,6 @@ class MCTSDPW(AbstractPlanner):
             return cfg
 
     def reset(self):
-        self.seed(2022)
         self.root = DecisionNode(parent=None, config=self.config)
 
     def get_available_decisions(self, state):
@@ -270,6 +269,9 @@ class DecisionNode(Node):
         img_state = ImaginedEnv(self.state)
         img_state.seed(rng.randint(1e5))
         img_state.uniform_prior()
+        # print('I am in imagination >>> ', rng.uniform(), img_state.time_step)
+        print('I am in imagination >>> ', rng.uniform(), img_state.vehicles[2].driver_params['aggressiveness'])
+
         return img_state
 
 class ChanceNode(Node):
