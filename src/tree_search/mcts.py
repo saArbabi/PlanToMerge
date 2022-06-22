@@ -84,12 +84,20 @@ class MCTSDPW(AbstractPlanner):
         for vehicle in state.vehicles:
             vehicle.glob_x += self.rng.normal()
 
-    def step(self, state, decision):
+    def step(self, state, decision, step_type):
         state.env_reward_reset()
         state.sdv.update_decision(decision)
-        for i in range(self.steps_per_decision):
-            joint_action = self.predict_vehicle_actions(state)
-            state.step(joint_action)
+
+        if step_type == 'search':
+            for i in range(self.steps_per_decision):
+                joint_action = self.predict_vehicle_actions(state)
+                state.step(joint_action)
+
+        elif step_type == 'random_rollout':
+            for i in range(self.steps_per_decision):
+                if i % self.config['rollout_step_skips'] == 0:
+                    joint_action = self.predict_vehicle_actions(state)
+                state.step(joint_action)
 
         self.add_position_noise(state)
         observation = state.planner_observe()
@@ -117,7 +125,7 @@ class MCTSDPW(AbstractPlanner):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'search')
             child_type, state_node = chance_node.get_child(
                                             state,
                                             observation,
@@ -150,7 +158,7 @@ class MCTSDPW(AbstractPlanner):
             decision = self.rng.choice(self.get_available_decisions(state))
             state.env_reward_reset()
             state_before = safe_deepcopy_env(state)
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'random_rollout')
             total_reward += self.config["gamma"] ** rollout_depth * reward
 
             if terminal:

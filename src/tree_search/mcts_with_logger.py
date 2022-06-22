@@ -54,7 +54,7 @@ class MCTSDPWLogger(MCTSDPW):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'search')
             child_type, state_node = chance_node.get_child(
                                             state,
                                             observation,
@@ -90,10 +90,14 @@ class MCTSDPWLogger(MCTSDPW):
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'random_rollout')
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
             self.extract_belief_info(state, rollout_depth)
+            # if decision == 4:
+                # print('merge')
+                # if state.sdv.is_merge_initiated():
+                #     print('init')
 
             if terminal:
                 break

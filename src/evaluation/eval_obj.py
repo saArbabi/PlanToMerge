@@ -62,7 +62,7 @@ class MCEVAL():
         hard_brake_count = 0
         decisions_made = []
 
-        while not self.env.sdv.is_merge_complete():
+        while not self.env.sdv.is_merge_initiated():
         # while self.env.time_step < 40:
             if self.planner.is_decision_time():
                 t_0 = time.time()
