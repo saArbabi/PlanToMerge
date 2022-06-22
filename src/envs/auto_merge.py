@@ -116,7 +116,7 @@ class EnvAutoMerge(EnvMerge):
             # reward agent for behavior continuation
             total_reward += 0.1
 
-        if self.sdv.is_merge_complete():
+        if self.sdv.is_merge_initiated():
             if self.sdv.abort_been_chosen:
                 total_reward += 1
             else:
