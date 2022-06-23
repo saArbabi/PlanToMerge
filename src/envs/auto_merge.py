@@ -75,9 +75,8 @@ class EnvAutoMerge(EnvMerge):
     def track_history(self, vehicle):
         """Use history for prediction
         """
-        if vehicle.id != 1:
-            obs = vehicle.neur_observe()
-            vehicle.update_obs_history(obs[0])
+        obs = vehicle.neur_observe()
+        vehicle.update_obs_history(obs)
 
     def step(self):
         """ steps the environment forward in time.

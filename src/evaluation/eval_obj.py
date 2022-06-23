@@ -59,6 +59,7 @@ class MCEVAL():
         self.planner._enough_history = False
         self.planner.steps_till_next_decision = 0
         self.planner.seed(2022)
+        self.planner.nidm.vehicle_count = len(self.env.vehicles)
         tf.random.set_seed(2022)
 
 

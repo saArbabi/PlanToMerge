@@ -8,16 +8,17 @@ import copy
 
 class ImaginedEnv(EnvAutoMerge):
     def __init__(self, state):
-        super().__init__()
-        for attrname in ['vehicles', 'sdv', 'time_step']:
+        self.hidden_state = [] # this is to be estimated via NIDM
+        for attrname in ['vehicles', 'sdv', 'time_step', 'dummy_stationary_car']:
             attrvalue = getattr(state, attrname)
             setattr(self, attrname, copy.deepcopy(attrvalue))
 
-    def uniform_prior(self):
+    def uniform_prior(self, vehicles, seed):
         """
         Sets sdv's prior belief about other drivers
         """
-        for vehicle in self.vehicles:
+        self.seed(seed)
+        for vehicle in vehicles:
             vehicle.driver_params['aggressiveness'] = self.rng.uniform(0.01, 0.99)
             vehicle.set_driver_params(self.rng)
 

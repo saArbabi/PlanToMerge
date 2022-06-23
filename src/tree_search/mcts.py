@@ -66,8 +66,7 @@ class MCTSDPW(AbstractPlanner):
                 else:
                     return [4]
 
-
-    def predict_vehicle_actions(self, state):
+    def predict_joint_action(self, state):
         """
         Returns the joint action of all vehicles other than SDV on the road
         """
@@ -88,13 +87,13 @@ class MCTSDPW(AbstractPlanner):
         state.sdv.update_decision(decision)
         if step_type == 'search':
             for i in range(self.steps_per_decision):
-                joint_action = self.predict_vehicle_actions(state)
+                joint_action = self.predict_joint_action(state)
                 state.step(joint_action)
 
         elif step_type == 'random_rollout':
             for i in range(self.steps_per_decision):
                 if i % self.config['rollout_step_skips'] == 0:
-                    joint_action = self.predict_vehicle_actions(state)
+                    joint_action = self.predict_joint_action(state)
                 state.step(joint_action)
 
         self.add_position_noise(state)
