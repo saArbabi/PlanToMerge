@@ -86,7 +86,6 @@ class MCTSDPW(AbstractPlanner):
     def step(self, state, decision, step_type):
         state.env_reward_reset()
         state.sdv.update_decision(decision)
-
         if step_type == 'search':
             for i in range(self.steps_per_decision):
                 joint_action = self.predict_vehicle_actions(state)
@@ -269,9 +268,6 @@ class DecisionNode(Node):
         img_state = ImaginedEnv(self.state)
         img_state.seed(rng.randint(1e5))
         img_state.uniform_prior()
-        # print('I am in imagination >>> ', rng.uniform(), img_state.time_step)
-        print('I am in imagination >>> ', rng.uniform(), img_state.vehicles[2].driver_params['aggressiveness'])
-
         return img_state
 
 class ChanceNode(Node):

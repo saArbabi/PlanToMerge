@@ -87,7 +87,7 @@ class MCEVAL():
             self.env.step()
             self.planner.steps_till_next_decision -= 1
 
-        # cumulative_reward += self.env.get_reward(decision)
+        cumulative_reward += self.env.get_reward(decision)
         # collect metrics
         timesteps_to_merge = self.env.time_step
         max_decision_time = max(decision_times)
