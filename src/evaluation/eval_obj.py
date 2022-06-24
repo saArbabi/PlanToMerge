@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pickle
 import json
+import tensorflow as tf
 
 class MCEVAL():
     def __init__(self, eval_config):
@@ -51,10 +52,16 @@ class MCEVAL():
             print('No such planner exists yet. Check the evaluation config file')
 
     def run_episode(self, episode_id):
-        # episode_id = 502
         print('Running episode: ', episode_id)
         self.current_episode_count += 1
+        self.env = EnvAutoMerge()
         self.env.initialize_env(episode_id)
+        self.planner._enough_history = False
+        self.planner.steps_till_next_decision = 0
+        self.planner.seed(2022)
+        self.planner.nidm.vehicle_count = len(self.env.vehicles)
+        tf.random.set_seed(2022)
+
 
         cumulative_decision_count = 0
         decision_times = []
@@ -62,8 +69,7 @@ class MCEVAL():
         hard_brake_count = 0
         decisions_made = []
 
-        while not self.env.sdv.is_merge_complete():
-        # while self.env.time_step < 40:
+        while not self.env.sdv.is_merge_initiated():
             if self.planner.is_decision_time():
                 t_0 = time.time()
                 self.planner.plan(self.env)
@@ -80,7 +86,6 @@ class MCEVAL():
                 self.env.env_reward_reset()
 
             self.env.step()
-            # print(self.env.time_step)
             self.planner.steps_till_next_decision -= 1
 
         cumulative_reward += self.env.get_reward(decision)

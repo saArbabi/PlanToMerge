@@ -9,15 +9,14 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
         self.samples_n = 1
         self.history_len = 30 # steps
         self.state_dim = 13
-        self.obs_history = np.empty([self.samples_n, self.history_len, self.state_dim])
-        self.obs_history[:] = np.nan
-        self.enc_h = None
+        self.obs_history = []
         with open('./src/models/dummy_value_set.pickle', 'rb') as handle:
             self.dummy_value_set = pickle.load(handle)
 
     def update_obs_history(self, o_t):
-        self.obs_history[:, :-1, :] = self.obs_history[:, 1:, :]
-        self.obs_history[:, -1, :] = o_t[0, 0, :]
+        self.obs_history.append(o_t)
+        if len(self.obs_history) > self.history_len:
+            self.obs_history = self.obs_history[1:]
 
     def neur_observe(self):
         m_veh = self.neighbours['m']
@@ -66,7 +65,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
                              delta_x_to_merge])
         obs_t0.append(m_veh_exists)
         self.m_veh_exists = m_veh_exists
-        return [np.array([[obs_t0]]), [[[float(m_veh_exists)]]]]
+        return obs_t0
 
     def get_driver_param(self, param_name, rng):
         if param_name in ['desired_v', 'max_act', 'min_act']:

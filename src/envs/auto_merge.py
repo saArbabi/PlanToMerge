@@ -75,9 +75,8 @@ class EnvAutoMerge(EnvMerge):
     def track_history(self, vehicle):
         """Use history for prediction
         """
-        if vehicle.id != 1:
-            obs = vehicle.neur_observe()
-            vehicle.update_obs_history(obs[0])
+        obs = vehicle.neur_observe()
+        vehicle.update_obs_history(obs)
 
     def step(self):
         """ steps the environment forward in time.
@@ -116,7 +115,7 @@ class EnvAutoMerge(EnvMerge):
             # reward agent for behavior continuation
             total_reward += 0.1
 
-        if self.sdv.is_merge_complete():
+        if self.sdv.is_merge_initiated():
             if self.sdv.abort_been_chosen:
                 total_reward += 1
             else:

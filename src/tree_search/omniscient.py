@@ -13,7 +13,7 @@ class Omniscient(MCTSDPW):
         state.env_reward_reset()
         state.sdv.update_decision(decision)
         for i in range(self.steps_per_decision):
-            joint_action = self.predict_vehicle_actions(state)
+            joint_action = self.predict_joint_action(state)
             state.step(joint_action)
 
         observation = state.planner_observe()

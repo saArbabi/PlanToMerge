@@ -53,7 +53,7 @@ class EnvInitializor():
         # main road vehicles
         lane_id = 1
         vehicles = []
-        traffic_density = self.rng.randint(3, 6) # number of vehicles
+        traffic_density = self.rng.randint(3, 6)  # number of vehicles
         # print('traffic_density ', traffic_density)
 
         available_spacing = self.lane_length-self.merge_lane_start-50

@@ -1,12 +1,12 @@
 from tree_search.mcts import MCTSDPW, DecisionNode
 from tree_search.qmdp import QMDP, BeliefNode
+import tensorflow as tf
 
 class QMDPLogger(QMDP):
     def __init__(self):
         super(QMDPLogger, self).__init__()
 
     def reset(self):
-        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = BeliefNode(parent=None, config=self.config)
@@ -54,17 +54,20 @@ class QMDPLogger(QMDP):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            observation, reward, terminal = self.step(state, decision)
-            child_type, belief_node = chance_node.get_child(
-                                                state,
-                                                observation,
-                                                self.rng)
-            if child_type == 'old':
+            if chance_node.should_expand():
+                observation, reward, terminal = self.step(state, decision, 'search')
+                belief_node = chance_node.expand_child(
+                                                    state,
+                                                    observation,
+                                                    self.rng)
+            else:
+                belief_node = chance_node.select_visited_child(self.rng)
                 reward = belief_node.state.get_reward(decision)
+
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
-            
+
             self.log_visited_sdv_state(state, tree_states, 'selection')
             self.extract_belief_info(state, depth)
 
@@ -86,11 +89,10 @@ class QMDPLogger(QMDP):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
-            observation, reward, terminal = self.step(state, decision)
+            observation, reward, terminal = self.step(state, decision, 'random_rollout')
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
             self.extract_belief_info(state, rollout_depth)
