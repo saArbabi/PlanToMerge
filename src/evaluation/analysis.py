@@ -38,7 +38,7 @@ planner_names = ["mcts_step_1", "mcts_step_2"]
 planner_names = ["mcts_step1", "mcts_step2"]
 planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2"]
 planner_names = ["qmdp_clever", "qmdp_clever2"]
-planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2", "qmdp_clever4"]
+planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2", "qmdp_clever3", "qmdp_clever4"]
 
 metric_dict = {}
 decision_logs = {}
@@ -92,7 +92,7 @@ def add_plot_to_fig(metrics, ax, kpi):
         ax.plot(x_y[0], x_y[1].mean(axis=1), \
                        'o-', label=planner_name, color='red')
     else:
-        ax.plot(x_y[0], x_y[1].mean(axis=1), \
+        ax.plot(    x_y[0], x_y[1].mean(axis=1), \
                        'o-', label=planner_name)
     ax.legend()
     ax.set_title(kpi)

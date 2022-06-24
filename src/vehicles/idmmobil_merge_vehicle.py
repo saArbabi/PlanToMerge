@@ -8,8 +8,8 @@ class IDMMOBILVehicleMerge(Vehicle):
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
 
-        self.act_long_c = None # current action
-        self.act_long_p = None # last action
+        self.act_long_c = 0 # current action
+        self.act_long_p = 0 # last action
         self.merge_lane_start = config['merge_lane_start']
         self.ramp_exit_start = config['ramp_exit_start']
         self.beta_precision = 15

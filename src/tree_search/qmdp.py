@@ -22,27 +22,25 @@ class QMDP(MCTSDPW):
         checks to see if enough observations have been tracked for the model.
         """
         if not self._enough_history:
-            for vehicle in state.vehicles:
-                if vehicle.id == 2:
-                    if not np.isnan(vehicle.obs_history).any():
-                        self._enough_history = True
+            if len(state.vehicles[0].obs_history) == 30:
+                self._enough_history = True
         return self._enough_history
 
-    def predict_vehicle_actions(self, state):
+    def predict_joint_action(self, state):
         """
         Returns the joint action of all vehicles other than SDV on the road
         """
         joint_action = []
-        for vehicle in state.vehicles:
+        for index, vehicle in enumerate(state.vehicles):
             vehicle.neighbours = vehicle.my_neighbours(state.all_cars() + \
                                                        [state.dummy_stationary_car])
-
-            if vehicle.id != 1 and vehicle.enc_h != None:
-                actions = self.nidm.estimate_vehicle_action(vehicle)
+            if self.root.state.hidden_state and self.nidm.should_att_pred(vehicle):
+                actions = self.nidm.predict_joint_action(self.root.state, vehicle, index)
             else:
                 actions = vehicle.act()
 
             joint_action.append(actions)
+
         return joint_action
 
     def load_nidm(self):
@@ -50,39 +48,22 @@ class QMDP(MCTSDPW):
         return NIDM()
 
     def update_belief(self, belief_node):
-        """
-        Passes the sequence of past vehicle observations (vehicle standpoint)
-        and actions into an LSTM encoder. Then the encoded state is mapped to
-        the latent belief.
-        """
         if self.enough_history(belief_node.state) and \
-                            not belief_node.belief_is_updated:
-            belief_node.belief_is_updated = True
-            for vehicle in belief_node.state.vehicles:
-                if vehicle.id != 1:
-                    self.nidm.latent_inference(vehicle)
+                            not belief_node.state.hidden_state:
+            state = belief_node.state
+            state.hidden_state = self.nidm.latent_inference(state.vehicles)
 
     def sample_belief(self, belief_node):
         """
         Returns a sample from the belief state.
-        Procedure:
-        For each vehicle:
-            (1) sample from latent dis
-            (2) using the sampled latent, obtain relevant projections
-            (3) assign the sampled driver params to each vehicle
         """
         img_state = ImaginedEnv(belief_node.state)
-        if belief_node.belief_is_updated:
-            # you need enough history for this
-            for vehicle in img_state.vehicles:
-                if vehicle.id != 1:
-                    z_idm, z_att = self.nidm.sample_latent(vehicle)
-                    proj_idm = self.nidm.apply_projections(vehicle, z_idm, z_att)
-                    idm_params = self.nidm.model.idm_layer(proj_idm)
-                    self.nidm.driver_params_update(vehicle, idm_params)
+        if belief_node.state.hidden_state:
+            idm_params = self.nidm.sample_latent(belief_node.state)
+            self.nidm.driver_params_update(img_state.vehicles, idm_params)
         else:
-            img_state.seed(self.rng.randint(1e5))
-            img_state.uniform_prior()
+            img_state.uniform_prior(img_state.vehicles, self.rng.randint(1e5))
+
         return img_state
 
     def run(self, belief_node):
@@ -136,7 +117,6 @@ class QMDP(MCTSDPW):
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
-        self.belief_is_updated = False
         self.state = None
 
     def expand(self, available_decisions, rng):
