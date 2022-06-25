@@ -123,15 +123,12 @@ class MCTSDPW(AbstractPlanner):
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
-            child_type, state_node = chance_node.get_child(
+            state_node = chance_node.get_child(
                                             state,
                                             observation,
                                             self.rng)
 
             state = state_node.fetch_state()
-            if child_type == 'old':
-                reward = state_node.state.get_reward(decision)
-
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
 
@@ -287,16 +284,13 @@ class ChanceNode(Node):
         if obs_id not in self.children:
             if self.k_state*self.count**self.alpha_state < len(self.children):
                 obs_id = rng.choice(list(self.children))
-                child_type = 'old'
-                return child_type, self.children[obs_id]
+                return self.children[obs_id]
             else:
                 # Add observation to the children set
-                child_type = 'new'
                 self.expand(state, obs_id)
-                return child_type, self.children[obs_id]
+                return self.children[obs_id]
         else:
-            child_type = 'old'
-            return child_type, self.children[obs_id]
+            return self.children[obs_id]
 
     def backup_to_root(self, total_reward):
         """

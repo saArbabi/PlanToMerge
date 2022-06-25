@@ -1,8 +1,5 @@
 from tree_search.mcts import MCTSDPW, DecisionNode, ChanceNode
-from tree_search.abstract import AbstractPlanner, Node
-from tree_search.factory import safe_deepcopy_env
 from tree_search.imagined_env import ImaginedEnv
-import time
 import hashlib
 import numpy as np
 import sys
@@ -11,7 +8,6 @@ class QMDP(MCTSDPW):
     def __init__(self, config=None):
         super(QMDP, self).__init__(config)
         self.update_counts = 0
-        self.nidm = self.load_nidm()
         self._enough_history = False
 
     def reset(self):
@@ -22,7 +18,8 @@ class QMDP(MCTSDPW):
         checks to see if enough observations have been tracked for the model.
         """
         if not self._enough_history:
-            if len(state.vehicles[0].obs_history) == 30:
+            if len(state.vehicles[0].obs_history) == 10:
+                self.nidm = self.load_nidm()
                 self._enough_history = True
         return self._enough_history
 
@@ -81,15 +78,11 @@ class QMDP(MCTSDPW):
                                         self.get_available_decisions(state),
                                         self.rng)
 
-            if chance_node.should_expand():
-                observation, reward, terminal = self.step(state, decision, 'search')
-                belief_node = chance_node.expand_child(
-                                                    state,
-                                                    observation,
-                                                    self.rng)
-            else:
-                belief_node = chance_node.select_visited_child(self.rng)
-                reward = belief_node.state.get_reward(decision)
+            observation, reward, terminal = self.step(state, decision, 'search')
+            belief_node = chance_node.get_child(
+                                            state,
+                                            observation,
+                                            self.rng)
 
             state = belief_node.fetch_state()
             total_reward += self.config["gamma"] ** depth * reward
@@ -132,17 +125,3 @@ class SubChanceNode(ChanceNode):
     def expand(self, state, obs_id):
         self.children[obs_id] = BeliefNode(self, self.config)
         self.children[obs_id].state = state
-
-    def expand_child(self, state, observation, rng):
-        obs_id = hashlib.sha1(str(observation).encode("UTF-8")).hexdigest()[:5]
-        self.expand(state, obs_id)
-        return self.children[obs_id]
-
-    def select_visited_child(self, rng):
-        obs_id = rng.choice(list(self.children))
-        return self.children[obs_id]
-
-    def should_expand(self):
-        if len(self.children) == 0:
-            return True
-        return self.k_state*self.count**self.alpha_state > len(self.children)
