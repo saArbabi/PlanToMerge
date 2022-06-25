@@ -41,18 +41,18 @@ class MCTSDPW(AbstractPlanner):
             if state.sdv.neighbours['rl']:
                 return [5]
             else:
-                return [4, 5]
+                return [4]
         else:
             if state.sdv.is_merge_initiated():
                 return [4]
             elif state.sdv.decision_cat == 'LANEKEEP':
                 if state.sdv.is_merge_possible():
                     if state.sdv.driver_params['aggressiveness'] < 0.05:
-                        return [1, 2, 4]
+                        return [1, 2, 4, 5]
                     elif state.sdv.driver_params['aggressiveness'] > 0.95:
-                        return [3, 2, 4]
+                        return [3, 2, 4, 5]
                     else:
-                        return [1, 2, 3, 4]
+                        return [1, 2, 3, 4, 5]
                 else:
                     if state.sdv.driver_params['aggressiveness'] < 0.05:
                         return [1, 2]
@@ -265,8 +265,7 @@ class DecisionNode(Node):
 
     def draw_sample(self, rng):
         img_state = ImaginedEnv(self.state)
-        img_state.seed(rng.randint(1e5))
-        img_state.uniform_prior()
+        img_state.uniform_prior(img_state.vehicles, rng.randint(1e5))
         return img_state
 
 class ChanceNode(Node):
