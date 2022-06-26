@@ -11,8 +11,8 @@ class NIDM():
         self.samples_n = 1
 
     def load_nidm(self):
-        model_name = 'neural_idm_367'
-        epoch_count = '20'
+        model_name = 'neural_idm_371'
+        epoch_count = '17'
         exp_dir = './src/models/'+model_name
         exp_path = exp_dir+'/model_epo'+epoch_count
         with open(exp_dir+'/'+'config.json', 'rb') as handle:
@@ -49,7 +49,7 @@ class NIDM():
                         'el_delta_v', 'el_delta_x',
                         'em_delta_v', 'em_delta_x',
                         'm_veh_action_p', 'm_veh_speed','em_delta_y',
-                        'delta_x_to_merge','m_veh_exists']
+                        'delta_x_to_merge','m_veh_exists', 'm_veh_decision']
 
         index = 0
         for item_name in feature_names:
@@ -131,7 +131,7 @@ class NIDM():
 
     def get_att_context(self, root_state, obs_t0, index):
         obs_t0 = np.array(obs_t0)
-        m_veh_exists = obs_t0[:, :, -1:]
+        booleans = obs_t0[:, :, -2:] # ['m_veh_exists', 'm_veh_decision'] 
         env_state = self.scale_state(obs_t0, 'env_state')
         merger_c = self.scale_state(obs_t0, 'merger_c')
         att_context = tf.concat([root_state.proj_att[index:index+1, :, :],

@@ -23,6 +23,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
         f_veh = self.neighbours['f']
         if not m_veh:
             m_veh_exists = 0
+            m_veh_decision = 0
             m_veh_action = self.dummy_value_set['m_veh_action_p']
             m_veh_speed = self.dummy_value_set['m_veh_speed']
             em_delta_x = self.dummy_value_set['em_delta_x']
@@ -32,6 +33,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
 
         else:
             m_veh_exists = 1
+            m_veh_decision = 1 if m_veh.lane_decision != 'keep_lane' else 0
             m_veh_action = m_veh.act_long_p
             m_veh_speed = m_veh.speed
             em_delta_x = m_veh.glob_x-self.glob_x
@@ -53,7 +55,6 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
             el_delta_v = self.speed-f_veh_speed
 
         obs_t0 = [self.act_long_p, f_veh_action, self.speed, f_veh_speed]
-
         obs_t0.extend([el_delta_v,
                              el_delta_x])
 
@@ -63,7 +64,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
                              m_veh_speed,
                              em_delta_y,
                              delta_x_to_merge])
-        obs_t0.append(m_veh_exists)
+        obs_t0.extend([m_veh_exists, m_veh_decision])
         self.m_veh_exists = m_veh_exists
         return obs_t0
 
