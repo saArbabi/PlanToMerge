@@ -132,12 +132,12 @@ class NIDM():
 
     def get_att_context(self, root_state, obs_t0, index):
         obs_t0 = np.array(obs_t0)
-        booleans = obs_t0[:, :, -2:] # ['m_veh_exists', 'm_veh_decision'] 
+        booleans = obs_t0[:, :, -2:] # ['m_veh_exists', 'm_veh_decision']
         env_state = self.scale_state(obs_t0, 'env_state')
         merger_c = self.scale_state(obs_t0, 'merger_c')
         att_context = tf.concat([root_state.proj_att[index:index+1, :, :],
                                  root_state.hidden_state[0][index:index+1, :, :],
-                                 env_state, merger_c, m_veh_exists], axis=-1)
+                                 env_state, merger_c, booleans], axis=-1)
         return att_context
 
     def predict_joint_action(self, root_state, vehicle, index):
@@ -159,11 +159,11 @@ class NIDM():
             m_att_score = 0
 
         act_long = f_att_score*ef_act + m_att_score*em_act
-        print('oooops  ',
-                'm_att_score ', round(m_att_score, 2), '  ',
-                'em_act ', round(em_act, 2), '  ',
-                'act_long ', round(act_long, 2), '  ',
-                'glob_y_m ', round(vehicle.neighbours['m'].glob_y, 2), '  ',
-                'glob_x_m ', round(vehicle.neighbours['m'].glob_x-vehicle.glob_x, 2), '  ',
-                'glob_x_f ', round(vehicle.neighbours['f'].glob_x-vehicle.glob_x, 2))
+        # print('oooops  ',
+        #         'm_att_score ', round(m_att_score, 2), '  ',
+        #         'em_act ', round(em_act, 2), '  ',
+        #         'act_long ', round(act_long, 2), '  ',
+        #         'glob_y_m ', round(vehicle.neighbours['m'].glob_y, 2), '  ',
+        #         'glob_x_m ', round(vehicle.neighbours['m'].glob_x-vehicle.glob_x, 2), '  ',
+        #         'glob_x_f ', round(vehicle.neighbours['f'].glob_x-vehicle.glob_x, 2))
         return [act_long, 0]
