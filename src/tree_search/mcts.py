@@ -96,7 +96,7 @@ class MCTSDPW(AbstractPlanner):
                     joint_action = self.predict_joint_action(state)
                 state.step(joint_action)
 
-        self.add_position_noise(state)
+        # self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
         terminal = state.is_terminal()
@@ -257,7 +257,6 @@ class DecisionNode(Node):
     def fetch_state(self):
         assert self.state, 'This node has no state attribute'
         img_state = ImaginedEnv(self.state)
-        # return self.state
         return img_state
 
     def draw_sample(self, rng):

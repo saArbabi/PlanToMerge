@@ -28,6 +28,13 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
+indexs = {}
+metric_labels = ['budget', 'epi sode', 'cumulative_reward', 'timesteps_to_merge', \
+                  'max_decision_time', 'hard_brake_count', 'decisions_made']
+
+for i in range(6):
+    indexs[metric_labels[i]] = i
+indexs
 # %%
 planner_names = ["mcts", "omniscient", "qmdp"]
 planner_names = ["mcts", "omniscient"]
@@ -39,6 +46,8 @@ planner_names = ["mcts_step1", "mcts_step2"]
 planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2"]
 planner_names = ["qmdp_clever", "qmdp_clever2"]
 planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2", "qmdp_clever3", "qmdp_clever4"]
+planner_names = ['mcts_', "qmdp_10", "qmdp_30", 'qmdp']
+planner_names = ['mcts', "qmdp"]
 
 metric_dict = {}
 decision_logs = {}
@@ -64,16 +73,6 @@ for planner_name in planner_names:
 # metric_dict[planner_name].shape
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
-
-# %%
-
-indexs = {}
-metric_labels = ['budget', 'epi sode', 'cumulative_reward', 'timesteps_to_merge', \
-                  'max_decision_time', 'hard_brake_count', 'decisions_made']
-
-for i in range(6):
-    indexs[metric_labels[i]] = i
-indexs
 
 # %%
 subplot_xcount = 2
@@ -123,10 +122,12 @@ Performance comparison for each episode.
 """
 fig, ax = plt.subplots(figsize=(5, 10))
 episodes_considered = range(500, 500+metric_dict[planner_name].shape[1])
+planner_count = len(planner_names)
 
-y_pos = np.arange(len(episodes_considered))*3
+y_pos = np.linspace(planner_count/2, (planner_count+2)*len(episodes_considered), len(episodes_considered))
+y_pos
 kpi = 'cumulative_reward'
-kpi = 'timesteps_to_merge'
+# kpi = 'timesteps_to_merge'
 
 for i, planner_name in enumerate(planner_names):
     metrics = metric_dict[planner_name]
@@ -138,11 +139,11 @@ for i, planner_name in enumerate(planner_names):
 
 labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
-# ax.set_ylim([490, 520])
 ax.set_yticklabels(labels)
+ax.spines['left'].set_position('zero')
 ax.legend()
-plt.plot([0, 0], \
-          [-1, 30], color = 'black')
+# plt.plot([0, 0], \
+#           [-1, 30], color = 'black')
 
 
 # %%

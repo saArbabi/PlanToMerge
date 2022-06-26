@@ -5,7 +5,6 @@ import os
 import numpy as np
 import pickle
 import json
-import tensorflow as tf
 
 class MCEVAL():
     def __init__(self, eval_config):
@@ -56,12 +55,8 @@ class MCEVAL():
         self.current_episode_count += 1
         self.env = EnvAutoMerge()
         self.env.initialize_env(episode_id)
-        self.planner._enough_history = False
         self.planner.steps_till_next_decision = 0
         self.planner.seed(2022)
-        self.planner.nidm.vehicle_count = len(self.env.vehicles)
-        tf.random.set_seed(2022)
-
 
         cumulative_decision_count = 0
         decision_times = []
@@ -161,8 +156,8 @@ class MCEVAL():
                 if self.is_eval_complete(exp_name, planner_name):
                     continue
                 planner_info['budget'] = budget
-                self.load_planner(planner_info, planner_name)
                 while self.episode_id < self.target_episode:
+                    self.load_planner(planner_info, planner_name)
                     self.run_episode(self.episode_id)
                     self.dump_mc_logs(exp_name, planner_name)
                     self.update_eval_config(exp_name)

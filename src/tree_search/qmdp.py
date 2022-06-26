@@ -45,6 +45,7 @@ class QMDP(MCTSDPW):
         return NIDM()
 
     def update_belief(self, belief_node):
+        # return
         if self.enough_history(belief_node.state) and \
                             not belief_node.state.hidden_state:
             state = belief_node.state

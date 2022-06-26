@@ -117,7 +117,7 @@ class EnvAutoMerge(EnvMerge):
 
         if self.sdv.is_merge_initiated():
             if self.sdv.abort_been_chosen:
-                total_reward += 1
+                total_reward += 0.2
             else:
                 total_reward += 3
 
