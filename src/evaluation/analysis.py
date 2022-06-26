@@ -146,7 +146,7 @@ plt.plot([0, 0], \
 
 
 # %%
-
+s
 
 
 x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
