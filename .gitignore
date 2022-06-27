@@ -14,3 +14,5 @@ src/garbage.py
 src/extract code from these/
 
 src/evaluation/experiments/
+
+*.pyc

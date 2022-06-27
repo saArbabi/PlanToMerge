@@ -9,7 +9,7 @@ import time
 import json
 planner_name = 'omniscient'
 planner_name = 'qmdp'
-# planner_name = 'mcts'
+planner_name = 'belief_search'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:

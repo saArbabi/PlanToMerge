@@ -41,6 +41,9 @@ class MCEVAL():
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
             self.planner = QMDP(planner_info)
+        elif planner_name == 'belief_search':
+            from tree_search.belief_search import BeliefSearch
+            self.planner = BeliefSearch()
         elif planner_name == 'mcts':
             from tree_search.mcts import MCTSDPW
             self.planner = MCTSDPW(planner_info)

@@ -47,7 +47,7 @@ planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2"]
 planner_names = ["qmdp_clever", "qmdp_clever2"]
 planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2", "qmdp_clever3", "qmdp_clever4"]
 planner_names = ['mcts_', "qmdp_10", "qmdp_30", 'qmdp']
-planner_names = ['mcts', "qmdp"]
+planner_names = ['mcts', "qmdp", "belief_search"]
 
 metric_dict = {}
 decision_logs = {}
