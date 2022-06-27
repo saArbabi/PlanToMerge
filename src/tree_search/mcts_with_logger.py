@@ -52,7 +52,7 @@ class MCTSDPWLogger(MCTSDPW):
                         'x_rollout':[], 'y_rollout':[]}
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
-        print('############### Iter #################')
+        # print('############### Iter #################')
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(
@@ -60,12 +60,12 @@ class MCTSDPWLogger(MCTSDPW):
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
-            try:
-                print('dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
-                      '  speed:', round(state.sdv.speed, 2), '  ', state.sdv.neighbours['rl'].id)
-            except:
-                print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
-                      '  speed:', round(state.sdv.speed, 2))
+            # try:
+            #     print('dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
+            #           '  speed:', round(state.sdv.speed, 2), '  ', state.sdv.neighbours['rl'].id)
+            # except:
+            #     print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
+            #           '  speed:', round(state.sdv.speed, 2))
 
             state_node = chance_node.get_child(
                                             state,
@@ -97,16 +97,16 @@ class MCTSDPWLogger(MCTSDPW):
         :return: the total reward of the rollout trajectory
         """
         self.log_visited_sdv_state(state, tree_states, 'rollout')
-        print('############### EVAL #################')
+        # print('############### EVAL #################')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.get_available_decisions(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
-            try:
-                print('dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
-                      '  speed:', round(state.sdv.speed, 2), '  ', state.sdv.neighbours['rl'].id)
-            except:
-                print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
-                      '  speed:', round(state.sdv.speed, 2))
+            # try:
+            #     print('dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
+            #           '  speed:', round(state.sdv.speed, 2), '  ', state.sdv.neighbours['rl'].id)
+            # except:
+            #     print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward, \
+            #           '  speed:', round(state.sdv.speed, 2))
 
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')
@@ -118,5 +118,5 @@ class MCTSDPWLogger(MCTSDPW):
 
             if terminal:
                 break
-        print('accum reward: ', total_reward)
+        # print('accum reward: ', total_reward)
         return tree_states, total_reward

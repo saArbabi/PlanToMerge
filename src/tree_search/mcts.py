@@ -62,6 +62,7 @@ class MCTSDPW(AbstractPlanner):
                         return [1, 2, 3]
             elif state.sdv.decision_cat == 'MERGE':
                 if self.last_decision == 4 and state.time_step == self.current_time_step:
+                    # you can abort merge once you have chosen it
                     return [4, 5]
                 else:
                     return [4]
