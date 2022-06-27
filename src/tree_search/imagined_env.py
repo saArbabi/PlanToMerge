@@ -31,9 +31,13 @@ class ImaginedEnv(EnvAutoMerge):
         for vehicle, actions in zip(self.vehicles, joint_action):
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
+            vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.got_bad_action = True
-            vehicle.step(actions)
+
+            if self.is_bad_state(vehicle):
+                self.got_bad_state = True
+
         self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
         self.time_step += 1
