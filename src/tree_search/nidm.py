@@ -163,7 +163,5 @@ class NIDM():
         #         'm_att_score ', round(m_att_score, 2), '  ',
         #         'em_act ', round(em_act, 2), '  ',
         #         'act_long ', round(act_long, 2), '  ',
-        #         'glob_y_m ', round(vehicle.neighbours['m'].glob_y, 2), '  ',
-        #         'glob_x_m ', round(vehicle.neighbours['m'].glob_x-vehicle.glob_x, 2), '  ',
-        #         'glob_x_f ', round(vehicle.neighbours['f'].glob_x-vehicle.glob_x, 2))
+        #         'bools ', vehicle.obs_history[-1][-2:])
         return [act_long, 0]

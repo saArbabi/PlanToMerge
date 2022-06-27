@@ -60,10 +60,11 @@ class QMDPLogger(QMDP):
 
             observation, reward, terminal = self.step(state, decision, 'search')
             try:
+                rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
                 print('dec >>> ', self.OPTIONS[decision], \
                       '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
                                             '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                            '  rl_desV', round(state.sdv.neighbours['rl'].driver_params['desired_v'], 2), '  ', \
+                                            '  rl_params', rl_params, '  ', \
                                             '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
                                             '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
             except:
@@ -105,10 +106,11 @@ class QMDPLogger(QMDP):
             decision = self.rng.choice(self.get_available_decisions(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
             try:
+                rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
                 print('dec >>> ', self.OPTIONS[decision], \
                       '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
                                             '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                            '  rl_desV', round(state.sdv.neighbours['rl'].driver_params['desired_v'], 2), '  ', \
+                                            '  rl_params', rl_params, '  ', \
                                             '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
                                             '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
             except:

@@ -142,6 +142,7 @@ ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
 ax.spines['left'].set_position('zero')
 ax.legend()
+ax.grid()
 # plt.plot([0, 0], \
 #           [-1, 30], color = 'black')
 
