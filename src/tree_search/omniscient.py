@@ -6,16 +6,21 @@ class Omniscient(MCTSDPW):
     def __init__(self, config=None):
         super(Omniscient, self).__init__(config)
 
-    def step(self, state, decision):
-        """
-        With determinstic transitions.
-        """
+    def step(self, state, decision, step_type):
         state.env_reward_reset()
         state.sdv.update_decision(decision)
-        for i in range(self.steps_per_decision):
-            joint_action = self.predict_joint_action(state)
-            state.step(joint_action)
+        if step_type == 'search':
+            for i in range(self.steps_per_decision):
+                joint_action = self.predict_joint_action(state)
+                state.step(joint_action)
 
+        elif step_type == 'random_rollout':
+            for i in range(self.steps_per_decision):
+                if i % self.config['rollout_step_skips'] == 0:
+                    joint_action = self.predict_joint_action(state)
+                state.step(joint_action)
+
+        # self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
         terminal = state.is_terminal()
