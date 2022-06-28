@@ -8,7 +8,6 @@ import json
 
 class MCEVAL():
     def __init__(self, eval_config):
-        self.env = EnvAutoMerge()
         self.eval_config = eval_config
 
     def create_empty(self):
@@ -38,12 +37,13 @@ class MCEVAL():
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
     def load_planner(self, planner_info, planner_name):
+        print(planner_info)
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
             self.planner = QMDP(planner_info)
         elif planner_name == 'belief_search':
             from tree_search.belief_search import BeliefSearch
-            self.planner = BeliefSearch()
+            self.planner = BeliefSearch(planner_info)
         elif planner_name == 'mcts':
             from tree_search.mcts import MCTSDPW
             self.planner = MCTSDPW(planner_info)
@@ -54,10 +54,9 @@ class MCEVAL():
             print('No such planner exists yet. Check the evaluation config file')
 
     def run_episode(self, episode_id):
-        print('Running episode: ', episode_id)
         self.current_episode_count += 1
-        self.env = EnvAutoMerge()
-        self.env.initialize_env(episode_id)
+        env = EnvAutoMerge()
+        env.initialize_env(episode_id)
         self.planner.steps_till_next_decision = 0
         self.planner.seed(2022)
 
@@ -67,28 +66,28 @@ class MCEVAL():
         hard_brake_count = 0
         decisions_made = []
 
-        while not self.env.sdv.is_merge_initiated():
+        while not env.sdv.is_merge_initiated():
             if self.planner.is_decision_time():
                 t_0 = time.time()
-                self.planner.plan(self.env)
-                decision = self.planner.get_decision(self.env)
+                self.planner.plan(env)
+                decision = self.planner.get_decision(env)
                 t_1 = time.time()
 
-                self.env.sdv.update_decision(decision)
+                env.sdv.update_decision(decision)
                 cumulative_decision_count += 1
                 decision_times.append(t_1 - t_0)
-                cumulative_reward += self.env.get_reward(decision)
+                cumulative_reward += env.get_reward(decision)
                 decisions_made.append(decision)
-                if self.env.got_bad_action:
+                if env.got_bad_action:
                     hard_brake_count += 1
-                self.env.env_reward_reset()
+                env.env_reward_reset()
 
-            self.env.step()
+            env.step()
             self.planner.steps_till_next_decision -= 1
 
-        cumulative_reward += self.env.get_reward(decision)
+        cumulative_reward += env.get_reward(decision)
         # collect metrics
-        timesteps_to_merge = self.env.time_step
+        timesteps_to_merge = env.time_step
         max_decision_time = max(decision_times)
         self.mc_collection[episode_id] = [
                                         cumulative_reward,
@@ -111,12 +110,11 @@ class MCEVAL():
         self.eval_config['progress_logging'][planner_name] = progress_logging
 
     def load_collections(self, exp_name, planner_name):
-        exp_dir = './src/evaluation/experiments/'+planner_name
-        with open(exp_dir+'/'+exp_name+'.pickle', 'rb') as handle:
+        with open(self.exp_dir+'/'+planner_name+'/'+exp_name+'.pickle', 'rb') as handle:
             self.mc_collection = pickle.load(handle)
 
     def dump_mc_logs(self, exp_name, planner_name):
-        exp_dir = './src/evaluation/experiments/'+planner_name
+        exp_dir = self.exp_dir+'/'+planner_name
         if not os.path.exists(exp_dir):
             os.mkdir(exp_dir)
         with open(exp_dir+'/'+exp_name+'.pickle', 'wb') as handle:
