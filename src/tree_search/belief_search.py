@@ -1,8 +1,8 @@
 from tree_search.qmdp import QMDP, BeliefNode
 
 class BeliefSearch(QMDP):
-    def __init__(self):
-        super(BeliefSearch, self).__init__()
+    def __init__(self, config=None):
+        super(BeliefSearch, self).__init__(config)
 
     def run(self, belief_node):
         total_reward = 0

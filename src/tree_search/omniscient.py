@@ -1,4 +1,3 @@
-from tree_search.mcts import MCTSDPW
 from tree_search.mcts import MCTSDPW, DecisionNode, ChanceNode
 from tree_search.imagined_env import ImaginedEnv
 
@@ -27,7 +26,6 @@ class Omniscient(MCTSDPW):
         return observation, reward, terminal
 
     def reset(self):
-        self.seed(2022)
         self.tree_info = []
         self.belief_info = {}
         self.root = OmniDecisionNode(parent=None, config=self.config)

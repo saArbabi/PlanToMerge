@@ -45,10 +45,10 @@ class SDVehicle(IDMMOBILVehicleMerge):
     def change_aggressiveness(self, speed_decision):
         if speed_decision == 'UP':
             self.driver_params['aggressiveness'] = \
-                                min(self.driver_params['aggressiveness']+0.2, 1)
+                                min(self.driver_params['aggressiveness']+0.3, 1)
         elif speed_decision == 'DOWN':
             self.driver_params['aggressiveness'] = \
-                                max(self.driver_params['aggressiveness']-0.2, 0)
+                                max(self.driver_params['aggressiveness']-0.3, 0)
         self.set_driver_params()
 
     def is_merge_possible(self):
@@ -69,7 +69,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
         if merge_decision == 'MERGE':
             self.lane_decision = 'move_left'
-                
+
         elif merge_decision == 'LANEKEEP':
             self.lane_decision = 'keep_lane'
             if self.target_lane != self.lane_id:
