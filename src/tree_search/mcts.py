@@ -47,16 +47,16 @@ class MCTSDPW(AbstractPlanner):
                 return [4]
             elif state.sdv.decision_cat == 'LANEKEEP':
                 if state.sdv.is_merge_possible():
-                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                    if state.sdv.driver_params['aggressiveness'] == 0:
                         return [1, 2, 4, 5]
-                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                    elif state.sdv.driver_params['aggressiveness'] == 1:
                         return [3, 2, 4, 5]
                     else:
                         return [1, 2, 3, 4, 5]
                 else:
-                    if state.sdv.driver_params['aggressiveness'] < 0.05:
+                    if state.sdv.driver_params['aggressiveness'] == 0:
                         return [1, 2]
-                    elif state.sdv.driver_params['aggressiveness'] > 0.95:
+                    elif state.sdv.driver_params['aggressiveness'] == 1:
                         return [3, 2]
                     else:
                         return [1, 2, 3]
