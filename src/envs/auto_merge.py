@@ -133,7 +133,7 @@ class EnvAutoMerge(EnvMerge):
                 total_reward += 3
 
         if self.got_bad_action:
-            total_reward -= 5
+            total_reward -= 3
 
         if self.got_bad_state:
             total_reward -= 10

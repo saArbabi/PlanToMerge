@@ -4,9 +4,11 @@ import numpy as np
 
 class AbstractPlanner(object):
     def __init__(self):
-        self.root = None
-        self.steps_till_next_decision = 0
         self.steps_per_decision = 10 # number of timesteps that lapce between each decision
+        self.initialize_planner()
+
+    def initialize_planner(self):
+        self.steps_till_next_decision = 0
         self.seed(2022)
 
     def seed(self, seed):

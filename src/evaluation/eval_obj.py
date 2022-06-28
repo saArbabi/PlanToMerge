@@ -37,7 +37,6 @@ class MCEVAL():
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
     def load_planner(self, planner_info, planner_name):
-        print(planner_info)
         if planner_name == 'qmdp':
             from tree_search.qmdp import QMDP
             self.planner = QMDP(planner_info)
@@ -57,14 +56,15 @@ class MCEVAL():
         self.current_episode_count += 1
         env = EnvAutoMerge()
         env.initialize_env(episode_id)
-        self.planner.steps_till_next_decision = 0
-        self.planner.seed(2022)
+        self.planner.initialize_planner()
+
 
         cumulative_decision_count = 0
         decision_times = []
         cumulative_reward = 0
         hard_brake_count = 0
         decisions_made = []
+        agent_aggressiveness = []
 
         while not env.sdv.is_merge_initiated():
             if self.planner.is_decision_time():
@@ -78,6 +78,7 @@ class MCEVAL():
                 decision_times.append(t_1 - t_0)
                 cumulative_reward += env.get_reward(decision)
                 decisions_made.append(decision)
+                agent_aggressiveness.append(env.sdv.driver_params['aggressiveness'])
                 if env.got_bad_action:
                     hard_brake_count += 1
                 env.env_reward_reset()
@@ -94,7 +95,8 @@ class MCEVAL():
                                         timesteps_to_merge,
                                         max_decision_time,
                                         hard_brake_count,
-                                        decisions_made]
+                                        decisions_made,
+                                        agent_aggressiveness]
 
     def initiate_eval(self, planner_name):
         self.current_episode_count = 0
@@ -144,7 +146,7 @@ class MCEVAL():
             progress_logging['current_episode_count'] = \
                         f'{self.current_episode_count}/{mc_config["episodes_n"]}'
             self.target_episode =  self.episode_id + epis_n_left
-            self.update_eval_config(exp_name)
+            # self.update_eval_config(exp_name)
             return False
 
     def run(self):
@@ -157,8 +159,8 @@ class MCEVAL():
                 if self.is_eval_complete(exp_name, planner_name):
                     continue
                 planner_info['budget'] = budget
+                self.load_planner(planner_info, planner_name)
                 while self.episode_id < self.target_episode:
-                    self.load_planner(planner_info, planner_name)
                     self.run_episode(self.episode_id)
                     self.dump_mc_logs(exp_name, planner_name)
                     self.update_eval_config(exp_name)

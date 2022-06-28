@@ -7,8 +7,12 @@ import sys
 class QMDP(MCTSDPW):
     def __init__(self, config=None):
         super(QMDP, self).__init__(config)
-        self.update_counts = 0
+        self.nidm = self.load_nidm()
+
+    def initialize_planner(self):
         self._enough_history = False
+        self.steps_till_next_decision = 0
+        self.seed(2022)
 
     def reset(self):
         self.root = BeliefNode(parent=None, config=self.config)
@@ -19,7 +23,6 @@ class QMDP(MCTSDPW):
         """
         if not self._enough_history:
             if len(state.vehicles[0].obs_history) == 10:
-                self.nidm = self.load_nidm()
                 self._enough_history = True
         return self._enough_history
 
