@@ -10,6 +10,9 @@ class NIDM():
         self.create_state_indxs()
         self.samples_n = 1
 
+    def seed(self, seed):
+        tf.random.set_seed(seed)
+
     def load_nidm(self):
         model_name = 'neural_idm_371'
         epoch_count = '17'
@@ -21,7 +24,6 @@ class NIDM():
         from models.neural_idm import  NeurIDMModel
         self.model = NeurIDMModel(config)
         self.model.load_weights(exp_path).expect_partial()
-        tf.random.set_seed(2022)
 
     def load_scalers(self):
         data_files_dir = './src/models/'

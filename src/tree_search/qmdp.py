@@ -6,13 +6,14 @@ import sys
 
 class QMDP(MCTSDPW):
     def __init__(self, config=None):
-        super(QMDP, self).__init__(config)
         self.nidm = self.load_nidm()
+        super(QMDP, self).__init__(config)
 
     def initialize_planner(self):
         self._enough_history = False
         self.steps_till_next_decision = 0
         self.seed(2022)
+        self.nidm.seed(2022)
 
     def reset(self):
         self.root = BeliefNode(parent=None, config=self.config)
