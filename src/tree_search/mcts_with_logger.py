@@ -6,8 +6,8 @@ class MCTSDPWLogger(MCTSDPW):
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
                5 : ['ABORT', 'IDLE']}
-    def __init__(self):
-        super(MCTSDPWLogger, self).__init__()
+    def __init__(self, config=None):
+        super(MCTSDPWLogger, self).__init__(config)
 
     def reset(self):
         self.tree_info = []
