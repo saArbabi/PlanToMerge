@@ -8,9 +8,9 @@ class BeliefSearch(QMDP):
         total_reward = 0
         depth = 0
         terminal = False
-
+        state = self.sample_belief(belief_node)
+        
         while self.not_exit_tree(depth, belief_node, terminal):
-            state = self.sample_belief(belief_node)
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
                                         self.get_available_decisions(state),
@@ -22,11 +22,12 @@ class BeliefSearch(QMDP):
                                             observation,
                                             self.rng)
             self.update_belief(belief_node)
+            state = self.sample_belief(belief_node)
             total_reward += self.config["gamma"] ** depth * reward
             depth += 1
 
         if not terminal:
-            total_reward = self.evaluate(self.sample_belief(belief_node),
+            total_reward = self.evaluate(state,
                                           total_reward,
                                           depth=depth)
         # Backup global statistics
