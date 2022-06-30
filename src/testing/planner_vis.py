@@ -45,7 +45,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 569
+    episode_id = 565
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)

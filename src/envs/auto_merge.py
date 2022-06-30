@@ -62,7 +62,8 @@ class EnvAutoMerge(EnvMerge):
 
     def is_bad_action(self, vehicle, actions):
         cond = not self.got_bad_action and vehicle.neighbours['m'] and \
-                self.sdv.lane_decision != 'keep_lane' and actions[0] < -5
+                self.sdv.lane_decision != 'keep_lane' and \
+                vehicle.act_long_p > -5 and actions[0] < -5
         if cond:
             return True
 
