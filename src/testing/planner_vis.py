@@ -24,6 +24,8 @@ def load_planner():
     if planner_name == 'omniscient':
         from tree_search.omniscient import Omniscient
         planner = Omniscient()
+        # from tree_search.omniscient_with_logger import OmniscientLogger
+        # planner = OmniscientLogger()
 
     if planner_name == 'mcts':
         from tree_search.mcts_with_logger import MCTSDPWLogger
@@ -43,7 +45,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 501
+    episode_id = 569
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
