@@ -119,6 +119,7 @@ class MCTSDPW(AbstractPlanner):
         depth = 0
         terminal = False
         state = state_node.draw_sample(self.rng)
+
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(
