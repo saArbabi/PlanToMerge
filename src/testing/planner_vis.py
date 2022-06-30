@@ -67,7 +67,7 @@ def main():
             except:
                 pass
 
-        if planner.is_decision_time(env):
+        if planner.is_decision_time():
             t_0 = time.time()
             planner.plan(env)
             _decision = planner.get_decision(env)
