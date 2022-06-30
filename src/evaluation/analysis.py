@@ -6,18 +6,12 @@ import numpy as np
 
 
 # %%
-eval_config_dir = './src/evaluation/experiments/eval_config.json'
 def get_mc_collection(exp_dir, exp_names):
     mc_collection = []
     for exp_name in exp_names:
         with open(exp_dir+'/'+exp_name, 'rb') as handle:
             mc_collection.append(pickle.load(handle))
     return mc_collection
-
-def read_eval_config():
-    with open(eval_config_dir, 'rb') as handle:
-        eval_config = json.load(handle)
-    return eval_config
 
 def get_budgets(exp_dir):
     exp_names = os.listdir(exp_dir)
@@ -27,62 +21,6 @@ def get_budgets(exp_dir):
         budgets += budget
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
-
-indexs = {}
-metric_labels = ['budget', 'epi sode', 'cumulative_reward', 'timesteps_to_merge', \
-                  'max_decision_time', 'hard_brake_count', 'decisions_made']
-
-for i in range(6):
-    indexs[metric_labels[i]] = i
-indexs
-# %%
-planner_names = ["mcts", "omniscient", "qmdp"]
-planner_names = ["mcts", "omniscient"]
-planner_names = ["mcts_rand", "mcts_know", "omniscient"]
-planner_names = ["mcts_rand", "mcts_know", "omniscient", "qmdp"]
-# planner_names = ["mcts"]
-planner_names = ["mcts_step_1", "mcts_step_2"]
-planner_names = ["mcts_step1", "mcts_step2"]
-planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2"]
-planner_names = ["qmdp_clever", "qmdp_clever2"]
-planner_names = ["qmdp_simple", "qmdp_clever", "qmdp_clever2", "qmdp_clever3", "qmdp_clever4"]
-planner_names = ['mcts_', "qmdp_10", "qmdp_30", 'qmdp']
-planner_names = ['mcts', "qmdp", "belief_search"]
-
-metric_dict = {}
-decision_logs = {}
-for planner_name in planner_names:
-    metrics = []
-    decision_logs[planner_name] = {}
-    exp_dir = './src/evaluation/experiments/'+planner_name
-    budgets, exp_names = get_budgets(exp_dir)
-    mc_collection = get_mc_collection(exp_dir, exp_names)
-    for i, budget in enumerate(budgets):
-        decision_logs[planner_name][budget] = []
-        budget_metric = []
-        for episode, epis_metric in mc_collection[i].items():
-            # if episode != 501:
-            #     continue
-            decision_logs[planner_name][budget] += epis_metric[-1]
-            budget_metric.append([budget, episode]+epis_metric[0:-1])
-        metrics.append(budget_metric)
-
-    metric_dict[planner_name] = np.array(metrics)
-    print(planner_name,' shape: ', metric_dict[planner_name].shape)
-
-# metric_dict[planner_name].shape
-# metric_dict[planner_name].shape
-# dims: [budgets, episodes, logged_states]
-
-# %%
-subplot_xcount = 2
-subplot_ycount = 2
-fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
-axs[1, 0].set_xlabel('Iterations')
-axs[1, 1].set_xlabel('Iterations')
-for ax in axs.flatten():
-    ax.set_xticks([10, 30])
-
 
 def add_plot_to_fig(metrics, ax, kpi):
     # ax.plot(x_y[0], x_y[1][:, -1], \
@@ -96,6 +34,61 @@ def add_plot_to_fig(metrics, ax, kpi):
     ax.legend()
     ax.set_title(kpi)
 
+indexs = {}
+metric_labels = ['budget', 'episode', 'cumulative_reward', 'timesteps_to_merge', \
+                  'max_decision_time', 'hard_brake_count', 'decisions_made', 'agent_aggressiveness']
+
+for i in range(6):
+    indexs[metric_labels[i]] = i
+indexs
+# %%
+planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
+# planner_names = ["omniscient"]
+run_name = 'run_5'
+
+metric_dict = {}
+decision_logs = {}
+aggressiveness_logs = {}
+for planner_name in planner_names:
+    metrics = []
+    decision_logs[planner_name] = {}
+    aggressiveness_logs[planner_name] = {}
+    exp_dir = './src/evaluation/experiments/'+run_name+'/'+planner_name
+    budgets, exp_names = get_budgets(exp_dir)
+    mc_collection = get_mc_collection(exp_dir, exp_names)
+    for i, budget in enumerate(budgets):
+        decision_logs[planner_name][budget] = {}
+        aggressiveness_logs[planner_name][budget] = {}
+        budget_metric = []
+        for episode, epis_metric in mc_collection[i].items():
+            # if episode > 550:
+            #     continue
+            decision_logs[planner_name][budget][episode] = epis_metric[-2]
+            aggressiveness_logs[planner_name][budget][episode] = epis_metric[-1]
+            budget_metric.append([budget, episode]+epis_metric[0:-2])
+        metrics.append(budget_metric)
+
+    metric_dict[planner_name] = np.array(metrics)
+    print(planner_name,' shape: ', metric_dict[planner_name].shape)
+# metric_dict[planner_name].shape
+# metric_dict[planner_name].shape
+# dims: [budgets, episodes, logged_states]
+metric_dict['qmdp'].shape
+metric_dict['qmdp'][1, :, -1]
+metric_dict['qmdp'][0, 65, 1]
+np.where(metric_dict['qmdp'][0, :, -1] > 1)
+# %%
+subplot_xcount = 2
+subplot_ycount = 2
+fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
+axs[1, 0].set_xlabel('Iterations')
+axs[1, 1].set_xlabel('Iterations')
+for ax in axs.flatten():
+    ax.set_xticks([1, 50, 100, 150])
+    ax.grid()
+metric_dict['qmdp'].shape
+metric_dict['qmdp'][-1, :, :]
+metric_dict['omniscient'][-1, :, :]
 for planner_name in planner_names:
     metrics = metric_dict[planner_name]
 
@@ -118,16 +111,80 @@ for planner_name in planner_names:
 
 # %%
 """
+Agent aggressiveness distriubiton
+"""
+budget = 50
+bins = 30
+colors = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728']
+
+for color, planner_name in zip(colors, planner_names):
+    agg = list(aggressiveness_logs[planner_name][budget].values())
+    agg = [x for xs in agg for x in xs]
+    _ = plt.hist(agg, bins=bins, label=planner_name, edgecolor=color, fill=False)
+
+plt.legend()
+
+# _ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human', 'fill')
+# %%
+"""
+Count number of agent decisions
+"""
+bins = 5
+for color, planner_name in zip(colors, planner_names):
+    decisions = list(decision_logs[planner_name][budget].values())
+    decisions = [x for xs in decisions for x in xs]
+    _ = plt.hist(decisions, bins=bins, label=planner_name, edgecolor=color, fill=False)
+    plt.title(planner_name)
+
+# %%
+"""
+Assess agent decisions
+"""
+planner_name = 'mcts'
+budget = 50
+# budget = 1
+OPTIONS = {1 : ['LANEKEEP', 'UP'],
+           2 : ['LANEKEEP', 'IDLE'],
+           3 : ['LANEKEEP', 'DOWN'],
+           4 : ['MERGE', 'IDLE'],
+           5 : ['ABORT', 'IDLE']}
+
+
+labels = [action[0]+'_'+action[1] for action in OPTIONS.values()]
+
+
+for epis in range(515, 516):
+    plt.figure()
+    plt.grid()
+    plt.title('episode: '+ str(epis))
+    for planner_name in planner_names:
+        plt.plot(decision_logs[planner_name][budget][epis], '--x', label=planner_name)
+    plt.legend()
+    plt.yticks(range(1, 6), labels)
+
+    # plt.figure()
+    # plt.grid()
+    # plt.title('episode: '+ str(epis))
+    # for planner_name in planner_names:
+    #     plt.plot(aggressiveness_logs[planner_name][budget][epis], '--x', label=planner_name)
+    # plt.legend()
+
+0 < 4 < 3
+17.5/7
+-5 in [1, -5]
+# %%
+"""
 Performance comparison for each episode.
 """
-fig, ax = plt.subplots(figsize=(5, 10))
+fig, ax = plt.subplots(figsize=(10, 50))
 episodes_considered = range(500, 500+metric_dict[planner_name].shape[1])
 planner_count = len(planner_names)
 
-y_pos = np.linspace(planner_count/2, (planner_count+2)*len(episodes_considered), len(episodes_considered))
+y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
 y_pos
 kpi = 'cumulative_reward'
 # kpi = 'timesteps_to_merge'
+# kpi = 'max_decision_time'
 
 for i, planner_name in enumerate(planner_names):
     metrics = metric_dict[planner_name]

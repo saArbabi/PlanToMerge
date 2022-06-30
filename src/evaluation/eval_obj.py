@@ -58,7 +58,6 @@ class MCEVAL():
         env.initialize_env(episode_id)
         self.planner.initialize_planner()
 
-
         cumulative_decision_count = 0
         decision_times = []
         cumulative_reward = 0

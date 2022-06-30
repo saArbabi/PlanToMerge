@@ -6,9 +6,7 @@ import numpy as np
 class TrackedVehicle(IDMMOBILVehicleMerge):
     def __init__(self, id, lane_id, glob_x, speed, aggressiveness=None):
         super().__init__(id, lane_id, glob_x, speed, aggressiveness)
-        self.samples_n = 1
         self.history_len = 30 # steps
-        self.state_dim = 13
         self.obs_history = []
         with open('./src/models/dummy_value_set.pickle', 'rb') as handle:
             self.dummy_value_set = pickle.load(handle)
@@ -56,16 +54,15 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
 
         obs_t0 = [self.act_long_p, f_veh_action, self.speed, f_veh_speed]
         obs_t0.extend([el_delta_v,
-                             el_delta_x])
-
-        obs_t0.extend([em_delta_v,
-                             em_delta_x,
-                             m_veh_action,
-                             m_veh_speed,
-                             em_delta_y,
-                             delta_x_to_merge])
-        obs_t0.extend([m_veh_exists, m_veh_decision])
-        self.m_veh_exists = m_veh_exists
+                        el_delta_x,
+                        em_delta_v,
+                        em_delta_x,
+                        m_veh_action,
+                        m_veh_speed,
+                        em_delta_y,
+                        delta_x_to_merge,
+                        m_veh_exists,
+                        m_veh_decision])
         return obs_t0
 
     def get_driver_param(self, param_name, rng):

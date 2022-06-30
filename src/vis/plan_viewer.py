@@ -77,10 +77,9 @@ class Viewer():
                 print('glob_x: ', round(vehicle.glob_x, 2))
                 print('ego_act: ', vehicle.act_long_c)
                 print('driver_params: ', vehicle.driver_params)
+                if vehicle.neighbours['rl']:
+                    print('delta_rl-x: ', vehicle.glob_x-vehicle.neighbours['rl'].glob_x)
                 print('###########################')
-
-                if vehicle.neighbours['f']:
-                    print('delta_x: ', vehicle.neighbours['f'].glob_x - vehicle.glob_x)
 
             if 'att' in vehicle.neighbours:
                 neighbour = vehicle.neighbours['att']

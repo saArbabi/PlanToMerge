@@ -14,8 +14,8 @@ class NIDM():
         tf.random.set_seed(seed)
 
     def load_nidm(self):
-        model_name = 'neural_idm_371'
-        epoch_count = '17'
+        model_name = 'neural_idm_375'
+        epoch_count = '15'
         exp_dir = './src/models/'+model_name
         exp_path = exp_dir+'/model_epo'+epoch_count
         with open(exp_dir+'/'+'config.json', 'rb') as handle:
@@ -106,7 +106,8 @@ class NIDM():
         return np.array(histories)
 
     def latent_inference(self, vehicles):
-        obs_history = self.scale_state(self.aggregate_histories(vehicles), 'full')
+        histories = self.aggregate_histories(vehicles)[:, :, :-1]
+        obs_history = self.scale_state(histories, 'full')
         enc_hs = self.model.h_seq_encoder(obs_history)
         latent_dis_params = self.model.belief_net(enc_hs , dis_type='prior')
         enc_hs = tf.reshape(enc_hs, [len(vehicles), 1, 128])

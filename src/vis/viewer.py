@@ -85,6 +85,9 @@ class Viewer():
                 print('ego_act: ', vehicle.act_long_c)
                 # print('lane_y: ', vehicle.lane_y)
                 print('driver_params: ', vehicle.driver_params)
+                if vehicle.id == 'sdv':
+                    if vehicle.neighbour['rl']:
+                        print('delta x rl: ', vehicle.neighbour['rl'].glob_x-vehicle.glob_x)
 
                 # print('glob_x: ', vehicle.glob_x)
                 # print('glob_y: ', vehicle.glob_y)
@@ -220,8 +223,7 @@ class ViewerMC(Viewer):
                 # print('glob_x: ', vehicle.glob_x)
                 # print('glob_y: ', vehicle.glob_y)
                 # print('lane_y: ', vehicle.lane_y)
-                if vehicle.neighbours['f']:
-                    print('delta_x: ', vehicle.neighbours['f'].glob_x - vehicle.glob_x)
+
                 print('###########################')
 
     def draw_highway(self, ax, vehicles, env_type):

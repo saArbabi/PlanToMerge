@@ -19,7 +19,7 @@ def get_run_names():
     return names
 
 def main():
-    run_name = 'run_2'
+    run_name = 'run_5'
     names = get_run_names()
     if run_name in names:
         config_path = './src/evaluation/experiments/'+run_name+'/eval_config.json'
@@ -27,7 +27,6 @@ def main():
         config_path = './src/evaluation/experiments/eval_config.json'
 
     eval_config = read_eval_config(config_path)
-    print(eval_config)
     eval_obj = MCEVAL(eval_config)
     eval_obj.exp_dir = './src/evaluation/experiments/'+run_name
     eval_obj.eval_config_dir = eval_obj.exp_dir+'/eval_config.json'
