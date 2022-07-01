@@ -129,11 +129,7 @@ class EnvAutoMerge(EnvMerge):
         if not self.sdv.abort_been_chosen and decision == 5:
             self.sdv.abort_been_chosen = True
 
-        if decision == 2:
-            # reward agent for behavior continuation
-            total_reward += 0.1
-
-        if self.sdv.is_merge_initiated():
+        if self.sdv.is_merge_complete():
             if self.sdv.abort_been_chosen:
                 total_reward += 0.2
             else:
@@ -144,8 +140,8 @@ class EnvAutoMerge(EnvMerge):
 
         if self.got_bad_state:
             total_reward -= 10
+
         # if total_reward < 0:
         #     print('################# OH DEAR ##################' , decision, '   ', total_reward)
-
 
         return total_reward
