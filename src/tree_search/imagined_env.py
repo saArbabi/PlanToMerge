@@ -33,7 +33,7 @@ class ImaginedEnv(EnvAutoMerge):
             self.track_history(vehicle)
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
-                self.got_bad_action = True
+                self.bad_action = actions[0]
 
             if self.is_bad_state(vehicle):
                 self.got_bad_state = True

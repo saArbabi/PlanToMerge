@@ -30,7 +30,7 @@ class EnvAutoMerge(EnvMerge):
     def env_reward_reset(self):
         """This is reset with every planner timestep
         """
-        self.got_bad_action = False
+        self.bad_action = 0
         self.got_bad_state = False
 
     def turn_sdv(self, vehicle):
@@ -61,9 +61,8 @@ class EnvAutoMerge(EnvMerge):
         return actions
 
     def is_bad_action(self, vehicle, actions):
-        cond = not self.got_bad_action and vehicle.neighbours['m'] and \
-                self.sdv.lane_decision != 'keep_lane' and \
-                vehicle.act_long_p > -5 and actions[0] < -5
+        cond = not self.bad_action and vehicle.neighbours['m'] and \
+                self.sdv.lane_decision != 'keep_lane' and vehicle.act_long_p > actions[0] < -4
         if cond:
             return True
 
@@ -72,7 +71,7 @@ class EnvAutoMerge(EnvMerge):
                 self.sdv.lane_decision != 'keep_lane'
         if cond:
             # Too close
-            if abs(self.sdv.glob_x - vehicle.glob_x) < 3:
+            if 0 < (self.sdv.glob_x - vehicle.glob_x) < 3:
                 return True
             # TTC
             if self.sdv.speed < vehicle.speed:
@@ -106,7 +105,7 @@ class EnvAutoMerge(EnvMerge):
             self.track_history(vehicle)
             vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
-                self.got_bad_action = True
+                self.bad_action = actions[0]
 
             if self.is_bad_state(vehicle):
                 self.got_bad_state = True
@@ -128,18 +127,20 @@ class EnvAutoMerge(EnvMerge):
         total_reward = 0
         if not self.sdv.abort_been_chosen and decision == 5:
             self.sdv.abort_been_chosen = True
+            total_reward -= 0.5
 
         if self.sdv.is_merge_complete():
             if self.sdv.abort_been_chosen:
-                total_reward += 0.2
+                total_reward += 0.1
             else:
                 total_reward += 3
 
-        if self.got_bad_action:
-            total_reward -= 5
+        if self.bad_action:
+            total_reward += self.bad_action
 
         if self.got_bad_state:
             total_reward -= 10
+
 
         # if total_reward < 0:
         #     print('################# OH DEAR ##################' , decision, '   ', total_reward)
