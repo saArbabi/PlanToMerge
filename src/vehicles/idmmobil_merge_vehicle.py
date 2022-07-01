@@ -199,7 +199,7 @@ class IDMMOBILVehicleMerge(Vehicle):
             return True
 
         act_long = self.idm_action(self, m_veh)
-        if act_long < -6:
+        if act_long < self.driver_params['safe_braking']:
             # emergency situation
             # print('collisio- avoidance based ########')
             return True
