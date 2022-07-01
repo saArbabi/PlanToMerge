@@ -69,21 +69,16 @@ class EnvAutoMerge(EnvMerge):
 
     def is_bad_state(self, vehicle):
         cond = not self.got_bad_state and vehicle.neighbours['m'] and \
-                self.sdv.lane_decision != 'keep_lane' and \
-                                self.sdv.glob_x > vehicle.glob_x and\
-                                ((self.sdv.glob_x - vehicle.glob_x) < 3)
+                self.sdv.lane_decision != 'keep_lane'
         if cond:
-            return True
-
-        # cond = not self.got_bad_state and vehicle.neighbours['m'] and \
-        #         self.sdv.lane_decision != 'keep_lane'
-
-        # if cond:
-        #     TTC = (self.sdv.glob_x-vehicle.glob_x)/(vehicle.speed-self.sdv.speed)
-        #     if vehicle.id == 3:
-        #         print('TTC ', TTC)
-        #     if 0 < TTC <= 3:
-        #         return True
+            # Too close
+            if abs(self.sdv.glob_x - vehicle.glob_x) < 3:
+                return True
+            # TTC
+            if self.sdv.speed < vehicle.speed:
+                ttc = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed - self.sdv.speed)
+                if ttc < 2: # min in dataset is 1.67
+                    return True
 
     def log_actions(self, vehicle, actions):
         act_long = actions[0]

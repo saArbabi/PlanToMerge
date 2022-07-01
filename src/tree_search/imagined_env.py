@@ -50,7 +50,7 @@ class ImaginedEnv(EnvAutoMerge):
         Episode is complete if:
         (1) agent successfully performs a merge
         """
-        if self.sdv.is_merge_initiated():
+        if self.sdv.is_merge_initiated() or self.got_bad_state:
             return True
 
     def planner_observe(self):
