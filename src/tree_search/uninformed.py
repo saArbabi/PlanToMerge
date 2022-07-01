@@ -12,7 +12,7 @@ class Uninformed(MCTSDPW):
 
         observation = state.planner_observe()
         reward = state.get_reward(decision)
-        terminal = state.is_terminal()
+        terminal = state.is_terminal(decision)
         return observation, reward, terminal
 
     def belief_estimator(self, state):

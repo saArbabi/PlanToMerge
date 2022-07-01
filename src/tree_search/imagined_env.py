@@ -42,7 +42,7 @@ class ImaginedEnv(EnvAutoMerge):
         self.sdv.step(sdv_action)
         self.time_step += 1
 
-    def is_terminal(self):
+    def is_terminal(self, decision):
         """ Set conditions for instance at which the episode is over
         Note: Collisions are not possible, since agent does not take actions that
             result in collisions
@@ -50,7 +50,7 @@ class ImaginedEnv(EnvAutoMerge):
         Episode is complete if:
         (1) agent successfully performs a merge
         """
-        if self.sdv.is_merge_initiated() or self.got_bad_state:
+        if self.sdv.is_merge_complete() or self.got_bad_state or decision == 5:
             return True
 
     def planner_observe(self):

@@ -22,7 +22,7 @@ class Omniscient(MCTSDPW):
         # self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
-        terminal = state.is_terminal()
+        terminal = state.is_terminal(decision)
         return observation, reward, terminal
 
     def reset(self):
