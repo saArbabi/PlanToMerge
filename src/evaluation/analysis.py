@@ -35,16 +35,16 @@ def add_plot_to_fig(metrics, ax, kpi):
     ax.set_title(kpi)
 
 indexs = {}
-metric_labels = ['budget', 'episode', 'cumulative_reward', 'timesteps_to_merge', \
+metric_labels = ['budget', 'episode', 'got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
                   'max_decision_time', 'hard_brake_count', 'decisions_made', 'agent_aggressiveness']
 
-for i in range(6):
+for i in range(7):
     indexs[metric_labels[i]] = i
 indexs
 # %%
 planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
 # planner_names = ["omniscient"]
-run_name = 'run_5'
+run_name = 'run_13'
 
 metric_dict = {}
 decision_logs = {}
@@ -61,7 +61,7 @@ for planner_name in planner_names:
         aggressiveness_logs[planner_name][budget] = {}
         budget_metric = []
         for episode, epis_metric in mc_collection[i].items():
-            # if episode > 550:
+            # if episode > 509:
             #     continue
             decision_logs[planner_name][budget][episode] = epis_metric[-2]
             aggressiveness_logs[planner_name][budget][episode] = epis_metric[-1]
@@ -73,10 +73,6 @@ for planner_name in planner_names:
 # metric_dict[planner_name].shape
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
-metric_dict['qmdp'].shape
-metric_dict['qmdp'][1, :, -1]
-metric_dict['qmdp'][0, 65, 1]
-np.where(metric_dict['qmdp'][0, :, -1] > 1)
 # %%
 subplot_xcount = 2
 subplot_ycount = 2
@@ -108,7 +104,6 @@ for planner_name in planner_names:
     x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[1, 1]
     add_plot_to_fig(x_y, ax, kpi)
-
 # %%
 """
 Agent aggressiveness distriubiton
@@ -169,14 +164,12 @@ for epis in range(515, 516):
     #     plt.plot(aggressiveness_logs[planner_name][budget][epis], '--x', label=planner_name)
     # plt.legend()
 
-0 < 4 < 3
-17.5/7
--5 in [1, -5]
 # %%
 """
 Performance comparison for each episode.
 """
 fig, ax = plt.subplots(figsize=(10, 50))
+# fig, ax = plt.subplots()
 episodes_considered = range(500, 500+metric_dict[planner_name].shape[1])
 planner_count = len(planner_names)
 

@@ -20,7 +20,7 @@ class Viewer():
         self.focus_on_this_vehicle = None
         self.merge_box = [Rectangle((config['merge_lane_start'], 0), \
                             config['merge_lane_length'], config['lane_width'])]
-        self.logged_var = {'sdv':[], 'other':[]}
+        self.logged_var = {'sdv':[], 'other':[0]}
 
     def draw_road(self, ax):
         lane_cor = self.config['lane_width']*self.config['lanes_n']
@@ -180,12 +180,10 @@ class Viewer():
                             'MERGE \n IDLE (4)',
                             'ABORT \n IDLE (5)'])
 
-    def log_var(self, vehicles):
-        for vehicle in vehicles:
-            if vehicle.id == 3:
-                self.logged_var['other'].append(vehicle.act_long_c)
-            elif vehicle.id == 'sdv':
-                self.logged_var['sdv'].append(vehicle.act_long_c)
+    def log_var(self, sdv):
+        if sdv.neighbours['rl']:
+            self.logged_var['other'].append(sdv.neighbours['rl'].act_long_c)
+        self.logged_var['sdv'].append(sdv.act_long_c)
 
     def draw_var(self, ax):
         ax.clear()

@@ -129,7 +129,8 @@ class NIDM():
         return proj_idm, proj_att
 
     def should_att_pred(self, vehicle):
-        if not vehicle.neighbours['m'] or vehicle.neighbours['m'].lane_decision == 'keep_lane':
+        if not vehicle.neighbours['m'] or vehicle.lane_id == vehicle.neighbours['m'].lane_id or \
+                    vehicle.neighbours['m'].lane_decision == 'keep_lane':
             return False
         return True
 

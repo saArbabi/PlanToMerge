@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import json
-planner_name = 'belief_search'
-# planner_name = 'mcts'
-planner_name = 'omniscient'
+planner_name = 'mcts'
 planner_name = 'qmdp'
+# planner_name = 'belief_search'
+planner_name = 'omniscient'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
@@ -45,12 +45,13 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 595
+    episode_id = 518
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
     vis_tree = TreeVis()
     planner = load_planner()
+    decision = None
     cumulative_reward = 0
     avg_step_reward = 0
     avg_step_rewards = []
@@ -70,20 +71,19 @@ def main():
                 pass
 
         if planner.is_decision_time():
+            avg_step_reward = env.get_reward(decision)
+            cumulative_reward += avg_step_reward
+            avg_step_rewards.append(avg_step_reward)
+            avg_step_reward_steps.append(env.time_step)
+            print('Avg step reward: ', avg_step_reward)
+            print('Cummulative reward: ', cumulative_reward)
+
+            env.env_reward_reset()
             t_0 = time.time()
             planner.plan(env)
             _decision = planner.get_decision(env)
             t_1 = time.time()
             print('compute time: ', t_1 - t_0)
-
-            avg_step_reward = env.get_reward(_decision)
-            cumulative_reward += avg_step_reward
-            avg_step_rewards.append(avg_step_reward)
-            avg_step_reward_steps.append(env.time_step)
-            env.env_reward_reset()
-            print('Avg step reward: ', avg_step_reward)
-            print('Cummulative reward: ', cumulative_reward)
-
             viewer.render_plans(planner)
             decision = input('Give me a decision ')
             try:
@@ -92,11 +92,10 @@ def main():
                 decision = _decision
             env.sdv.update_decision(decision)
 
-        all_cars = env.all_cars()
-        viewer.render_env(all_cars)
-        viewer.log_var(all_cars)
-        viewer.render_logs(avg_step_reward_steps, avg_step_rewards)
         env.step()
+        viewer.render_env(env.all_cars())
+        viewer.log_var(env.sdv)
+        viewer.render_logs(avg_step_reward_steps, avg_step_rewards)
         planner.steps_till_next_decision -= 1
 
 if __name__=='__main__':
