@@ -27,13 +27,13 @@ class ImaginedEnv(EnvAutoMerge):
         """
         assert self.vehicles, 'Environment not yet initialized'
         sdv_action = self.get_sdv_action()
-        self.log_actions(self.sdv, sdv_action)
         self.sdv.step(sdv_action)
+        self.log_actions(self.sdv, sdv_action)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
+            vehicle.step(actions)
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
-            vehicle.step(actions)
             if self.is_bad_action(vehicle, actions):
                 self.bad_action = actions[0]
 
