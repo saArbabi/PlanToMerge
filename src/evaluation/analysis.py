@@ -50,8 +50,8 @@ for planner_name in planner_names:
         aggressiveness_logs[planner_name][budget] = {}
         metric_logs[planner_name][budget] = {}
         for episode, epis_metric in mc_collection[i].items():
-            # if episode > 509:
-            #     continue
+            if episode > 509:
+                continue
             decision_logs[planner_name][budget][episode] = epis_metric[-2]
             aggressiveness_logs[planner_name][budget][episode] = epis_metric[-1]
             metric_logs[planner_name][budget][episode] = epis_metric[0:-2]
@@ -176,7 +176,7 @@ fig, ax = plt.subplots(figsize=(10, 50))
 # fig, ax = plt.subplots()
 planner_count = len(planner_names)
 
-budget = 50
+budget = 100
 episodes_considered = metric_logs[planner_name][budget].keys()
 
 kpi = 'cumulative_reward'

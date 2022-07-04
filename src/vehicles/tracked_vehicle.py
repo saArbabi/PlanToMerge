@@ -8,7 +8,7 @@ class TrackedVehicle(IDMMOBILVehicleMerge):
         super().__init__(id, lane_id, glob_x, speed, aggressiveness)
         self.history_len = 30 # steps
         self.obs_history = []
-        with open('./src/models/dummy_value_set.pickle', 'rb') as handle:
+        with open('./src/models/experiments/dummy_value_set.pickle', 'rb') as handle:
             self.dummy_value_set = pickle.load(handle)
 
     def update_obs_history(self, o_t):

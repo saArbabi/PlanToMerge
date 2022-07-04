@@ -27,6 +27,8 @@ class ImaginedEnv(EnvAutoMerge):
         """
         assert self.vehicles, 'Environment not yet initialized'
         sdv_action = self.get_sdv_action()
+        self.log_actions(self.sdv, sdv_action)
+        self.sdv.step(sdv_action)
 
         for vehicle, actions in zip(self.vehicles, joint_action):
             self.log_actions(vehicle, actions)
@@ -38,8 +40,6 @@ class ImaginedEnv(EnvAutoMerge):
             if self.is_bad_state(vehicle):
                 self.got_bad_state = True
 
-        self.log_actions(self.sdv, sdv_action)
-        self.sdv.step(sdv_action)
         self.time_step += 1
 
     def is_terminal(self, decision):

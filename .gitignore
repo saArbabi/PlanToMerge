@@ -5,10 +5,6 @@ src/tree_search/config_files/
 
 tree_snapshots/
 
-src/models/neural_idm_367/
-
-src/models/
-
 src/garbage.py
 
 src/extract code from these/
@@ -16,3 +12,5 @@ src/extract code from these/
 src/evaluation/experiments/
 
 *.pyc
+
+src/models/experiments/

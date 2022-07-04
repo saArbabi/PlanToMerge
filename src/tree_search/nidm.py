@@ -16,26 +16,23 @@ class NIDM():
     def load_nidm(self):
         model_name = 'neural_idm_376'
         epoch_count = '15'
-        exp_dir = './src/models/'+model_name
+        exp_dir = './src/models/experiments/'+model_name
         exp_path = exp_dir+'/model_epo'+epoch_count
         with open(exp_dir+'/'+'config.json', 'rb') as handle:
             config = json.load(handle)
 
-        from models.neural_idm import  NeurIDMModel
+        from models.core.neural_idm import  NeurIDMModel
         self.model = NeurIDMModel(config)
         self.model.load_weights(exp_path).expect_partial()
 
     def load_scalers(self):
-        data_files_dir = './src/models/'
+        data_files_dir = './src/models/experiments/'
 
         with open(data_files_dir+'env_scaler.pickle', 'rb') as handle:
             self.env_scaler = pickle.load(handle)
 
         with open(data_files_dir+'m_scaler.pickle', 'rb') as handle:
             self.m_scaler = pickle.load(handle)
-
-        with open(data_files_dir+'dummy_value_set.pickle', 'rb') as handle:
-            self.dummy_value_set = pickle.load(handle)
 
     def names_to_index(self, col_names):
         if type(col_names) == list:
@@ -114,13 +111,13 @@ class NIDM():
         hidden_state = [enc_hs, latent_dis_params]
         return hidden_state
 
-    def sample_latent(self, root_state):
+    def sample_latent(self, belief_state):
         """Take a latent sample and apply NN projections
         """
-        z_idm, z_att = self.model.belief_net.sample_z(root_state.hidden_state[-1])
+        z_idm, z_att = self.model.belief_net.sample_z(belief_state.hidden_state[-1])
         proj_idm, proj_att = self.apply_projections(z_idm, z_att)
         idm_params = self.model.idm_layer(proj_idm)
-        root_state.proj_att = tf.reshape(proj_att, [len(root_state.vehicles), 1, 128])
+        belief_state.proj_att = tf.reshape(proj_att, [len(belief_state.vehicles), 1, 128])
         return idm_params
 
     def apply_projections(self, z_idm, z_att):
@@ -134,19 +131,19 @@ class NIDM():
             return False
         return True
 
-    def get_att_context(self, root_state, obs_t0, index):
+    def get_att_context(self, belief_state, obs_t0, index):
         obs_t0 = np.array(obs_t0)
         booleans = obs_t0[:, :, -2:] # ['m_veh_exists', 'm_veh_decision']
         env_state = self.scale_state(obs_t0, 'env_state')
         merger_c = self.scale_state(obs_t0, 'merger_c')
-        att_context = tf.concat([root_state.proj_att[index:index+1, :, :],
-                                 root_state.hidden_state[0][index:index+1, :, :],
+        att_context = tf.concat([belief_state.proj_att[index:index+1, :, :],
+                                 belief_state.hidden_state[0][index:index+1, :, :],
                                  env_state, merger_c, booleans], axis=-1)
         return att_context
 
-    def predict_joint_action(self, root_state, vehicle, index):
+    def predict_joint_action(self, belief_state, vehicle, index):
         obs_t0 = [[vehicle.obs_history[-1]]]
-        att_context = self.get_att_context(root_state, obs_t0, index)
+        att_context = self.get_att_context(belief_state, obs_t0, index)
         f_att_score, m_att_score = self.get_neur_att(att_context)
         ef_act = self.action_clip(vehicle.idm_action(vehicle, vehicle.neighbours['f']))
         if vehicle.neighbours['m'].glob_x > vehicle.glob_x:
