@@ -58,38 +58,43 @@ class MCEVAL():
         env.initialize_env(episode_id)
         self.planner.initialize_planner()
 
-        cumulative_decision_count = 0
+        decision = None
         decision_times = []
         cumulative_reward = 0
         hard_brake_count = 0
         decisions_made = []
         agent_aggressiveness = []
 
-        while not env.sdv.is_merge_initiated():
+        while not env.sdv.is_merge_complete() and not env.got_bad_state:
             if self.planner.is_decision_time():
+                cumulative_reward += env.get_reward(decision)
+                if env.bad_action:
+                    hard_brake_count += 1
+
+                env.env_reward_reset()
                 t_0 = time.time()
                 self.planner.plan(env)
                 decision = self.planner.get_decision(env)
                 t_1 = time.time()
-
                 env.sdv.update_decision(decision)
-                cumulative_decision_count += 1
                 decision_times.append(t_1 - t_0)
-                cumulative_reward += env.get_reward(decision)
                 decisions_made.append(decision)
                 agent_aggressiveness.append(env.sdv.driver_params['aggressiveness'])
-                if env.got_bad_action:
-                    hard_brake_count += 1
-                env.env_reward_reset()
+
 
             env.step()
             self.planner.steps_till_next_decision -= 1
 
         cumulative_reward += env.get_reward(decision)
+
         # collect metrics
         timesteps_to_merge = env.time_step
         max_decision_time = max(decision_times)
+        got_bad_state = 1 if env.got_bad_state else 0
+        if env.bad_action:
+            hard_brake_count += 1
         self.mc_collection[episode_id] = [
+                                        got_bad_state,
                                         cumulative_reward,
                                         timesteps_to_merge,
                                         max_decision_time,

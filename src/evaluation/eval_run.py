@@ -19,8 +19,7 @@ def get_run_names():
     return names
 
 def main():
-    run_name = 'run_13'
-    run_name = 'test1111'
+    run_name = 'run_14'
     names = get_run_names()
     if run_name in names:
         config_path = './src/evaluation/experiments/'+run_name+'/eval_config.json'

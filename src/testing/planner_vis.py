@@ -9,8 +9,8 @@ import time
 import json
 planner_name = 'mcts'
 planner_name = 'qmdp'
-# planner_name = 'belief_search'
-planner_name = 'omniscient'
+planner_name = 'belief_search'
+# planner_name = 'omniscient'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
@@ -45,7 +45,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 518
+    episode_id = 510
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)

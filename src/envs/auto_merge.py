@@ -118,12 +118,15 @@ class EnvAutoMerge(EnvMerge):
         """
         return self.vehicles + [self.sdv]
 
-    def get_reward(self, decision):
+    def get_reward(self, decision=None):
         """
         Reward is set to encourage the following behaviours:
         1) perform merge successfully
         2) avoid reckless decisions
         """
+        if not decision:
+            return 0
+
         total_reward = 0
         if not self.sdv.abort_been_chosen and decision == 5:
             self.sdv.abort_been_chosen = True
@@ -141,8 +144,8 @@ class EnvAutoMerge(EnvMerge):
         if self.got_bad_state:
             total_reward -= 10
 
-
-        # if total_reward < 0:
-        #     print('################# OH DEAR ##################' , decision, '   ', total_reward)
+        # reward for idle action
+        if decision in [1, 3]:
+            total_reward -= 0.1
 
         return total_reward

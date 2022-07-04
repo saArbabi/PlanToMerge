@@ -22,20 +22,9 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
-def add_plot_to_fig(metrics, ax, kpi):
-    # ax.plot(x_y[0], x_y[1][:, -1], \
-    #                'o-', label=planner_name)
-    if planner_name == 'omniscient':
-        ax.plot(x_y[0], x_y[1].mean(axis=1), \
-                       'o-', label=planner_name, color='red')
-    else:
-        ax.plot(    x_y[0], x_y[1].mean(axis=1), \
-                       'o-', label=planner_name)
-    ax.legend()
-    ax.set_title(kpi)
 
 indexs = {}
-metric_labels = ['budget', 'episode', 'got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
+metric_labels = ['got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
                   'max_decision_time', 'hard_brake_count', 'decisions_made', 'agent_aggressiveness']
 
 for i in range(7):
@@ -44,35 +33,35 @@ indexs
 # %%
 planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
 # planner_names = ["omniscient"]
-run_name = 'run_13'
+run_name = 'run_14'
 
-metric_dict = {}
 decision_logs = {}
 aggressiveness_logs = {}
+metric_logs = {}
 for planner_name in planner_names:
-    metrics = []
     decision_logs[planner_name] = {}
     aggressiveness_logs[planner_name] = {}
+    metric_logs[planner_name] = {}
     exp_dir = './src/evaluation/experiments/'+run_name+'/'+planner_name
     budgets, exp_names = get_budgets(exp_dir)
     mc_collection = get_mc_collection(exp_dir, exp_names)
     for i, budget in enumerate(budgets):
         decision_logs[planner_name][budget] = {}
         aggressiveness_logs[planner_name][budget] = {}
-        budget_metric = []
+        metric_logs[planner_name][budget] = {}
         for episode, epis_metric in mc_collection[i].items():
             # if episode > 509:
             #     continue
             decision_logs[planner_name][budget][episode] = epis_metric[-2]
             aggressiveness_logs[planner_name][budget][episode] = epis_metric[-1]
-            budget_metric.append([budget, episode]+epis_metric[0:-2])
-        metrics.append(budget_metric)
+            metric_logs[planner_name][budget][episode] = epis_metric[0:-2]
 
-    metric_dict[planner_name] = np.array(metrics)
-    print(planner_name,' shape: ', metric_dict[planner_name].shape)
 # metric_dict[planner_name].shape
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
+metric_logs['omniscient'][100]
+# %%
+
 # %%
 subplot_xcount = 2
 subplot_ycount = 2
@@ -82,28 +71,43 @@ axs[1, 1].set_xlabel('Iterations')
 for ax in axs.flatten():
     ax.set_xticks([1, 50, 100, 150])
     ax.grid()
-metric_dict['qmdp'].shape
-metric_dict['qmdp'][-1, :, :]
-metric_dict['omniscient'][-1, :, :]
+
+def add_plot_to_fig(plot_data, ax, kpi):
+    plot_data = budgets, metrics_arrs
+    metrics_mean = [metrics_arr[:, indexs[kpi]].mean(axis=0) for metrics_arr in metrics_arrs]
+    if planner_name == 'omniscient':
+        ax.plot(budgets, metrics_mean, \
+                       'o-', label=planner_name, color='red')
+    else:
+        ax.plot(budgets, metrics_mean, \
+                       'o-', label=planner_name)
+    ax.legend()
+    ax.set_title(kpi)
+
 for planner_name in planner_names:
-    metrics = metric_dict[planner_name]
+    metrics = metric_logs[planner_name]
+    budgets = metrics.keys()
+    metrics_arrs = []
+    for budget in budgets:
+        episodes = metrics[budget].keys()
+        metrics_arrs.append(np.array(list(metrics[budget].values())))
 
     kpi = 'cumulative_reward'
-    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[0, 0]
-    add_plot_to_fig(x_y, ax, kpi)
+    add_plot_to_fig([budgets, metrics_arrs], ax, kpi)
+
     kpi = 'timesteps_to_merge'
-    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[0, 1]
-    add_plot_to_fig(x_y, ax, kpi)
+    metrics_arrs = [metrics_arr[metrics_arr[:, indexs['got_bad_state']] != 1] for metrics_arr in metrics_arrs]
+    add_plot_to_fig([budgets, metrics_arrs], ax, kpi)
+
     kpi = 'max_decision_time'
-    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[1, 0]
-    add_plot_to_fig(x_y, ax, kpi)
+    add_plot_to_fig([budgets, metrics_arrs], ax, kpi)
+
     kpi = 'hard_brake_count'
-    x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
     ax = axs[1, 1]
-    add_plot_to_fig(x_y, ax, kpi)
+    add_plot_to_fig([budgets, metrics_arrs], ax, kpi)
 # %%
 """
 Agent aggressiveness distriubiton
@@ -170,22 +174,22 @@ Performance comparison for each episode.
 """
 fig, ax = plt.subplots(figsize=(10, 50))
 # fig, ax = plt.subplots()
-episodes_considered = range(500, 500+metric_dict[planner_name].shape[1])
 planner_count = len(planner_names)
 
-y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
-y_pos
+budget = 50
+episodes_considered = metric_logs[planner_name][budget].keys()
+
 kpi = 'cumulative_reward'
 # kpi = 'timesteps_to_merge'
 # kpi = 'max_decision_time'
 
+y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
+
 for i, planner_name in enumerate(planner_names):
-    metrics = metric_dict[planner_name]
-    kpi_val = metrics[1, :, indexs[kpi]]
+    metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
+    kpi_val = metrics_arr[:, indexs[kpi]]
     ax.barh(y_pos + i, kpi_val, label=planner_name)
 
-# metric_dict['mcts'][1, :, indexs[kpi]]
-# metric_dict['omniscient'][1, :, indexs[kpi]]
 
 labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
@@ -193,15 +197,13 @@ ax.set_yticklabels(labels)
 ax.spines['left'].set_position('zero')
 ax.legend()
 ax.grid()
-# plt.plot([0, 0], \
-#           [-1, 30], color = 'black')
 
 
 # %%
 s
 
 
-x_y = [metrics[:, 0, indexs['budget']], metrics[:, :, indexs[kpi]]]
+
 # %%
 metric_dict['omniscient'][0, :, indexs['timesteps_to_merge']]
 metric_dict['omniscient'][0, :, indexs['cumulative_reward']]
