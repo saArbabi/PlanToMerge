@@ -50,11 +50,11 @@ class MCTSDPW(AbstractPlanner):
                     if not state.sdv.neighbours['rl']:
                         return [4]
                     if state.sdv.driver_params['aggressiveness'] == 0:
-                        return [1, 2, 4, 5]
+                        return [1, 2, 4]
                     elif state.sdv.driver_params['aggressiveness'] == 1:
-                        return [3, 2, 4, 5]
+                        return [3, 2, 4]
                     else:
-                        return [1, 2, 3, 4, 5]
+                        return [1, 2, 3, 4]
                 else:
                     if state.sdv.driver_params['aggressiveness'] == 0:
                         return [1, 2]
