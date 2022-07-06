@@ -16,7 +16,9 @@ class TreeVis():
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['ABORT', 'IDLE']}
+               5 : ['GIVEWAY', 'IDLE'],
+               6 : ['ABORT', 'IDLE']
+               }
 
     def __init__(self):
         self.decision_node_names = ['DecisionNode', 'BeliefNode']

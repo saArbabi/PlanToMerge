@@ -45,7 +45,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 500
+    episode_id = 503
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
@@ -83,7 +83,7 @@ def main():
 
             env.env_reward_reset()
             t_0 = time.time()
-            planner.plan(env)
+            # planner.plan(env)
             _decision = planner.get_decision(env)
             t_1 = time.time()
             print('compute time: ', t_1 - t_0)

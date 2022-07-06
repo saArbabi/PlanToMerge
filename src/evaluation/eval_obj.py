@@ -76,7 +76,6 @@ class MCEVAL():
 
                 env.env_reward_reset()
                 t_0 = time.time()
-                self.planner.plan(env)
                 decision = self.planner.get_decision(env)
                 t_1 = time.time()
                 env.sdv.update_decision(decision)

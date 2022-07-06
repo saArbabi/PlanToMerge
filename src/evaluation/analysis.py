@@ -33,7 +33,7 @@ indexs
 # %%
 
 planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
-run_name = 'run_17'
+run_name = 'run_19'
 
 decision_logs = {}
 aggressiveness_logs = {}
@@ -124,6 +124,8 @@ for color, planner_name in zip(colors, planner_names):
 plt.legend()
 
 # _ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human', 'fill')
+
+3 * 0.9**10
 # %%
 """
 Count number of agent decisions

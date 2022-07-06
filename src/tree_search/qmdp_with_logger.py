@@ -5,7 +5,9 @@ class QMDPLogger(QMDP):
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['ABORT', 'IDLE']}
+               5 : ['GIVEWAY', 'IDLE'],
+               6 : ['ABORT', 'IDLE']
+               }
     def __init__(self):
         super(QMDPLogger, self).__init__()
 
@@ -55,7 +57,7 @@ class QMDPLogger(QMDP):
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
-                                        self.get_available_decisions(state),
+                                        self.available_options(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
@@ -104,7 +106,7 @@ class QMDPLogger(QMDP):
         self.log_visited_sdv_state(state, tree_states, 'rollout')
         print('############### EVAL #################')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
-            decision = self.rng.choice(self.get_available_decisions(state))
+            decision = self.rng.choice(self.available_options(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
             if decision != 44:
                 try:

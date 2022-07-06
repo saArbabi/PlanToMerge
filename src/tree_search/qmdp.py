@@ -68,7 +68,7 @@ class QMDP(MCTSDPW):
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
-                                        self.get_available_decisions(state),
+                                        self.available_options(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
@@ -89,24 +89,20 @@ class QMDP(MCTSDPW):
         belief_node.backup_to_root(total_reward)
 
     def plan(self, state):
-        self.last_decision = state.sdv.decision
-        self.current_time_step = state.time_step
-        available_decisions = self.get_available_decisions(state)
-        if len(available_decisions) > 1:
-            self.reset()
-            belief_node = self.root
-            belief_node.state = ImaginedEnv(state)
-            self.update_belief(belief_node)
-            for plan_itr in range(self.config['budget']):
-                self.run(belief_node)
+        self.reset()
+        belief_node = self.root
+        belief_node.state = ImaginedEnv(state)
+        self.update_belief(belief_node)
+        for plan_itr in range(self.config['budget']):
+            self.run(belief_node)
 
 class BeliefNode(DecisionNode):
     def __init__(self, parent, config):
         super().__init__(parent, config)
         self.state = None
 
-    def expand(self, available_decisions, rng):
-        decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
+    def expand(self, available_options, rng):
+        decision = rng.choice(list(self.unexplored_decisions(available_options)))
         self.children[decision] = SubChanceNode(self, self.config)
         return self.children[decision], decision
 

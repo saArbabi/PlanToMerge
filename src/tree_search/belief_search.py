@@ -13,7 +13,7 @@ class BeliefSearch(QMDP):
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
-                                        self.get_available_decisions(state),
+                                        self.available_options(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')

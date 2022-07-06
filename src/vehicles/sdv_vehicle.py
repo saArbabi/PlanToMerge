@@ -7,13 +7,14 @@ class SDVehicle(IDMMOBILVehicleMerge):
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['ABORT', 'IDLE']}
+               5 : ['GIVEWAY', 'IDLE'],
+               6 : ['ABORT', 'IDLE']
+               }
 
     def __init__(self, id):
         self.id = id
         self.decisions_and_counts = None
         self.decision = 2
-        self.decision_cat = 'LANEKEEP'
         self.abort_been_chosen = False
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
@@ -60,22 +61,18 @@ class SDVehicle(IDMMOBILVehicleMerge):
         return self.glob_y > 0.5*self.lane_width
 
     def update_decision(self, decision):
+        self.old_neighbours = self.neighbours
         merge_decision = self.OPTIONS[decision][0]
         speed_decision = self.OPTIONS[decision][1]
         self.decision = decision
-        self.decision_cat = merge_decision
 
-        self.change_aggressiveness(speed_decision)
+        if speed_decision != 'IDLE':
+            self.change_aggressiveness(speed_decision)
 
         if merge_decision == 'MERGE':
             self.lane_decision = 'move_left'
 
-        elif merge_decision == 'LANEKEEP':
-            self.lane_decision = 'keep_lane'
-            if self.target_lane != self.lane_id:
-                self.target_lane = self.lane_id
-
-        elif merge_decision == 'ABORT':
+        elif merge_decision in ['LANEKEEP', 'ABORT', 'GIVEWAY']:
             self.lane_decision = 'keep_lane'
             if self.target_lane != self.lane_id:
                 self.target_lane = self.lane_id

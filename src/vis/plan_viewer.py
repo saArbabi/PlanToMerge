@@ -9,7 +9,9 @@ class Viewer():
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['ABORT', 'IDLE']}
+               5 : ['GIVEWAY', 'IDLE'],
+               6 : ['ABORT', 'IDLE']
+               }
 
     def __init__(self, config):
         self.config  = config
@@ -171,14 +173,15 @@ class Viewer():
             ax.bar(decision, count, 0.5, \
                     label=self.OPTIONS[decision][1], color=color)
         ax.set_ylim([0, 40])
-        ax.set_xlim([0, 6])
+        ax.set_xlim([0, 7])
 
         ax.set_xticks(list(self.OPTIONS.keys()))
         ax.set_xticklabels(['LANEKEEP \n UP (1)',
                             'LANEKEEP \n IDLE (2)',
                             'LANEKEEP \n DOWN (3)',
                             'MERGE \n IDLE (4)',
-                            'ABORT \n IDLE (5)'])
+                            'GIVEWAY \n IDLE (5)',
+                             'ABORT \n IDLE (6)'])
 
     def log_var(self, sdv):
         if sdv.neighbours['rl']:

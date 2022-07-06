@@ -5,7 +5,9 @@ class BeliefSearchLogger(QMDP):
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['ABORT', 'IDLE']}
+               5 : ['GIVEWAY', 'IDLE'],
+               6 : ['ABORT', 'IDLE']
+               }
     def __init__(self):
         super(BeliefSearchLogger, self).__init__()
 
@@ -24,7 +26,7 @@ class BeliefSearchLogger(QMDP):
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
-                                        self.get_available_decisions(state),
+                                        self.available_options(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
@@ -66,7 +68,7 @@ class BeliefSearchLogger(QMDP):
         """
         print('############### EVAL #################')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
-            decision = self.rng.choice(self.get_available_decisions(state))
+            decision = self.rng.choice(self.available_options(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
             try:
                 rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]

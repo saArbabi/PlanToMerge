@@ -128,7 +128,7 @@ class EnvAutoMerge(EnvMerge):
             return 0
 
         total_reward = 0
-        if not self.sdv.abort_been_chosen and decision == 5:
+        if not self.sdv.abort_been_chosen and decision == 6:
             self.sdv.abort_been_chosen = True
 
         if self.sdv.is_merge_complete():

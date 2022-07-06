@@ -36,34 +36,44 @@ class MCTSDPW(AbstractPlanner):
     def reset(self):
         self.root = DecisionNode(parent=None, config=self.config)
 
-    def get_available_decisions(self, state):
-        if state.sdv.decision == 5:
+    def available_options(self, state):
+        if state.sdv.decision == 6:
             if state.sdv.neighbours['rl']:
-                return [5]
+                options = [6]
             else:
-                return [4]
+                options = [4]
+
+        elif state.sdv.decision == 4:
+            if state.time_step == self.current_time_step and not state.sdv.is_merge_initiated():
+                # you can abort merge once you have chosen it
+                options = [4, 6]
+            else:
+                options = [4]
+
+        elif state.sdv.decision == 5 and \
+                        state.sdv.neighbours['rl'] and \
+                                state.sdv.old_neighbours['rl'].id == \
+                                                state.sdv.neighbours['rl'].id:
+            options = [5]
+
+        elif state.sdv.is_merge_possible():
+            if not state.sdv.neighbours['rl']:
+                options = [4]
+            if state.sdv.driver_params['aggressiveness'] == 0:
+                options = [1, 2, 4, 5]
+            elif state.sdv.driver_params['aggressiveness'] == 1:
+                options = [3, 2, 4, 5]
+            else:
+                options = [1, 2, 3, 4, 5]
         else:
-            if state.sdv.is_merge_initiated():
-                return [4]
-            elif state.sdv.decision_cat == 'LANEKEEP':
-                if state.sdv.is_merge_possible():
-                    if not state.sdv.neighbours['rl']:
-                        return [4]
-                    if state.sdv.driver_params['aggressiveness'] == 0:
-                        return [1, 2, 4]
-                    elif state.sdv.driver_params['aggressiveness'] == 1:
-                        return [3, 2, 4]
-                    else:
-                        return [1, 2, 3, 4]
-                else:
-                    if state.sdv.driver_params['aggressiveness'] == 0:
-                        return [1, 2]
-                    elif state.sdv.driver_params['aggressiveness'] == 1:
-                        return [3, 2]
-                    else:
-                        return [1, 2, 3]
-            elif state.sdv.decision_cat == 'MERGE':
-                return [4, 5]
+            if state.sdv.driver_params['aggressiveness'] == 0:
+                options = [1, 2]
+            elif state.sdv.driver_params['aggressiveness'] == 1:
+                options = [3, 2]
+            else:
+                options = [1, 2, 3]
+
+        return options
 
     def predict_joint_action(self, state):
         """
@@ -119,7 +129,7 @@ class MCTSDPW(AbstractPlanner):
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(
-                                        self.get_available_decisions(state),
+                                        self.available_options(state),
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
@@ -149,7 +159,7 @@ class MCTSDPW(AbstractPlanner):
         :return: the total reward of the rollout trajectory
         """
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
-            decision = self.rng.choice(self.get_available_decisions(state))
+            decision = self.rng.choice(self.available_options(state))
             state.env_reward_reset()
             state_before = safe_deepcopy_env(state)
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
@@ -160,19 +170,20 @@ class MCTSDPW(AbstractPlanner):
         return total_reward
 
     def plan(self, state):
-        available_decisions = self.get_available_decisions(state)
-        if len(available_decisions) > 1:
-            self.reset()
-            state_node = self.root
-            state_node.state = ImaginedEnv(state)
-            for plan_itr in range(self.config['budget']):
-                self.run(state_node)
+        self.reset()
+        state_node = self.root
+        state_node.state = ImaginedEnv(state)
+        for plan_itr in range(self.config['budget']):
+            self.run(state_node)
 
     def get_decision(self, state):
         """Only return the first decision, the rest is conditioned on observations"""
-        available_decisions = self.get_available_decisions(state)
-        if len(available_decisions) == 1:
-            return available_decisions[0]
+        self.current_time_step = state.time_step
+        available_options = self.available_options(state)
+        if len(available_options) == 1:
+            return available_options[0]
+        else:
+            self.plan(state)
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 
@@ -193,22 +204,22 @@ class DecisionNode(Node):
         self.temperature = config["temperature"]
         self.config = config
 
-    def unexplored_decisions(self, available_decisions):
-        return set(self.children.keys()).symmetric_difference(available_decisions)
+    def unexplored_decisions(self, available_options):
+        return set(self.children.keys()).symmetric_difference(available_options)
 
-    def expand(self, available_decisions, rng):
-        decision = rng.choice(list(self.unexplored_decisions(available_decisions)))
+    def expand(self, available_options, rng):
+        decision = rng.choice(list(self.unexplored_decisions(available_options)))
         self.children[decision] = ChanceNode(self, self.config)
         return self.children[decision], decision
 
-    def get_child(self, available_decisions, rng):
-        if len(self.children) == len(available_decisions) \
+    def get_child(self, available_options, rng):
+        if len(self.children) == len(available_options) \
                 or self.k_decision*self.count**self.alpha_decision < len(self.children):
             # select one of previously expanded decisions
             return self.selection_strategy(rng)
         else:
             # insert a new aciton
-            return self.expand(available_decisions, rng)
+            return self.expand(available_options, rng)
 
     def backup_to_root(self, total_reward):
         """
