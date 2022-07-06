@@ -63,11 +63,7 @@ class MCTSDPW(AbstractPlanner):
                     else:
                         return [1, 2, 3]
             elif state.sdv.decision_cat == 'MERGE':
-                if self.last_decision == 4 and state.time_step == self.current_time_step:
-                    # you can abort merge once you have chosen it
-                    return [4, 5]
-                else:
-                    return [4]
+                return [4, 5]
 
     def predict_joint_action(self, state):
         """
@@ -164,8 +160,6 @@ class MCTSDPW(AbstractPlanner):
         return total_reward
 
     def plan(self, state):
-        self.last_decision = state.sdv.decision
-        self.current_time_step = state.time_step
         available_decisions = self.get_available_decisions(state)
         if len(available_decisions) > 1:
             self.reset()

@@ -10,22 +10,12 @@ class QMDP(MCTSDPW):
         super(QMDP, self).__init__(config)
 
     def initialize_planner(self):
-        self._enough_history = False
         self.steps_till_next_decision = 0
         self.seed(2022)
         self.nidm.seed(2022)
 
     def reset(self):
         self.root = BeliefNode(parent=None, config=self.config)
-
-    def enough_history(self, state):
-        """
-        checks to see if enough observations have been tracked for the model.
-        """
-        if not self._enough_history:
-            if len(state.vehicles[0].obs_history) == 10:
-                self._enough_history = True
-        return self._enough_history
 
     def predict_joint_action(self, state):
         """
@@ -49,9 +39,7 @@ class QMDP(MCTSDPW):
         return NIDM()
 
     def update_belief(self, belief_node):
-        # return
-        if self.enough_history(belief_node.state) and \
-                            not belief_node.state.hidden_state:
+        if not belief_node.state.hidden_state:
             state = belief_node.state
             state.hidden_state = self.nidm.latent_inference(state.vehicles)
 

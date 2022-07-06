@@ -9,7 +9,7 @@ import time
 import json
 planner_name = 'mcts'
 planner_name = 'qmdp'
-planner_name = 'belief_search'
+# planner_name = 'belief_search'
 # planner_name = 'omniscient'
 
 def load_planner():
@@ -45,7 +45,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 510
+    episode_id = 500
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
@@ -56,6 +56,9 @@ def main():
     avg_step_reward = 0
     avg_step_rewards = []
     avg_step_reward_steps = []
+    for i in range(5):
+        # gather at least 5 obs prior to making a decision
+        env.step()
 
     while True:
         user_input = input(str(env.time_step) + \

@@ -64,6 +64,9 @@ class MCEVAL():
         hard_brake_count = 0
         decisions_made = []
         agent_aggressiveness = []
+        for i in range(5):
+            # gather at least 5 obs prior to making a decision
+            env.step()
 
         while not env.sdv.is_merge_complete() and not env.got_bad_state:
             if self.planner.is_decision_time():

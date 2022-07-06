@@ -31,9 +31,9 @@ for i in range(7):
     indexs[metric_labels[i]] = i
 indexs
 # %%
+
 planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
-# planner_names = ["omniscient"]
-run_name = 'run_14'
+run_name = 'run_17'
 
 decision_logs = {}
 aggressiveness_logs = {}
@@ -50,8 +50,8 @@ for planner_name in planner_names:
         aggressiveness_logs[planner_name][budget] = {}
         metric_logs[planner_name][budget] = {}
         for episode, epis_metric in mc_collection[i].items():
-            if episode > 509:
-                continue
+            # if episode > 509:
+            #     continue
             decision_logs[planner_name][budget][episode] = epis_metric[-2]
             aggressiveness_logs[planner_name][budget][episode] = epis_metric[-1]
             metric_logs[planner_name][budget][episode] = epis_metric[0:-2]
@@ -59,7 +59,7 @@ for planner_name in planner_names:
 # metric_dict[planner_name].shape
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
-metric_logs['omniscient'][100]
+metric_logs['omniscient'][50]
 # %%
 
 # %%
@@ -169,6 +169,7 @@ for epis in range(515, 516):
     # plt.legend()
 
 # %%
+3 * 0.9**0
 """
 Performance comparison for each episode.
 """
@@ -176,7 +177,7 @@ fig, ax = plt.subplots(figsize=(10, 50))
 # fig, ax = plt.subplots()
 planner_count = len(planner_names)
 
-budget = 100
+budget = 50
 episodes_considered = metric_logs[planner_name][budget].keys()
 
 kpi = 'cumulative_reward'
