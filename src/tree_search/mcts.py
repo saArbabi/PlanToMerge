@@ -44,7 +44,7 @@ class MCTSDPW(AbstractPlanner):
                 options = [4]
 
         elif state.sdv.decision == 4:
-            if state.time_step == self.current_time_step and not state.sdv.is_merge_initiated():
+            if not state.sdv.is_merge_initiated():
                 # you can abort merge once you have chosen it
                 options = [4, 6]
             else:
@@ -59,12 +59,20 @@ class MCTSDPW(AbstractPlanner):
         elif state.sdv.is_merge_possible():
             if not state.sdv.neighbours['rl']:
                 options = [4]
-            if state.sdv.driver_params['aggressiveness'] == 0:
-                options = [1, 2, 4, 5]
-            elif state.sdv.driver_params['aggressiveness'] == 1:
-                options = [3, 2, 4, 5]
+            elif state.sdv.neighbours['rl'].neighbours['r']:
+                if state.sdv.driver_params['aggressiveness'] == 0:
+                    options = [1, 2, 4, 5, 6]
+                elif state.sdv.driver_params['aggressiveness'] == 1:
+                    options = [3, 2, 4, 5, 6]
+                else:
+                    options = [1, 2, 3, 4, 5, 6]
             else:
-                options = [1, 2, 3, 4, 5]
+                if state.sdv.driver_params['aggressiveness'] == 0:
+                    options = [1, 2, 4, 6]
+                elif state.sdv.driver_params['aggressiveness'] == 1:
+                    options = [3, 2, 4, 6]
+                else:
+                    options = [1, 2, 3, 4, 6]
         else:
             if state.sdv.driver_params['aggressiveness'] == 0:
                 options = [1, 2]
@@ -92,6 +100,9 @@ class MCTSDPW(AbstractPlanner):
             vehicle.glob_x += self.rng.normal()
 
     def step(self, state, decision, step_type):
+        if decision == 6:
+            return state.planner_observe(), 0, True
+
         state.env_reward_reset()
         state.sdv.update_decision(decision)
         if step_type == 'search':
@@ -178,7 +189,6 @@ class MCTSDPW(AbstractPlanner):
 
     def get_decision(self, state):
         """Only return the first decision, the rest is conditioned on observations"""
-        self.current_time_step = state.time_step
         available_options = self.available_options(state)
         if len(available_options) == 1:
             return available_options[0]
