@@ -100,9 +100,6 @@ class MCTSDPW(AbstractPlanner):
             vehicle.glob_x += self.rng.normal()
 
     def step(self, state, decision, step_type):
-        if decision == 6:
-            return state.planner_observe(), 0, True
-
         state.env_reward_reset()
         state.sdv.update_decision(decision)
         if step_type == 'search':
