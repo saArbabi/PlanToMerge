@@ -186,6 +186,8 @@ class Viewer():
     def log_var(self, sdv):
         if sdv.neighbours['rl']:
             self.logged_var['other'].append(sdv.neighbours['rl'].act_long_c)
+        elif sdv.neighbours['r']:
+            self.logged_var['other'].append(sdv.neighbours['r'].act_long_c)
         self.logged_var['sdv'].append(sdv.act_long_c)
 
     def draw_var(self, ax):

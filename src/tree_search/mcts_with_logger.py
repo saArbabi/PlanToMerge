@@ -54,7 +54,7 @@ class MCTSDPWLogger(MCTSDPW):
                         'x_rollout':[], 'y_rollout':[]}
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
-        print('############### Iter #################')
+        # print('############### Iter #################')
         while self.not_exit_tree(depth, state_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = state_node.get_child(

@@ -33,7 +33,8 @@ indexs
 # %%
 
 planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
-run_name = 'run_19'
+# run_name = 'run_17'
+run_name = 'run_22'
 
 decision_logs = {}
 aggressiveness_logs = {}
@@ -172,6 +173,9 @@ for epis in range(515, 516):
 
 # %%
 3 * 0.9**0
+a = [1, 2, 3, 4]
+a = [i for i in a if i != 2]
+a
 """
 Performance comparison for each episode.
 """
@@ -179,7 +183,7 @@ fig, ax = plt.subplots(figsize=(10, 50))
 # fig, ax = plt.subplots()
 planner_count = len(planner_names)
 
-budget = 50
+budget = 100
 episodes_considered = metric_logs[planner_name][budget].keys()
 
 kpi = 'cumulative_reward'
@@ -187,7 +191,8 @@ kpi = 'cumulative_reward'
 # kpi = 'max_decision_time'
 
 y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
-
+# planner_names = ['qmdp']
+planner_names
 for i, planner_name in enumerate(planner_names):
     metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
     kpi_val = metrics_arr[:, indexs[kpi]]

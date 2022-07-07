@@ -8,8 +8,8 @@ import numpy as np
 import time
 import json
 planner_name = 'mcts'
-planner_name = 'qmdp'
-# planner_name = 'belief_search'
+# planner_name = 'qmdp'
+planner_name = 'belief_search'
 # planner_name = 'omniscient'
 
 def load_planner():
@@ -34,6 +34,8 @@ def load_planner():
     if planner_name == 'belief_search':
         from tree_search.belief_search_with_logger import BeliefSearchLogger
         planner = BeliefSearchLogger()
+        # from tree_search.belief_search import BeliefSearch
+        # planner = BeliefSearch()
 
     if planner_name == 'qmdp':
         from tree_search.qmdp_with_logger import QMDPLogger
@@ -45,7 +47,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 503
+    episode_id = 500
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)

@@ -96,7 +96,7 @@ class NIDM():
         return f_att_score, m_att_score
 
     def action_clip(self, act_long):
-        return min(max([-6, act_long]), 6)
+        return min(max([-7, act_long]), 5)
 
     def aggregate_histories(self, vehicles):
         histories = [vehicle.obs_history for vehicle in vehicles]

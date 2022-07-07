@@ -22,7 +22,7 @@ class BeliefSearchLogger(QMDP):
         terminal = False
         state = self.sample_belief(belief_node)
 
-        print('############### Iter #################')
+        # print('############### Iter #################')
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
@@ -30,16 +30,16 @@ class BeliefSearchLogger(QMDP):
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
-            try:
-                rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
-                print('dec >>> ', self.OPTIONS[decision], \
-                      '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
-                                            '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                            '  rl_params', rl_params, '  ', \
-                                            '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
-                                            '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
-            except:
-                print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
+            # try:
+            #     rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
+            #     print('dec >>> ', self.OPTIONS[decision], \
+            #           '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
+            #                                 '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
+            #                                 '  rl_params', rl_params, '  ', \
+            #                                 '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
+            #                                 '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
+            # except:
+            #     print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
 
             belief_node = chance_node.get_child(
                                             state,
@@ -66,20 +66,20 @@ class BeliefSearchLogger(QMDP):
         :param depth: the initial simulation depth
         :return: the total reward of the rollout trajectory
         """
-        print('############### EVAL #################')
+        # print('############### EVAL #################')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.available_options(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
-            try:
-                rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
-                print('dec >>> ', self.OPTIONS[decision], \
-                      '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
-                                            '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                            '  rl_params', rl_params, '  ', \
-                                            '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
-                                            '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
-            except:
-                print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
+            # try:
+            #     rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
+            #     print('dec >>> ', self.OPTIONS[decision], \
+            #           '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
+            #                                 '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
+            #                                 '  rl_params', rl_params, '  ', \
+            #                                 '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
+            #                                 '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
+            # except:
+            #     print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
 
             total_reward += self.config["gamma"] ** rollout_depth * reward
 
