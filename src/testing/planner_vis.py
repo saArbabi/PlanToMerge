@@ -11,6 +11,7 @@ planner_name = 'mcts'
 # planner_name = 'qmdp'
 planner_name = 'belief_search'
 # planner_name = 'omniscient'
+planner_name = 'mcts_mean'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
@@ -30,6 +31,11 @@ def load_planner():
     if planner_name == 'mcts':
         from tree_search.mcts_with_logger import MCTSDPWLogger
         planner = MCTSDPWLogger()
+
+
+    if planner_name == 'mcts_mean':
+        from tree_search.mcts_mean import MCTSMEAN
+        planner = MCTSMEAN()
 
     if planner_name == 'belief_search':
         from tree_search.belief_search_with_logger import BeliefSearchLogger

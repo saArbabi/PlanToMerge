@@ -46,6 +46,9 @@ class MCEVAL():
         elif planner_name == 'mcts':
             from tree_search.mcts import MCTSDPW
             self.planner = MCTSDPW(planner_info)
+        elif planner_name == 'mcts_mean':
+            from tree_search.mcts_mean import MCTSMEAN
+            self.planner = MCTSMEAN(planner_info)
         elif planner_name == 'omniscient':
             from tree_search.omniscient import Omniscient
             self.planner = Omniscient(planner_info)

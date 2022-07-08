@@ -32,9 +32,11 @@ for i in range(7):
 indexs
 # %%
 
-planner_names = ["mcts", "qmdp", "belief_search", "omniscient"]
-# run_name = 'run_17'
-run_name = 'run_22'
+planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient"]
+# planner_names = ["qmdp"]
+# run_name = 'run317'
+run_name = 'run_23'
+# run_name = 'run_22'
 
 decision_logs = {}
 aggressiveness_logs = {}
@@ -70,7 +72,7 @@ fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
 axs[1, 0].set_xlabel('Iterations')
 axs[1, 1].set_xlabel('Iterations')
 for ax in axs.flatten():
-    ax.set_xticks([1, 50, 100, 150])
+    ax.set_xticks([50, 100, 150, 200])
     ax.grid()
 
 def add_plot_to_fig(plot_data, ax, kpi):
@@ -87,7 +89,8 @@ def add_plot_to_fig(plot_data, ax, kpi):
 
 for planner_name in planner_names:
     metrics = metric_logs[planner_name]
-    budgets = metrics.keys()
+    budgets = list(metrics.keys())
+    # budgets = list(metrics.keys())[1:]
     metrics_arrs = []
     for budget in budgets:
         episodes = metrics[budget].keys()
@@ -183,7 +186,7 @@ fig, ax = plt.subplots(figsize=(10, 50))
 # fig, ax = plt.subplots()
 planner_count = len(planner_names)
 
-budget = 100
+budget = 50
 episodes_considered = metric_logs[planner_name][budget].keys()
 
 kpi = 'cumulative_reward'
