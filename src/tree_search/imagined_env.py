@@ -22,6 +22,12 @@ class ImaginedEnv(EnvAutoMerge):
             vehicle.driver_params['aggressiveness'] = self.rng.uniform(0.01, 0.99)
             vehicle.set_driver_params(self.rng)
 
+    def mean_prior(self, vehicles, seed):
+        self.seed(seed)
+        for vehicle in vehicles:
+            vehicle.driver_params['aggressiveness'] = 0.5
+            vehicle.set_driver_params(self.rng)
+
     def step(self, joint_action):
         """ steps the environment forward in time.
         """
