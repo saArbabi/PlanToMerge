@@ -207,6 +207,7 @@ class Viewer():
             ax.set_xlim(log_len-150, log_len+30)
 
         ax.set_ylim(-7, 7)
+        ax.plot(200*[-4], color='red', linestyle='--')
         ax.set_ylabel('long.acc ($ms^{-2}$)')
         ax.set_xlabel('step')
         ax.legend()

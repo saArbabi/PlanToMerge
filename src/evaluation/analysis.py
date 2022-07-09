@@ -22,6 +22,10 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
+def read_eval_config(config_path):
+    with open(config_path, 'rb') as handle:
+        eval_config = json.load(handle)
+    return eval_config
 
 indexs = {}
 metric_labels = ['got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
@@ -32,15 +36,17 @@ for i in range(7):
 indexs
 # %%
 
-planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient"]
-# planner_names = ["qmdp"]
+planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
+# planner_names = ["rule_based"]
 # run_name = 'run317'
 run_name = 'run_23'
-# run_name = 'run_22'
+# run_name = 'run_test'
 
 decision_logs = {}
 aggressiveness_logs = {}
 metric_logs = {}
+
+
 for planner_name in planner_names:
     decision_logs[planner_name] = {}
     aggressiveness_logs[planner_name] = {}
@@ -63,8 +69,8 @@ for planner_name in planner_names:
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
 metric_logs['omniscient'][50]
+eval_config = read_eval_config('./src/evaluation/experiments/'+run_name+'/eval_config.json')
 # %%
-
 # %%
 subplot_xcount = 2
 subplot_ycount = 2
@@ -72,18 +78,25 @@ fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(10, 8))
 axs[1, 0].set_xlabel('Iterations')
 axs[1, 1].set_xlabel('Iterations')
 for ax in axs.flatten():
-    ax.set_xticks([50, 100, 150, 200])
+    ax.set_xticks(eval_config['planner_info']['budgets'] )
     ax.grid()
 
 def add_plot_to_fig(plot_data, ax, kpi):
-    plot_data = budgets, metrics_arrs
+    budgets, metrics_arrs = plot_data
     metrics_mean = [metrics_arr[:, indexs[kpi]].mean(axis=0) for metrics_arr in metrics_arrs]
-    if planner_name == 'omniscient':
-        ax.plot(budgets, metrics_mean, \
-                       'o-', label=planner_name, color='red')
+    if planner_name == 'rule_based':
+
+        ax.plot(eval_config['planner_info']['budgets'],
+                len(eval_config['planner_info']['budgets'])*[metrics_mean], \
+                       'o-', label=planner_name, color='black')
     else:
-        ax.plot(budgets, metrics_mean, \
-                       'o-', label=planner_name)
+
+        if planner_name == 'omniscient':
+            ax.plot(budgets, metrics_mean, \
+                           'o-', label=planner_name, color='red')
+        else:
+            ax.plot(budgets, metrics_mean, \
+                           'o-', label=planner_name)
     ax.legend()
     ax.set_title(kpi)
 
@@ -129,7 +142,6 @@ plt.legend()
 
 # _ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human', 'fill')
 
-3 * 0.9**10
 # %%
 """
 Count number of agent decisions
@@ -175,29 +187,30 @@ for epis in range(515, 516):
     # plt.legend()
 
 # %%
-3 * 0.9**0
-a = [1, 2, 3, 4]
-a = [i for i in a if i != 2]
-a
 """
 Performance comparison for each episode.
 """
-fig, ax = plt.subplots(figsize=(10, 50))
+fig, ax = plt.subplots(figsize=(10, 100))
 # fig, ax = plt.subplots()
+planner_names = ['mcts', 'rule_based']
 planner_count = len(planner_names)
 
 budget = 50
-episodes_considered = metric_logs[planner_name][budget].keys()
+episodes_considered = metric_logs[planner_name][1].keys()
 
 kpi = 'cumulative_reward'
-# kpi = 'timesteps_to_merge'
+kpi = 'timesteps_to_merge'
+# kpi = 'hard_brake_count'
 # kpi = 'max_decision_time'
 
 y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
 # planner_names = ['qmdp']
 planner_names
 for i, planner_name in enumerate(planner_names):
-    metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
+    if planner_name == 'rule_based':
+        metrics_arr = np.array(list(metric_logs[planner_name][1].values()))
+    else:
+        metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
     kpi_val = metrics_arr[:, indexs[kpi]]
     ax.barh(y_pos + i, kpi_val, label=planner_name)
 
@@ -211,7 +224,7 @@ ax.grid()
 
 
 # %%
-s
+
 
 
 

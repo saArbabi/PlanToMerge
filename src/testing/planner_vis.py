@@ -8,10 +8,11 @@ import numpy as np
 import time
 import json
 planner_name = 'mcts'
-# planner_name = 'qmdp'
-planner_name = 'belief_search'
+planner_name = 'qmdp'
+# planner_name = 'belief_search'
 # planner_name = 'omniscient'
-planner_name = 'mcts_mean'
+# planner_name = 'mcts_mean'
+planner_name = 'rule_based'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
@@ -47,13 +48,17 @@ def load_planner():
         from tree_search.qmdp_with_logger import QMDPLogger
         planner = QMDPLogger()
 
+    if planner_name == 'rule_based':
+        from tree_search.rule_based import RuleBased
+        planner = RuleBased()
+
     return planner
 
 def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 500
+    episode_id = 511
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)

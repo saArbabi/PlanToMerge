@@ -52,6 +52,9 @@ class MCEVAL():
         elif planner_name == 'omniscient':
             from tree_search.omniscient import Omniscient
             self.planner = Omniscient(planner_info)
+        elif planner_name == 'rule_based':
+            from tree_search.rule_based import RuleBased
+            self.planner = RuleBased()
         else:
             print('No such planner exists yet. Check the evaluation config file')
 
@@ -163,7 +166,8 @@ class MCEVAL():
         planner_names = planner_info['planner_names']
         budgets = planner_info['budgets']
         for planner_name in planner_names:
-            for budget in budgets:
+            if planner_name == 'rule_based':
+                budget = 1
                 exp_name = f'{planner_name}-budget-{budget}'
                 if self.is_eval_complete(exp_name, planner_name):
                     continue
@@ -174,3 +178,15 @@ class MCEVAL():
                     self.dump_mc_logs(exp_name, planner_name)
                     self.update_eval_config(exp_name)
                     self.episode_id += 1
+            else:
+                for budget in budgets:
+                    exp_name = f'{planner_name}-budget-{budget}'
+                    if self.is_eval_complete(exp_name, planner_name):
+                        continue
+                    planner_info['budget'] = budget
+                    self.load_planner(planner_info, planner_name)
+                    while self.episode_id < self.target_episode:
+                        self.run_episode(self.episode_id)
+                        self.dump_mc_logs(exp_name, planner_name)
+                        self.update_eval_config(exp_name)
+                        self.episode_id += 1

@@ -162,8 +162,8 @@ class NIDM():
         act_long = f_att_score*ef_act + m_att_score*em_act
         # print('oooops  ',
         #         'rl_id:', vehicle.id, '  ', \
-        #         'rl_detaXX:', round(vehicle.neighbours['m'].glob_x-vehicle.glob_x), '  ', \
         #         'm_att_score ', round(m_att_score, 2), '  ',
+        #         'rl_detaXX:', round(vehicle.neighbours['m'].glob_x-vehicle.glob_x), '  ', \
         #         'em_act ', round(em_act, 2), '  ',
         #         'act_long ', round(act_long, 2), '  ',
         #         'bools ', vehicle.obs_history[-1][-2:])
