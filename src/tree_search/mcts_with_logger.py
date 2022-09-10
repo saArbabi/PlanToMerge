@@ -28,7 +28,6 @@ class MCTSDPWLogger(MCTSDPW):
         return tree_states
 
     def extract_belief_info(self, state, depth):
-        vehicle_id = 2
         for veh in state.vehicles:
             if veh.id not in self.belief_info:
                 self.belief_info[veh.id] = {}

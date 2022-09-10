@@ -16,7 +16,7 @@ import time
 import json
 planner_name = 'mcts'
 # planner_name = 'qmdp'
-# planner_name = 'belief_search'
+planner_name = 'belief_search'
 # planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
 # planner_name = 'rule_based'
@@ -88,7 +88,7 @@ def main():
                 sys.exit()
             if user_input == 'st':
                 # vis_tree.save_tree_snapshot(planner, env.time_step)
-                viewer.save_tree_state(planner, env.time_step)
+                viewer.save_tree_state(planner, last_decision_time_step)
             if user_input == 'sl':
                 viewer.save_state_logs()
 
@@ -102,6 +102,7 @@ def main():
             cumulative_reward += avg_step_reward
             avg_step_rewards.append(avg_step_reward)
             avg_step_reward_steps.append(env.time_step)
+            last_decision_time_step = env.time_step
             print('Avg step reward: ', avg_step_reward)
             print('Cummulative reward: ', cumulative_reward)
 

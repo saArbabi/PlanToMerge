@@ -1,7 +1,11 @@
 """
 The following results are showcased:
 1) comparing agent behaviour when dealing with a aggressive vs timid driver
+    episode:
 2) comparing LVT with MCTS and QMDP(?)
+    episode:
+Note:
+100 itr allocated for planner budget
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,9 +20,9 @@ import json
 """
 Load logs
 """
-timestr = '20220909-20-16-29'
-save_to = './src/publication/scene_evolution/'
-time_step = '26'
+timestr = '20220910-18-56-41'
+save_to = './src/publication/scene_evolution/saved_files/'
+time_step = 25
 file_name = f'{timestr}_tree_info_step_{time_step}'
 with open(save_to+file_name+'.pickle', 'rb') as handle:
     tree_info = pickle.load(handle)
@@ -44,24 +48,21 @@ plot_viewer = Viewer(config)
 with open('./src/envs/config.json', 'rb') as handle:
     config = json.load(handle)
 
-time_step = 15
+# time_step = 15
 plot_viewer.set_up_fig()
 plot_viewer.fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
 plot_viewer.draw_road()
-plot_viewer.draw_sdv_traj(logged_states['sdv'], time_step=time_step)
+# plot_viewer.draw_sdv_traj(logged_states['sdv'], time_step=time_step)
 plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
-
 plot_viewer.draw_vehicle_belief(belief_info, id=3)
-belief_info[1]
+plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
 plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
 
 # plt.savefig("scene_plot.pdf", dpi=500, bbox_inches='tight')
 
 # plot_viewer.draw_ego_plan(tree_info)
-
-
-
+ 
 
 #s %%
 """
@@ -86,7 +87,7 @@ MEDIUM_SIZE = 18
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
-plt.savefig("scene_plot.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("scene_plot.pdf", dpi=500, bbox_inches='tight')
 
 
 

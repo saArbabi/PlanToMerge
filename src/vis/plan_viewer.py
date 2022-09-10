@@ -249,19 +249,18 @@ class Viewer():
         for time_step, reward in zip(avg_step_reward_steps, avg_step_rewards):
             self.var_ax.text(time_step, 5.1, str(round(reward, 1)), fontsize='xx-small')
 
-    def save_tree_state(self, planner, time_step):
+    def save_tree_state(self, planner, last_decision_time_step):
         """
         Use this for overlaying the search tree onto the road
         """
-        save_to = './src/publication/scene_evolution/'
-
+        save_to = './src/publication/scene_evolution/saved_files/'
         # tree_info:
-        file_name = f'{self.timestr}_tree_info_step_{time_step}'
+        file_name = f'{self.timestr}_tree_info_step_{last_decision_time_step}'
         with open(save_to+file_name+'.pickle', 'wb') as handle:
             pickle.dump(planner.tree_info, handle)
 
         # belief_info
-        file_name = f'{self.timestr}_belief_info_step_{time_step}'
+        file_name = f'{self.timestr}_belief_info_step_{last_decision_time_step}'
         with open(save_to+file_name+'.pickle', 'wb') as handle:
             pickle.dump(planner.belief_info, handle)
 
@@ -274,7 +273,7 @@ class Viewer():
         Return:
         log: {id:[[time_step, act_long, act_lat, speed, glob_x, glob_y], ...], ...}
         """
-        save_to = './src/publication/scene_evolution/'
+        save_to = './src/publication/scene_evolution/saved_files/'
         file_name = f'{self.timestr}_logged_states'
         with open(save_to+file_name+'.pickle', 'wb') as handle:
             pickle.dump(self.logged_states, handle)

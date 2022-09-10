@@ -58,12 +58,12 @@ class Viewer():
 
     def draw_vehicle_belief(self, belief_info, id):
         ax = self.env_ax
-        max_depth = len(belief_info[id])
+        max_depth = 10
         # colors = cm.BuPu(np.linspace(1, 0, max_depth))
         colors = cm.rainbow(np.linspace(1, 0, max_depth))
 
         for depth, c in enumerate(colors):
-            if depth == 0:
+            if depth > max_depth:
                 continue
             ax.scatter(belief_info[id][depth]['xs'],
                        belief_info[id][depth]['ys'],
@@ -79,10 +79,10 @@ class Viewer():
         color = vehicle_colors[id]
         ax.scatter(glob_x, glob_y, s=100, marker=">", color=color, edgecolors=color)
         if id == 'sdv':
-            ax.annotate('id:e', (glob_x-20, glob_y+0.7), color=color)
+            ax.annotate('id:e', (glob_x-20, glob_y+0.7), color=color, size=12)
         else:
-            ax.annotate('id:'+str(id), (glob_x-20, glob_y+0.7), color=color)
-        ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-30, glob_y-1.5), color=color)
+            ax.annotate('id:'+str(id), (glob_x-20, glob_y+0.7), color=color, size=12)
+        ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-30, glob_y-1.3), color=color, size=12)
 
 
     def draw_sdv_traj(self, logged_states, time_step):
@@ -127,6 +127,9 @@ class Viewer():
         lat_poses = [logged_state[-1] for logged_state in logged_states]
         self.lateral_pos_ax.plot(np.arange(len(lat_poses))/10, lat_poses, color='red')
         self.lateral_pos_ax.set_ylabel(r'Lat. pos. (m)')
+        self.lateral_pos_ax.set_ylim(-0.1, self.config['lane_width']*2)
+        self.lateral_pos_ax.set_yticks([1, 3, 5, 7])
+
 
     def draw_state_profiles(self):
         time_steps = np.linspace(0, 5.9, 60)

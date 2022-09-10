@@ -192,10 +192,10 @@ Performance comparison for each episode.
 """
 fig, ax = plt.subplots(figsize=(10, 100))
 # fig, ax = plt.subplots()
-planner_names = ['mcts', 'rule_based']
+planner_names = ['mcts', 'belief_search']
 planner_count = len(planner_names)
 
-budget = 50
+budget = 100
 episodes_considered = metric_logs[planner_name][1].keys()
 
 kpi = 'cumulative_reward'
