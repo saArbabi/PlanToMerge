@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib.pyplot import cm
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
+import time
+import pickle
 
 class Viewer():
     OPTIONS = {1 : ['LANEKEEP', 'UP'],
@@ -22,7 +24,8 @@ class Viewer():
         self.focus_on_this_vehicle = None
         self.merge_box = [Rectangle((config['merge_lane_start'], 0), \
                             config['merge_lane_length'], config['lane_width'])]
-        self.logged_var = {'sdv':[], 'other':[0]}
+        self.logged_states = {}
+        self.timestr = time.strftime("%Y%m%d-%H-%M-%S") # time the experiment is run
 
     def draw_road(self, ax):
         lane_cor = self.config['lane_width']*self.config['lanes_n']
@@ -182,28 +185,49 @@ class Viewer():
                             'MERGE \n IDLE (4)',
                             'GIVEWAY \n IDLE (5)',
                              'ABORT \n IDLE (6)'])
+    def fetch_state(self, env, vehicle):
+        st = [
+             env.time_step,
+             vehicle.act_long_p,
+             vehicle.speed,
+             vehicle.glob_x,
+             vehicle.glob_y]
+        return st
 
-    def log_var(self, sdv):
-        if sdv.neighbours['rl']:
-            self.logged_var['other'].append(sdv.neighbours['rl'].act_long_c)
-        elif sdv.neighbours['r']:
-            self.logged_var['other'].append(sdv.neighbours['r'].act_long_c)
-        self.logged_var['sdv'].append(sdv.act_long_c)
+    def log_state(self, env):
+        if not self.logged_states:
+            self.logged_states['sdv'] = []
+            for veh in env.vehicles:
+                self.logged_states[veh.id] = []
+
+        self.logged_states['sdv'].append(self.fetch_state(env, env.sdv))
+
+        for veh in env.vehicles:
+            self.logged_states[veh.id].append(self.fetch_state(env, veh))
 
     def draw_var(self, ax):
+        """
+        Plots long. actions for agent and one other vehicle
+        """
         ax.clear()
-        log_len = len(self.logged_var['sdv'])
+        other_veh_id = 3
+        sdv_sts = self.logged_states['sdv']
+        sdv_acts = [sdv_st[1] for sdv_st in sdv_sts]
+        o_sts = self.logged_states[other_veh_id]
+        o_acts = [o_st[1] for o_st in o_sts]
+        log_len = len(sdv_acts)
+
         if log_len < 150:
-            ax.plot(self.logged_var['sdv'][-150:], color='red', label='Merger')
-            ax.plot(self.logged_var['other'][-150:], color='blue', label='Yielder')
-            ax.scatter(np.arange(0, len(self.logged_var['other']), 10), \
-                       self.logged_var['other'][::10], color='blue', label='Yielder')
+            ax.plot(sdv_acts[-150:], color='red', label='Merger')
+            ax.plot(o_acts[-150:], color='blue', label='Yielder')
+            ax.scatter(np.arange(0, len(o_acts), 10), \
+                       o_acts[::10], color='blue', label='Yielder')
             ax.set_xlim(0, 180)
         else:
-            ax.plot(self.logged_var['sdv'], color='red', label='Merger')
-            ax.plot(self.logged_var['other'], color='blue', label='Yielder')
-            ax.scatter(np.arange(0, len(self.logged_var['other']), 10), \
-                       self.logged_var['other'][::10], color='blue', label='Yielder')
+            ax.plot(sdv_acts, color='red', label='Merger')
+            ax.plot(o_acts, color='blue', label='Yielder')
+            ax.scatter(np.arange(0, len(o_acts), 10), \
+                       o_acts[::10], color='blue', label='Yielder')
             ax.set_xlim(log_len-150, log_len+30)
 
         ax.set_ylim(-7, 7)
@@ -217,12 +241,45 @@ class Viewer():
         if planner.decision_counts:
             self.draw_decision_counts(self.decision_ax, planner)
             self.draw_plans(self.env_ax, planner)
+            # self.draw_beliefs(self.env_ax, planner)
             plt.pause(1e-10)
 
     def render_logs(self, avg_step_reward_steps, avg_step_rewards):
         self.draw_var(self.var_ax)
         for time_step, reward in zip(avg_step_reward_steps, avg_step_rewards):
             self.var_ax.text(time_step, 5.1, str(round(reward, 1)), fontsize='xx-small')
+
+    def save_tree_state(self, planner, time_step):
+        """
+        Use this for overlaying the search tree onto the road
+        """
+        save_to = './src/publication/scene_evolution/'
+
+        # tree_info:
+        file_name = f'{self.timestr}_tree_info_step_{time_step}'
+        with open(save_to+file_name+'.pickle', 'wb') as handle:
+            pickle.dump(planner.tree_info, handle)
+
+        # belief_info
+        file_name = f'{self.timestr}_belief_info_step_{time_step}'
+        with open(save_to+file_name+'.pickle', 'wb') as handle:
+            pickle.dump(planner.belief_info, handle)
+
+        print('Tree state saved: ' + file_name)
+
+
+    def save_state_logs(self):
+        """
+        Use this for plotting vehicle states
+        Return:
+        log: {id:[[time_step, act_long, act_lat, speed, glob_x, glob_y], ...], ...}
+        """
+        save_to = './src/publication/scene_evolution/'
+        file_name = f'{self.timestr}_logged_states'
+        with open(save_to+file_name+'.pickle', 'wb') as handle:
+            pickle.dump(self.logged_states, handle)
+
+        print('Logged states saved: ' + file_name)
 
     def render_env(self, vehicles):
         self.draw_highway(self.env_ax, vehicles)
