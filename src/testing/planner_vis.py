@@ -1,3 +1,10 @@
+"""
+Run this to visualise a driving episode. The input keys are:
+- st: save tree state (with received observations and graphviz nodes)
+- sl: save the true environmnet logs sofar
+"""
+
+
 import sys
 sys.path.insert(0, './src')
 from vis.plan_viewer import Viewer
@@ -8,11 +15,11 @@ import numpy as np
 import time
 import json
 planner_name = 'mcts'
-planner_name = 'qmdp'
+# planner_name = 'qmdp'
 # planner_name = 'belief_search'
 # planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
-planner_name = 'rule_based'
+# planner_name = 'rule_based'
 
 def load_planner():
     with open('./src/tree_search/config_files/config.json', 'rb') as handle:
@@ -79,8 +86,12 @@ def main():
         if user_input:
             if user_input == 'n':
                 sys.exit()
-            if user_input == 's':
-                vis_tree.save_tree_snapshot(planner, env.time_step)
+            if user_input == 'st':
+                # vis_tree.save_tree_snapshot(planner, env.time_step)
+                viewer.save_tree_state(planner, env.time_step)
+            if user_input == 'sl':
+                viewer.save_state_logs()
+
             try:
                 viewer.focus_on_this_vehicle = user_input
             except:
@@ -110,7 +121,7 @@ def main():
 
         env.step()
         viewer.render_env(env.all_cars())
-        viewer.log_var(env.sdv)
+        viewer.log_state(env)
         viewer.render_logs(avg_step_reward_steps, avg_step_rewards)
         planner.steps_till_next_decision -= 1
 

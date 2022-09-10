@@ -29,13 +29,17 @@ class MCTSDPWLogger(MCTSDPW):
 
     def extract_belief_info(self, state, depth):
         vehicle_id = 2
-        if depth not in self.belief_info:
-            self.belief_info[depth] = {}
-            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == vehicle_id]
-            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == vehicle_id]
-        else:
-            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == vehicle_id])
-            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == vehicle_id])
+        for veh in state.vehicles:
+            if veh.id not in self.belief_info:
+                self.belief_info[veh.id] = {}
+
+            if depth not in self.belief_info[veh.id]:
+                self.belief_info[veh.id][depth] = {}
+                self.belief_info[veh.id][depth]['xs'] = []
+                self.belief_info[veh.id][depth]['ys'] = []
+
+            self.belief_info[veh.id][depth]['xs'].append(veh.glob_x)
+            self.belief_info[veh.id][depth]['ys'].append(veh.glob_y)
 
     def extract_tree_info(self, tree_states):
         self.tree_info.append(tree_states)
