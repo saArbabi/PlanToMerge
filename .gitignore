@@ -14,3 +14,7 @@ src/evaluation/experiments/
 *.pyc
 
 src/models/experiments/
+
+*.pickle
+
+scene_plot.pdf
