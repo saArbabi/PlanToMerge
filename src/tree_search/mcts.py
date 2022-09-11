@@ -37,16 +37,9 @@ class MCTSDPW(AbstractPlanner):
         self.root = DecisionNode(parent=None, config=self.config)
 
     def available_options(self, state):
-        if state.sdv.decision == 6:
-            if state.sdv.neighbours['rl']:
-                options = [6]
-            else:
-                options = [4]
-
-        elif state.sdv.decision == 4:
+        if state.sdv.decision == 4:
             if not state.sdv.is_merge_initiated():
-                # you can abort merge once you have chosen it
-                options = [4, 6]
+                options = [4, 5]
             else:
                 options = [4]
 
@@ -59,20 +52,13 @@ class MCTSDPW(AbstractPlanner):
         elif state.sdv.is_merge_possible():
             if not state.sdv.neighbours['rl']:
                 options = [4]
-            elif state.sdv.neighbours['rl'].neighbours['r']:
+            elif state.sdv.neighbours['rl']:
                 if state.sdv.driver_params['aggressiveness'] == 0:
-                    options = [1, 2, 4, 5, 6]
+                    options = [1, 2, 4, 5]
                 elif state.sdv.driver_params['aggressiveness'] == 1:
-                    options = [3, 2, 4, 5, 6]
+                    options = [3, 2, 4, 5]
                 else:
-                    options = [1, 2, 3, 4, 5, 6]
-            else:
-                if state.sdv.driver_params['aggressiveness'] == 0:
-                    options = [1, 2, 4, 6]
-                elif state.sdv.driver_params['aggressiveness'] == 1:
-                    options = [3, 2, 4, 6]
-                else:
-                    options = [1, 2, 3, 4, 6]
+                    options = [1, 2, 3, 4, 5]
         else:
             if state.sdv.driver_params['aggressiveness'] == 0:
                 options = [1, 2]

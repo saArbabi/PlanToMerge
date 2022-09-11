@@ -7,8 +7,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
                2 : ['LANEKEEP', 'IDLE'],
                3 : ['LANEKEEP', 'DOWN'],
                4 : ['MERGE', 'IDLE'],
-               5 : ['GIVEWAY', 'IDLE'],
-               6 : ['ABORT', 'IDLE']
+               5 : ['GIVEWAY', 'IDLE']
                }
 
     def __init__(self, id):
