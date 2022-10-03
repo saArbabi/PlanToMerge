@@ -27,14 +27,17 @@ class QMDPLogger(QMDP):
         return tree_states
 
     def extract_belief_info(self, state, depth):
-        vehicle_id = 2
-        if depth not in self.belief_info:
-            self.belief_info[depth] = {}
-            self.belief_info[depth]['xs'] = [veh.glob_x for veh in state.vehicles if veh.id == vehicle_id]
-            self.belief_info[depth]['ys'] = [veh.glob_y for veh in state.vehicles if veh.id == vehicle_id]
-        else:
-            self.belief_info[depth]['xs'].extend([veh.glob_x for veh in state.vehicles if veh.id == vehicle_id])
-            self.belief_info[depth]['ys'].extend([veh.glob_y for veh in state.vehicles if veh.id == vehicle_id])
+        for veh in state.vehicles:
+            if veh.id not in self.belief_info:
+                self.belief_info[veh.id] = {}
+
+            if depth not in self.belief_info[veh.id]:
+                self.belief_info[veh.id][depth] = {}
+                self.belief_info[veh.id][depth]['xs'] = []
+                self.belief_info[veh.id][depth]['ys'] = []
+
+            self.belief_info[veh.id][depth]['xs'].append(veh.glob_x)
+            self.belief_info[veh.id][depth]['ys'].append(veh.glob_y)
 
     def extract_tree_info(self, tree_states):
         self.tree_info.append(tree_states)
@@ -53,7 +56,7 @@ class QMDPLogger(QMDP):
                         'x_rollout':[], 'y_rollout':[]}
         self.extract_belief_info(state, 0)
         self.log_visited_sdv_state(state, tree_states, 'selection')
-        print('############### Iter #################')
+        # print('############### Iter #################')
         while self.not_exit_tree(depth, belief_node, terminal):
             # perform a decision followed by a transition
             chance_node, decision = belief_node.get_child(
@@ -61,17 +64,17 @@ class QMDPLogger(QMDP):
                                         self.rng)
 
             observation, reward, terminal = self.step(state, decision, 'search')
-            if decision != 44:
-                try:
-                    rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
-                    print('dec >>> ', self.OPTIONS[decision], \
-                          '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
-                                                '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                                '  rl_params', rl_params, '  ', \
-                                                '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
-                                                '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
-                except:
-                    print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
+            # if decision != 44:
+            #     try:
+            #         rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
+            #         print('dec >>> ', self.OPTIONS[decision], \
+            #               '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
+            #                                     '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
+            #                                     '  rl_params', rl_params, '  ', \
+            #                                     '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
+            #                                     '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
+            #     except:
+            #         print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
 
             belief_node = chance_node.get_child(
                                             state,
@@ -104,21 +107,21 @@ class QMDPLogger(QMDP):
         :return: the total reward of the rollout trajectory
         """
         self.log_visited_sdv_state(state, tree_states, 'rollout')
-        print('############### EVAL #################')
+        # print('############### EVAL #################')
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.available_options(state))
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
-            if decision != 44:
-                try:
-                    rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
-                    print('dec >>> ', self.OPTIONS[decision], \
-                          '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
-                                                '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
-                                                '  rl_params', rl_params, '  ', \
-                                                '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
-                                                '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
-                except:
-                    print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
+            # if decision != 44:
+            #     try:
+            #         rl_params = [round(val, 2) for val in state.sdv.neighbours['rl'].driver_params.values()]
+            #         print('dec >>> ', self.OPTIONS[decision], \
+            #               '  reward:', reward, '  rl_id:', state.sdv.neighbours['rl'].id, '  ', \
+            #                                     '  rl_detaXX:', round(state.sdv.glob_x-state.sdv.neighbours['rl'].glob_x), '  ', \
+            #                                     '  rl_params', rl_params, '  ', \
+            #                                     '  rl_att:', state.sdv.neighbours['rl'].neighbours['att'].id, '  ', \
+            #                                     '  rl_act:', round(state.sdv.neighbours['rl'].act_long_c, 2))
+            #     except:
+            #         print('***dec >>> ', self.OPTIONS[decision], '  reward:', reward)
 
             total_reward += self.config["gamma"] ** rollout_depth * reward
             self.log_visited_sdv_state(state, tree_states, 'rollout')

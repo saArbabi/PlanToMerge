@@ -1,6 +1,5 @@
 import numpy as np
 import time
-from tree_search.factory import safe_deepcopy_env
 from tree_search.abstract import AbstractPlanner, Node
 from tree_search.imagined_env import ImaginedEnv
 import hashlib
@@ -155,8 +154,6 @@ class MCTSDPW(AbstractPlanner):
         """
         for rollout_depth in range(depth+1, self.config["horizon"]+1):
             decision = self.rng.choice(self.available_options(state))
-            state.env_reward_reset()
-            state_before = safe_deepcopy_env(state)
             observation, reward, terminal = self.step(state, decision, 'random_rollout')
             total_reward += self.config["gamma"] ** rollout_depth * reward
 
