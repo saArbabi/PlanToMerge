@@ -280,6 +280,13 @@ class Viewer():
 
         print('Logged states saved: ' + file_name)
 
+    def save_latent(self, planner):
+        save_to = './src/publication/scene_evolution/saved_files/'
+        file_name = f'{self.timestr}_saved_latent'
+        with open(save_to+file_name+'.pickle', 'wb') as handle:
+            pickle.dump(planner.root.state.hidden_state, handle)
+        print('Latent vector saved: ' + file_name)
+
     def render_env(self, vehicles):
         self.draw_highway(self.env_ax, vehicles)
         self.fig.tight_layout()

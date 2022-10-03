@@ -20,3 +20,7 @@ src/models/experiments/
 scene_plot.pdf
 
 *.pdf
+
+*.PNG
+
+*.jpg

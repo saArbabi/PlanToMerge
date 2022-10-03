@@ -1,7 +1,8 @@
 """
 Run this to visualise a driving episode. The input keys are:
 - st: save tree state (with received observations and graphviz nodes)
-- sl: save the true environmnet logs sofar
+- slogs: save the true environmnet logs sofar
+- slatent: save the encoded history - used in latent plot
 """
 
 
@@ -31,15 +32,14 @@ def load_planner():
         planner = Uninformed()
 
     if planner_name == 'omniscient':
-        from tree_search.omniscient import Omniscient
-        planner = Omniscient()
-        # from tree_search.omniscient_with_logger import OmniscientLogger
-        # planner = OmniscientLogger()
+        # from tree_search.omniscient import Omniscient
+        # planner = Omniscient()
+        from tree_search.omniscient_with_logger import OmniscientLogger
+        planner = OmniscientLogger()
 
     if planner_name == 'mcts':
         from tree_search.mcts_with_logger import MCTSDPWLogger
         planner = MCTSDPWLogger()
-
 
     if planner_name == 'mcts_mean':
         from tree_search.mcts_mean import MCTSMEAN
@@ -86,12 +86,19 @@ def main():
         if user_input:
             if user_input == 'n':
                 sys.exit()
+            if user_input == 's':
+                vis_tree.save_tree_snapshot(planner, env.time_step)
             if user_input == 'st':
-                # vis_tree.save_tree_snapshot(planner, env.time_step)
                 viewer.save_tree_state(planner, last_decision_time_step)
-            if user_input == 'sl':
+            if user_input == 'slogs':
                 viewer.save_state_logs()
-
+            if user_input == 'slatent':
+                viewer.save_latent(planner)
+            if user_input == 'agg':
+                for vehicle in env.vehicles:
+                    if vehicle.id == 3:
+                        vehicle.driver_params['aggressiveness'] = 0.9
+                        vehicle.set_driver_params(np.random.RandomState(episode_id))
             try:
                 viewer.focus_on_this_vehicle = user_input
             except:
