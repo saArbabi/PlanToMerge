@@ -211,23 +211,23 @@ class Viewer():
         """
         ax.clear()
         other_veh_id = 3
+        o_name = 'Yielder_'+str(other_veh_id)
         sdv_sts = self.logged_states['sdv']
         sdv_acts = [sdv_st[1] for sdv_st in sdv_sts]
         o_sts = self.logged_states[other_veh_id]
         o_acts = [o_st[1] for o_st in o_sts]
         log_len = len(sdv_acts)
-
         if log_len < 150:
             ax.plot(sdv_acts[-150:], color='red', label='Merger')
-            ax.plot(o_acts[-150:], color='blue', label='Yielder')
+            ax.plot(o_acts[-150:], color='blue', label=o_name)
             ax.scatter(np.arange(0, len(o_acts), 10), \
-                       o_acts[::10], color='blue', label='Yielder')
+                       o_acts[::10], color='blue', label=o_name)
             ax.set_xlim(0, 180)
         else:
             ax.plot(sdv_acts, color='red', label='Merger')
-            ax.plot(o_acts, color='blue', label='Yielder')
+            ax.plot(o_acts, color='blue', label=o_name)
             ax.scatter(np.arange(0, len(o_acts), 10), \
-                       o_acts[::10], color='blue', label='Yielder')
+                       o_acts[::10], color='blue', label=o_name)
             ax.set_xlim(log_len-150, log_len+30)
 
         ax.set_ylim(-7, 7)
