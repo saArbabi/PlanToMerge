@@ -63,6 +63,9 @@ class MCEVAL():
         env = EnvAutoMerge()
         env.initialize_env(episode_id)
         self.planner.initialize_planner()
+        if type(self.planner).__name__ == 'RuleBased':
+            env.sdv.driver_params['aggressiveness'] = 0.5
+            env.sdv.set_driver_params()
 
         decision = None
         decision_times = []
@@ -77,7 +80,7 @@ class MCEVAL():
         while not env.sdv.is_merge_complete() and not env.got_bad_state:
             if self.planner.is_decision_time():
                 cumulative_reward += env.get_reward(decision)
-                if env.bad_action:
+                if env.got_bad_action:
                     hard_brake_count += 1
 
                 env.env_reward_reset()
@@ -99,7 +102,7 @@ class MCEVAL():
         timesteps_to_merge = env.time_step
         max_decision_time = max(decision_times)
         got_bad_state = 1 if env.got_bad_state else 0
-        if env.bad_action:
+        if env.got_bad_action:
             hard_brake_count += 1
         self.mc_collection[episode_id] = [
                                         got_bad_state,
