@@ -30,7 +30,8 @@ class EnvAutoMerge(EnvMerge):
     def env_reward_reset(self):
         """This is reset with every planner timestep
         """
-        self.bad_action = 0
+        self.give_way_chosen = False
+        self.got_bad_action = False
         self.got_bad_state = False
 
     def turn_sdv(self, vehicle):
@@ -60,23 +61,26 @@ class EnvAutoMerge(EnvMerge):
         actions = self.sdv.act()
         return actions
 
-    def is_bad_action(self, vehicle, actions):
-        cond = not self.bad_action and vehicle.neighbours['m'] and \
-                self.sdv.lane_decision != 'keep_lane' and actions[0] < -4
-        if cond:
+    def is_bad_action(self):
+        cond = not self.got_bad_action and \
+                self.sdv.lane_decision != 'keep_lane' and \
+                self.sdv.neighbours['rl']
+        if cond and self.sdv.neighbours['rl'].act_long_c < -4:
             return True
 
-    def is_bad_state(self, vehicle):
-        cond = not self.got_bad_state and vehicle.neighbours['m'] and \
-                self.sdv.lane_decision != 'keep_lane'
+    def is_bad_state(self):
+        cond = not self.got_bad_state and \
+                self.sdv.lane_decision != 'keep_lane' and \
+                self.sdv.neighbours['rl']
         if cond:
-            # Too close
-            if 0 < (self.sdv.glob_x - vehicle.glob_x) < 3:
-                return True
+            vehicle = self.sdv.neighbours['rl']
             # TTC
             if self.sdv.speed < vehicle.speed:
                 ttc = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed - self.sdv.speed)
-                if ttc < 2: # min in dataset is 1.67
+                tiv = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed)
+                if ttc > 1.7 and tiv > 0.35: # min in dataset is 1.7
+                    return False
+                else:
                     return True
 
     def log_actions(self, vehicle, actions):
@@ -100,15 +104,16 @@ class EnvAutoMerge(EnvMerge):
         self.sdv.step(sdv_action)
         self.log_actions(self.sdv, sdv_action)
 
+        if self.is_bad_action():
+            self.got_bad_action = True
+        if self.is_bad_state():
+            self.got_bad_state = True
+
         for vehicle, actions in zip(self.vehicles, joint_action):
             vehicle.step(actions)
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
-            if self.is_bad_action(vehicle, actions):
-                self.bad_action = actions[0]
 
-            if self.is_bad_state(vehicle):
-                self.got_bad_state = True
 
         self.time_step += 1
 
@@ -128,16 +133,18 @@ class EnvAutoMerge(EnvMerge):
             return 0
 
         total_reward = 0
-        if decision == 5:
-            total_reward -= 0.1
+        if decision == 5 and self.sdv.decision != 5:
+            total_reward -= 1
+            self.give_way_chosen = True
 
         if self.sdv.is_merge_complete():
             total_reward += 3
 
-        if self.bad_action:
-            total_reward += -4
+        if self.got_bad_action:
+            total_reward += -5
 
         if self.got_bad_state:
+            # print('bad bad')
             total_reward -= 10
 
         return total_reward
