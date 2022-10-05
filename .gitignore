@@ -24,3 +24,7 @@ scene_plot.pdf
 *.PNG
 
 *.jpg
+
+src/utility/ttc.txt
+
+*.txt

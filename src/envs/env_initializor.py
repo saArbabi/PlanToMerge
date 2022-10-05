@@ -90,14 +90,14 @@ class EnvInitializor():
                 vehicles.append(new_vehicle)
                 break
 
-        for vehicle in vehicles:
-            if vehicle.id == 3:
-                # vehicle.driver_params['aggressiveness'] = 0.9
-                vehicle.driver_params['aggressiveness'] = 0.1
-                vehicle.glob_x -= 20
-                vehicle.set_driver_params(self.rng)
-
-            if vehicle.id == 4:
-                vehicle.glob_x -= 40
+        # for vehicle in vehicles:
+        #     if vehicle.id == 3:
+        #         # vehicle.driver_params['aggressiveness'] = 0.9
+        #         vehicle.driver_params['aggressiveness'] = 0.1
+        #         vehicle.glob_x -= 20
+        #         vehicle.set_driver_params(self.rng)
+        #
+        #     if vehicle.id == 4:
+        #         vehicle.glob_x -= 40
 
         return vehicles
