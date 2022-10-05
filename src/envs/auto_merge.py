@@ -133,7 +133,7 @@ class EnvAutoMerge(EnvMerge):
             return 0
 
         total_reward = 0
-        if decision == 5 and self.sdv.decision != 5:
+        if decision == 5 and self.sdv.neighbours['rl'] and not self.sdv.single_option:
             total_reward -= 1
             self.give_way_chosen = True
 

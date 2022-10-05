@@ -35,17 +35,15 @@ class ImaginedEnv(EnvAutoMerge):
         sdv_action = self.get_sdv_action()
         self.sdv.step(sdv_action)
         self.log_actions(self.sdv, sdv_action)
+        if self.is_bad_action():
+            self.got_bad_action = True
+        if self.is_bad_state():
+            self.got_bad_state = True
 
         for vehicle, actions in zip(self.vehicles, joint_action):
             vehicle.step(actions)
             self.log_actions(vehicle, actions)
             self.track_history(vehicle)
-            if self.is_bad_action(vehicle, actions):
-                self.bad_action = actions[0]
-
-            if self.is_bad_state(vehicle):
-                self.got_bad_state = True
-
         self.time_step += 1
 
     def is_terminal(self, decision):

@@ -37,10 +37,10 @@ class MCTSDPW(AbstractPlanner):
 
     def available_options(self, state):
         if state.sdv.decision == 4:
-            if not state.sdv.is_merge_initiated():
-                options = [4, 5]
-            else:
+            if not state.sdv.neighbours['rl'] or state.sdv.is_merge_initiated():
                 options = [4]
+            else:
+                options = [4, 5]
 
         elif state.sdv.decision == 5 and \
                         state.sdv.neighbours['rl'] and \
@@ -172,9 +172,12 @@ class MCTSDPW(AbstractPlanner):
         """Only return the first decision, the rest is conditioned on observations"""
         available_options = self.available_options(state)
         if len(available_options) == 1:
+            state.sdv.single_option = True
             return available_options[0]
         else:
+            state.sdv.single_option = False
             self.plan(state)
+
         chosen_decision, self.decision_counts = self.root.selection_rule()
         return chosen_decision
 

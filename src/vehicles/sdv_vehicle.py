@@ -61,9 +61,9 @@ class SDVehicle(IDMMOBILVehicleMerge):
 
     def update_decision(self, decision):
         self.old_neighbours = self.neighbours
+        self.decision = decision
         merge_decision = self.OPTIONS[decision][0]
         speed_decision = self.OPTIONS[decision][1]
-        self.decision = decision
 
         if speed_decision != 'IDLE':
             self.change_aggressiveness(speed_decision)
