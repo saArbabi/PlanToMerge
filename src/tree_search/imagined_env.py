@@ -51,7 +51,7 @@ class ImaginedEnv(EnvAutoMerge):
         Note: Collisions are not possible, since agent does not take actions that
             result in collisions
         """
-        if self.sdv.is_merge_complete() or self.got_bad_state or decision == 5:
+        if self.sdv.is_merge_complete() or self.got_bad_state:
             return True
 
     def planner_observe(self):

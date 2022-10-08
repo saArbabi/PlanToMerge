@@ -13,7 +13,7 @@ class SDVehicle(IDMMOBILVehicleMerge):
     def __init__(self, id):
         self.id = id
         self.decisions_and_counts = None
-        self.decision = 2
+        self.prev_rl_veh= None
         self.abort_been_chosen = False
         with open('./src/envs/config.json', 'rb') as handle:
             config = json.load(handle)
@@ -59,8 +59,15 @@ class SDVehicle(IDMMOBILVehicleMerge):
     def is_merge_initiated(self):
         return self.glob_y > 0.5*self.lane_width
 
+    # def update_prev_rl_veh(self, decision):
+    #     """
+    #     Real left car
+    #     """
     def update_decision(self, decision):
-        self.old_neighbours = self.neighbours
+        if decision == 5 and self.neighbours['rl']:
+            if not self.prev_rl_veh or self.prev_rl_veh.id < self.neighbours['rl'].id:
+                self.prev_rl_veh = self.neighbours['rl']
+
         self.decision = decision
         merge_decision = self.OPTIONS[decision][0]
         speed_decision = self.OPTIONS[decision][1]

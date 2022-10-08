@@ -78,7 +78,9 @@ class EnvAutoMerge(EnvMerge):
             if self.sdv.speed < vehicle.speed:
                 ttc = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed - self.sdv.speed)
                 tiv = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed)
-                if ttc > 1.7 and tiv > 0.35: # min in dataset is 1.7
+                # if ttc > 1.7 and tiv > 0.3:
+                if ttc > 3.3 and tiv > 1.3:
+
                     return False
                 else:
                     return True
@@ -133,9 +135,8 @@ class EnvAutoMerge(EnvMerge):
             return 0
 
         total_reward = 0
-        if decision == 5 and self.sdv.neighbours['rl'] and not self.sdv.single_option:
-            total_reward -= 1
-            self.give_way_chosen = True
+        if decision == 5 and self.sdv.neighbours['rl']:
+            total_reward -= 0.5
 
         if self.sdv.is_merge_complete():
             total_reward += 3

@@ -193,7 +193,7 @@ class NeuralIDMVehicle(IDMMOBILVehicleMerge):
 
         if self.neighbours['m'] and self.neighbours['m'].glob_x > self.glob_x:
             em_act = self.idm_action(self, self.neighbours['m'])
-            # if self.id == 'neur_2':
+            # if self.id == 'neur_3':
             #     print('em_act ', em_act)
 
             if em_act < -20:
@@ -210,7 +210,5 @@ class NeuralIDMVehicle(IDMMOBILVehicleMerge):
 
         self.att = m_att_score
         act_long = f_att_score*ef_act + m_att_score*em_act
-
-
 
         return act_long

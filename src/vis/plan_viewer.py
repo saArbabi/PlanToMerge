@@ -210,11 +210,10 @@ class Viewer():
         Plots long. actions for agent and one other vehicle
         """
         ax.clear()
-        other_veh_id = 3
-        o_name = 'Yielder_'+str(other_veh_id)
+        o_name = 'Yielder_'+str(self.draw_var_veh.id)
         sdv_sts = self.logged_states['sdv']
         sdv_acts = [sdv_st[1] for sdv_st in sdv_sts]
-        o_sts = self.logged_states[other_veh_id]
+        o_sts = self.logged_states[self.draw_var_veh.id]
         o_acts = [o_st[1] for o_st in o_sts]
         log_len = len(sdv_acts)
         if log_len < 150:
@@ -245,7 +244,8 @@ class Viewer():
             plt.pause(1e-10)
 
     def render_logs(self, avg_step_reward_steps, avg_step_rewards):
-        self.draw_var(self.var_ax)
+        if self.draw_var_veh:
+            self.draw_var(self.var_ax)
         for time_step, reward in zip(avg_step_reward_steps, avg_step_rewards):
             self.var_ax.text(time_step, 5.1, str(round(reward, 1)), fontsize='xx-small')
 

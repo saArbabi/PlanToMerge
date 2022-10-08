@@ -167,4 +167,9 @@ class NIDM():
         #         'em_act ', round(em_act, 2), '  ',
         #         'act_long ', round(act_long, 2), '  ',
         #         'bools ', vehicle.obs_history[-1][-2:])
+        # if vehicle.id == 3:
+        #     print('#########')
+        #     print('f_att_score ', f_att_score)
+        #     print('m_att_score ', m_att_score)
+
         return [act_long, 0]
