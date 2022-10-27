@@ -37,9 +37,11 @@ indexs
 # %%
 
 planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
+# planner_names = ["mcts", "qmdp"]
+# planner_names = ["qmdp", "mcts"]
 # planner_names = ["rule_based"]
 # run_name = 'run317'
-run_name = 'run_23'
+run_name = 'run_39'
 # run_name = 'run_test'
 
 decision_logs = {}
@@ -68,7 +70,7 @@ for planner_name in planner_names:
 # metric_dict[planner_name].shape
 # metric_dict[planner_name].shape
 # dims: [budgets, episodes, logged_states]
-metric_logs['omniscient'][50]
+# metric_logs['omniscient'][50]
 eval_config = read_eval_config('./src/evaluation/experiments/'+run_name+'/eval_config.json')
 # %%
 # %%
@@ -82,6 +84,7 @@ for ax in axs.flatten():
     ax.grid()
 
 def add_plot_to_fig(plot_data, ax, kpi):
+    ax.set_xscale('log', basex=2)
     budgets, metrics_arrs = plot_data
     metrics_mean = [metrics_arr[:, indexs[kpi]].mean(axis=0) for metrics_arr in metrics_arrs]
     if planner_name == 'rule_based':
@@ -129,6 +132,7 @@ for planner_name in planner_names:
 """
 Agent aggressiveness distriubiton
 """
+128*2
 budget = 50
 bins = 30
 colors = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728']
@@ -190,18 +194,26 @@ for epis in range(515, 516):
 """
 Performance comparison for each episode.
 """
-fig, ax = plt.subplots(figsize=(10, 100))
-# fig, ax = plt.subplots()
+planner_names = ['rule_based', 'belief_search']
+planner_names = ['omniscient', 'belief_search']
+# planner_names = ['mcts', 'belief_search']
+planner_names = ['rule_based', 'omniscient']
 planner_names = ['mcts', 'belief_search']
+planner_names = ['mcts', 'qmdp']
+planner_names = ['qmdp']
+# planner_names = ['mcts', 'qmdp']
+
 planner_count = len(planner_names)
 
-budget = 100
-episodes_considered = metric_logs[planner_name][1].keys()
+budget = 4
+episodes_considered = metric_logs["mcts"][budget].keys()
+fig, ax = plt.subplots(figsize=(10, 30))
+
 
 kpi = 'cumulative_reward'
-kpi = 'timesteps_to_merge'
+# kpi = 'timesteps_to_merge'
 # kpi = 'hard_brake_count'
-# kpi = 'max_decision_time'
+# kpi = 'got_bad_state'
 
 y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
 # planner_names = ['qmdp']
@@ -213,14 +225,17 @@ for i, planner_name in enumerate(planner_names):
         metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
     kpi_val = metrics_arr[:, indexs[kpi]]
     ax.barh(y_pos + i, kpi_val, label=planner_name)
+    # ax.barh(y_pos + i, kpi_val, label=planner_name, width='0.1')
 
 
 labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
 ax.spines['left'].set_position('zero')
-ax.legend()
-ax.grid()
+plt.savefig('failure_cases.pdf', dpi=500, bbox_inches='tight')
+
+# ax.legend()
+# ax.grid()
 
 
 # %%

@@ -19,11 +19,24 @@ def get_budgets(exp_dir):
     budgets, exp_names = zip(*sorted(zip(budgets, exp_names)))
     return budgets, exp_names
 
+
 def get_metric(metrics, kpi, planner_name):
+    if kpi == 'timesteps_to_merge':
+        clean_metrics = {}
+        for budget in metrics.keys():
+            _clean_metrics = {}
+            for epis in metrics[budget].keys():
+                if metrics[budget][epis][indexs['got_bad_state']] != 1:
+                    _clean_metrics[epis] = metrics[budget][epis]
+            clean_metrics[budget] = _clean_metrics
+        metrics = clean_metrics
+
+
     if planner_name == 'rule_based':
         metric = [np.array(list(metrics[1].values()))[:, indexs[kpi]] for budget in budgets]
     else:
         metric = [np.array(list(metrics[budget].values()))[:, indexs[kpi]] for budget in budgets]
+
     return metric
 
 def get_giveway_rates():
@@ -41,6 +54,13 @@ def get_giveway_rates():
         giveway_rates.append(np.mean(budget_giveway_rates))
     return giveway_rates
 
+planner_name = 'mcts'
+metrics = metric_logs[planner_name]
+metric = get_metric(metrics, kpi, planner_name)
+
+# %%
+
+
 indexs = {}
 metric_labels = ['got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
                   'max_decision_time', 'hard_brake_count', 'decisions_made', 'agent_aggressiveness']
@@ -48,6 +68,9 @@ metric_labels = ['got_bad_state', 'cumulative_reward', 'timesteps_to_merge', \
 for i in range(7):
     indexs[metric_labels[i]] = i
 indexs
+
+
+
 # %%
 
 """ plot setup
@@ -67,9 +90,8 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 """
 run_name = 'run_23'
 run_name = 'run_39'
-planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
-
-planner_labels = ["MCTS", "Assume normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
+planner_names = ["rule_based", "omniscient", "mcts", "belief_search"]
+planner_labels = ["Rule-based", "Omniscient", "MCTS", "LVT"]
 
 
 decision_logs = {}
@@ -97,15 +119,21 @@ for planner_name in planner_names:
 """
 Time to merge vs budget
 """
-colors = ['blue', 'blue', 'darkgreen', 'darkgreen', 'red', 'black']
-line_styles = ['-o', '--d', '--d', '-o', '-s', '--']
+order = [2, 3, 1, 0]
+
+colors = ['black', 'red','blue', 'darkgreen']
+line_styles = ['--', '-o', '-s', '-D']
 
 kpi = 'timesteps_to_merge'
-
-
-
 budgets = list(metric_logs['omniscient'].keys())
+plt.figure()
 plt.xscale('log', basex=2)
+plt.xlim(0, 520)
+plt.ylim(14.5, 18.5)
+plt.xlabel('Iterations')
+plt.ylabel('Time to merge (s)')
+plt.grid(alpha=0.5)
+plt.xticks(budgets)
 
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
     metrics = metric_logs[planner_name]
@@ -119,14 +147,8 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
     # plt.errorbar(budgets, metric_avgs, metric_std)
-    plt.xlim(0, 520)
 
-plt.xlabel('Iterations')
-plt.ylabel('Time to merge (s)')
-plt.xticks(budgets)
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
-plt.grid(alpha=0.5)
-# plt.savefig("ttm.pdf", dpi=500, bbox_inches='tight')
+    plt.savefig('ttm_'+planner_name+'.pdf', dpi=500, bbox_inches='tight')
 
 
 
@@ -151,13 +173,13 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
 plt.xlabel('Iterations')
 plt.ylabel('Episode reward')
 plt.xticks(budgets)
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.23), edgecolor='black', ncol=3)
+# plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.23), edgecolor='black', ncol=3)
 plt.grid(alpha=0.5)
 plt.savefig("planner_rewards.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 """
-Abort count (%) vs budget
+giveway count (%) vs budget
 """
 plt.xscale('log', basex=2)
 
@@ -167,16 +189,30 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
 plt.xlabel('Iterations')
-plt.ylabel('Fraction of abort decisions')
+plt.ylabel('Fraction of giveway decisions')
 plt.xticks(budgets)
 plt.grid(alpha=0.5)
 plt.savefig("giveway_rate.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 """
-Decision count vs planner (a bar chart)
+Decision time
 """
+plt.figure()
+plt.xscale('log', basex=2)
+kpi = 'max_decision_time'
+for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
+    if planner_name in ['mcts', 'belief_search']:
+        metrics = metric_logs[planner_name]
+        metric = get_metric(metrics, kpi, planner_name)
+        metric_avgs = [_metric.mean() for _metric in metric]
+        plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
+plt.xlabel('Iterations')
+plt.ylabel('Average Decision Time (s)')
+plt.xticks(budgets)
+plt.grid(alpha=0.5)
+plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 decision_logs

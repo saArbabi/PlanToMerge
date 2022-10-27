@@ -17,7 +17,7 @@ import time
 import json
 planner_name = 'mcts'
 # planner_name = 'qmdp'
-planner_name = 'belief_search'
+# planner_name = 'belief_search'
 # planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
 # planner_name = 'rule_based'
@@ -66,12 +66,18 @@ def main():
         config = json.load(handle)
     env = EnvAutoMerge()
     episode_id = 511
+    episode_id = 503
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)
     vis_tree = TreeVis()
     planner = load_planner()
-    decision = None
+    if type(planner).__name__ == 'RuleBased':
+        env.sdv.driver_params['aggressiveness'] = 0.5
+        env.sdv.set_driver_params()
+
+    decision = 2
+    env.sdv.update_decision(decision)
     cumulative_reward = 0
     avg_step_reward = 0
     avg_step_rewards = []
@@ -118,7 +124,8 @@ def main():
             # planner.plan(env)
             _decision = planner.get_decision(env)
             t_1 = time.time()
-            print('compute time: ', t_1 - t_0)
+            compute_time = t_1 - t_0
+            print('compute time: ', compute_time)
             viewer.render_plans(planner)
             decision = input('Give me a decision ')
             try:
@@ -126,10 +133,12 @@ def main():
             except:
                 decision = _decision
             env.sdv.update_decision(decision)
+            print('DECISION: ', decision)
 
         env.step()
         viewer.render_env(env.all_cars())
         viewer.log_state(env)
+        viewer.draw_var_veh = env.sdv.neighbours['rl']
         viewer.render_logs(avg_step_reward_steps, avg_step_rewards)
         planner.steps_till_next_decision -= 1
 
