@@ -43,9 +43,8 @@ class MCTSDPW(AbstractPlanner):
                 options = [4, 5]
 
         elif state.sdv.decision == 5 and \
-                        state.sdv.neighbours['rl'] and \
-                                state.sdv.old_neighbours['rl'].id == \
-                                                state.sdv.neighbours['rl'].id:
+                state.sdv.neighbours['rl'] and \
+                    state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
             options = [5]
 
         elif state.sdv.is_merge_possible():
@@ -82,10 +81,11 @@ class MCTSDPW(AbstractPlanner):
 
     def add_position_noise(self, state):
         for vehicle in state.vehicles:
-            vehicle.glob_x += self.rng.normal(0, 0.2)
-            vehicle.glob_y += self.rng.normal(0, 0.2)
+            vehicle.glob_x += self.rng.normal(0, 1)
+            # vehicle.glob_y += self.rng.normal(0, 0.2)
 
     def step(self, state, decision, step_type):
+        self.add_position_noise(state)
         state.env_reward_reset()
         state.sdv.update_decision(decision)
         if step_type == 'search':
@@ -99,7 +99,6 @@ class MCTSDPW(AbstractPlanner):
                     joint_action = self.predict_joint_action(state)
                 state.step(joint_action)
 
-        self.add_position_noise(state)
         observation = state.planner_observe()
         reward = state.get_reward(decision)
         terminal = state.is_terminal(decision)
@@ -172,10 +171,8 @@ class MCTSDPW(AbstractPlanner):
         """Only return the first decision, the rest is conditioned on observations"""
         available_options = self.available_options(state)
         if len(available_options) == 1:
-            state.sdv.single_option = True
             return available_options[0]
         else:
-            state.sdv.single_option = False
             self.plan(state)
 
         chosen_decision, self.decision_counts = self.root.selection_rule()

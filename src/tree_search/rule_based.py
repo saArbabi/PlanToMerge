@@ -29,9 +29,9 @@ class RuleBased():
                 options = [4, 5]
 
         elif state.sdv.decision == 5 and \
-                        state.sdv.neighbours['rl'] and \
-                                state.sdv.old_neighbours['rl'].id == \
-                                                state.sdv.neighbours['rl'].id:
+                state.sdv.neighbours['rl'] and \
+                    state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
+
             options = [5]
         elif state.sdv.is_merge_possible():
             if not state.sdv.neighbours['rl']:
@@ -47,21 +47,18 @@ class RuleBased():
         available_options = self.available_options(state)
         # print('available_options   :', available_options)
         if len(available_options) == 1:
-            state.sdv.single_option = True
             return available_options[0]
-        else:
-            state.sdv.single_option = False
         ttc = self.get_ttc(state.sdv)
         tiv = self.get_tiv(state.sdv)
         # print('ttc   ', ttc)
         # print('tiv   ', tiv)
         if state.sdv.decision == 4 or state.sdv.decision == 5:
-            if (ttc > 6 or ttc < 0) and  tiv > 2.7:
+            if (ttc > 3.3 or ttc < 0) and tiv > 1.3:
                 return 4
             return 5
 
         elif state.sdv.decision == 2:
-            if (ttc > 6 or ttc < 0) and  tiv > 2.7:
+            if (ttc > 3.3 or ttc < 0) and tiv > 1.3:
                 return 4
             else:
                 return 2

@@ -67,7 +67,9 @@ class MCEVAL():
             env.sdv.driver_params['aggressiveness'] = 0.5
             env.sdv.set_driver_params()
 
-        decision = None
+        decision = 2
+        env.sdv.update_decision(decision)
+
         decision_times = []
         cumulative_reward = 0
         hard_brake_count = 0
@@ -80,6 +82,7 @@ class MCEVAL():
         while not env.sdv.is_merge_complete() and not env.got_bad_state:
             if self.planner.is_decision_time():
                 cumulative_reward += env.get_reward(decision)
+
                 if env.got_bad_action:
                     hard_brake_count += 1
 
