@@ -82,7 +82,7 @@ class MCTSDPW(AbstractPlanner):
     def add_position_noise(self, state):
         for vehicle in state.vehicles:
             vehicle.glob_x += self.rng.normal(0, 1)
-            # vehicle.glob_y += self.rng.normal(0, 0.2)
+            vehicle.glob_y += self.rng.normal(0, 0.2)
 
     def step(self, state, decision, step_type):
         self.add_position_noise(state)

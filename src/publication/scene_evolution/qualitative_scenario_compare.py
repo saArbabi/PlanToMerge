@@ -36,11 +36,11 @@ Load logs
 plot_cat = 'aggressive'
 # plot_cat = 'timid'
 if plot_cat == 'aggressive':
-    timestr = '20220912-15-46-58' # dealing with aggressive car
+    timestr = '20221027-20-16-20' # dealing with aggressive car
     time_step = 85
 elif plot_cat == 'timid':
-    timestr = '20220911-01-30-53' # dealing with timid car
-    time_step = 45
+    timestr = '20221027-19-41-44' # dealing with timid car
+    time_step = 35
 
 
 save_to = './src/publication/scene_evolution/saved_files/'
@@ -69,7 +69,7 @@ logged_states[2].shape
 """
 Plot initial scene
 """
-%matplotlib tk
+# %matplotlib tk
 from src.publication.scene_evolution import scene_viewer
 reload(scene_viewer)
 from src.publication.scene_evolution.scene_viewer import Viewer
@@ -81,7 +81,7 @@ with open('./src/envs/config.json', 'rb') as handle:
 plot_viewer = Viewer(config)
 plot_viewer.draw_initial_traffi_scene()
 
-time_step = 7
+# time_step = 7
 plot_viewer.draw_road()
 plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
 
@@ -99,7 +99,7 @@ Plot scene
 def place_image(im, loc=3, ax=None, zoom=1, **kw):
     if ax==None: ax=plt.gca()
     imagebox = OffsetImage(im, zoom=zoom*0.72)
-    ab = AnchoredOffsetbox(loc=loc, bbox_to_anchor=(450, 550), child=imagebox, frameon=False, **kw)
+    ab = AnchoredOffsetbox(loc=loc, bbox_to_anchor=(445, 550), child=imagebox, frameon=False, **kw)
     ax.add_artist(ab)
 
 import matplotlib.image as image
@@ -153,7 +153,8 @@ plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
 place_image(im, loc=1, ax=plot_viewer.env_ax, zoom=0.32)
-
+# plot_viewer.fig.figimage(im, 0, plot_viewer.fig.bbox.ymax-10)
+#
 if plot_cat == 'aggressive':
     plt.savefig("scene_plot_aggressive.pdf", dpi=500, bbox_inches='tight')
 elif plot_cat == 'timid':

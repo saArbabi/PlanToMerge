@@ -111,7 +111,7 @@ class Viewer():
         xs = logged_state[:, -2]
         ys = logged_state[:, -1]
         ax.plot(xs, ys, color='green', linewidth=2)
-        ax.scatter(xs[::10], ys[::10], marker='>', color='black', s=50)
+        ax.scatter(xs[::10], ys[::10], marker='>', color='green', s=30)
 
     def draw_scene(self, ax, vehicles):
         ax.clear()

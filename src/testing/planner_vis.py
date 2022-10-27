@@ -3,6 +3,7 @@ Run this to visualise a driving episode. The input keys are:
 - st: save tree state (with received observations and graphviz nodes)
 - slogs: save the true environmnet logs sofar
 - slatent: save the encoded history - used in latent plot
+- agg: make vehicle 3 aggressive
 """
 
 
@@ -17,7 +18,7 @@ import time
 import json
 planner_name = 'mcts'
 # planner_name = 'qmdp'
-# planner_name = 'belief_search'
+planner_name = 'belief_search'
 # planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
 # planner_name = 'rule_based'
@@ -66,7 +67,7 @@ def main():
         config = json.load(handle)
     env = EnvAutoMerge()
     episode_id = 511
-    episode_id = 503
+    # episode_id = 503
     env.initialize_env(episode_id)
 
     viewer = Viewer(config)

@@ -31,13 +31,13 @@ import json
 """
 Load logs
 """
-plot_files = {'lvt':['20220911-01-30-53'], \
-                 'qmdp':['20220912-16-52-42'],
-                 'mcts':['20220912-20-05-31'],
-                 'omniscient':['20220912-20-50-26'],
+plot_files = {'lvt':['20221027-21-18-04'], \
+                 # 'qmdp':['20221027-20-33-01'],
+                 'mcts':['20221027-21-13-12'],
+                 'omniscient':['20221027-21-21-37'],
                   } # [time_stamp, time_step]
 
-plot_cats = {'lvt':'NA', 'qmdp':'NA', 'mcts':'NA'}
+plot_cats = {'lvt':'NA', 'mcts':'NA', 'omniscient':'NA'}
 save_to = './src/publication/scene_evolution/saved_files/'
 
 for planner_name in plot_cats.keys():
@@ -72,9 +72,9 @@ plot_viewer = Viewer(config)
 
 plot_viewer.set_up_fig(2)
 plot_viewer.fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.35)
-colors = ['darkgreen', 'darkgreen', 'blue']
-line_styles = ['-', '--', '-', '-']
-planner_labels = ['LVT', 'QMDP', 'MCTS']
+colors = ['darkgreen', 'blue', 'red']
+line_styles = ['-', '-', '-', ]
+planner_labels = ['LVT', 'MCTS', 'Omniscient']
 
 for planner_name, planner_label, color, line_style in zip(plot_cats.keys(), planner_labels, colors, line_styles):
     # speed
@@ -91,20 +91,21 @@ for planner_name, planner_label, color, line_style in zip(plot_cats.keys(), plan
     # plot_viewer.draw_speed(logged_states['sdv'], 'red')
     # plot_viewer.draw_lat_pos(logged_states['sdv'])
     # plot_viewer.speed_ax.set_ylim(-1, 26)
-plot_viewer.speed_ax.set_xlim(0, time_axis[-1]+0.5)
+plot_viewer.speed_ax.set_xlim(0, 18)
+plot_viewer.speed_ax.set_ylim(0, 30)
 plot_viewer.speed_ax.set_ylabel(r'Long. speed (m/s)')
-plot_viewer.speed_ax.legend(loc='upper right', ncol=1, edgecolor='black', facecolor='white')
+plot_viewer.speed_ax.legend(loc='upper right', ncol=3, edgecolor='black', facecolor='white')
 
 plot_viewer.lateral_pos_ax.set_ylabel(r'Lat. pos. (m)')
 plot_viewer.lateral_pos_ax.set_ylim(-0.1, config['lane_width']*2)
-plot_viewer.lateral_pos_ax.set_xlim(0, time_axis[-1]+0.5)
+plot_viewer.lateral_pos_ax.set_xlim(0, 18)
 plot_viewer.lateral_pos_ax.set_yticks([1, 3, 5, 7])
-plot_viewer.lateral_pos_ax.legend(ncol=1, edgecolor='black', facecolor='white')
+# plot_viewer.lateral_pos_ax.legend(ncol=1, edgecolor='black', facecolor='white')
 
 #s %%
 params = {
           'font.family': "Times New Roman",
-          'legend.fontsize': 14,
+          'legend.fontsize': 12,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
 MEDIUM_SIZE = 14

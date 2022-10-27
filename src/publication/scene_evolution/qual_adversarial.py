@@ -31,7 +31,7 @@ Load logs
 #      vehicle.glob_x,
 #      vehicle.glob_y]
 
-timestr = '20220921-20-36-08' # dealing with timid car
+timestr = '20221027-20-46-55' # dealing with timid car
 save_to = './src/publication/scene_evolution/saved_files/'
 file_name = f'{timestr}_logged_states'
 with open(save_to+file_name+'.pickle', 'rb') as handle:
@@ -44,7 +44,7 @@ with open(save_to+file_name+'.pickle', 'rb') as handle:
         if car_id != 'sdv':
             logged_states[car_id] = np.array(state_vals)
             logged_states[car_id] = logged_states[car_id][:logged_states['sdv'].shape[0], :]
-# %%
+#s %%
 fig = plt.figure(figsize=(8     , 5))
 ax_1 = fig.add_subplot(211)
 ax_2 = fig.add_subplot(212)
@@ -57,8 +57,8 @@ for ax in fig.axes:
 
 
 time_axis = np.arange(logged_states['sdv'].shape[0])/10
-decision_times = [0, 10, 20, 30, 40, 100, 158] # up, up, idle, up, give, merge
-# decision_times_mid = [5, 15, 25, 30, 40, 100, 158] # up, up, idle, up, give, merge
+decision_times = [0, 10, 20, 30, 40, 50, 60, 100] # up, up, up, idle, 2 x merge, give, merge
+# decision_times_mid = [5, 15, 25, 30, 40, 100, 158] # up, up, up, idle, 2 x merge, give, merge
 #################################################################################
 delta_glob_x = np.abs(logged_states['sdv'][:, -2]-logged_states[3][:, -2])
 ax_2.plot(time_axis, delta_glob_x, color='green', label='LVT')
@@ -69,37 +69,58 @@ ax_2.set_ylim(-5, 110)
 
 decision_xs = np.array(decision_times)/10
 decision_ys = delta_glob_x[decision_times]
-text_ys = delta_glob_x[[5, 15, 25, 35, 70, 129]]
-
+text_ys = delta_glob_x[[5, 15, 25, 35, 45, 55, 80, 120]]
+#
 for d in range(len(decision_times)):
     if d == 1:
         ax_2.scatter(decision_xs[d], decision_ys[d], s=100, color='green', marker='>', label='Decision')
-    if d == 5:
+    elif d == 6:
+        # ax_2.scatter(, s=100, color='green', marker='>', rotate=30)
+        ax_2.plot(decision_xs[d], decision_ys[d], marker=(3, 0, 0), markersize=13, color='green')
+    elif d == 7:
         # ax_2.scatter(, s=100, color='green', marker='>', rotate=30)
         ax_2.plot(decision_xs[d], decision_ys[d], marker=(3, 0, 80), markersize=13, color='green')
 
     else:
         ax_2.scatter(decision_xs[d], decision_ys[d], s=100, color='green', marker='>')
 
-ax_2.text(decision_xs[2]+0.7, decision_ys[2]+21, 'increase ACC setpoint', color='green', size=11)
-ax_2.scatter(decision_xs[2]+0.5, decision_ys[2]+20, color='k', s=20)
-
-ax_2.plot([decision_xs[2]+0.5, decision_xs[2]+0.5], [text_ys[2], text_ys[2]+20],\
+ax_2.text(decision_xs[1]+0.7, decision_ys[1]+21, 'increase ACC setpoint', color='green', size=11)
+ax_2.scatter(decision_xs[1]+0.5, decision_ys[1]+20, color='k', s=20)
+ax_2.plot([decision_xs[2]+0.5, decision_xs[1]+0.5], [text_ys[2], text_ys[1]+20],\
                                                                 color='k', linewidth=1)
-ax_2.plot([decision_xs[0]+0.5, decision_xs[2]+0.5], [text_ys[0], text_ys[2]+20],\
+ax_2.plot([decision_xs[0]+0.5, decision_xs[1]+0.5], [text_ys[0], text_ys[1]+20],\
                                                                 color='k', linewidth=1)
-ax_2.plot([decision_xs[3]+0.5, decision_xs[2]+0.5], [text_ys[3], text_ys[2]+20],\
+ax_2.plot([decision_xs[1]+0.5, decision_xs[1]+0.5], [text_ys[1], text_ys[1]+20],\
                                                                 color='k', linewidth=1)
 
 
-ax_2.text(decision_xs[1]+0.7, text_ys[1]-16, 'maintain', color='green', size=11)
-ax_2.plot([decision_xs[1]+0.5, decision_xs[1]+0.5], [text_ys[1], text_ys[1]-15],\
+ax_2.text(decision_xs[3]+0.7, text_ys[3]-18, 'maintain', color='green', size=11)
+ax_2.scatter(decision_xs[3]+0.5, decision_ys[3]-16, color='k', s=20)
+ax_2.plot([decision_xs[3]+0.5, decision_xs[3]+0.5], [text_ys[3], text_ys[2]-15],\
                                                                 color='k', linewidth=1)
-ax_2.scatter(decision_xs[1]+0.5, text_ys[1]-15, color='k', s=20)
 
-ax_2.text(6, text_ys[4]+1, 'give way', rotation=-30, color='green', size=11)
-ax_2.text(12, text_ys[5]-5, 'merge in', rotation=30, color='green', size=11)
+text_x = 5.5
+text_y = decision_ys[1]+10
+ax_2.text(text_x, text_y, 'merge in', color='green', size=11)
+ax_2.scatter(text_x-0.2, text_y, color='k', s=20)
 
+ax_2.plot([decision_xs[4]+0.5, text_x-0.2], [text_ys[4], text_y],\
+                                                                color='k', linewidth=1)
+ax_2.plot([decision_xs[5]+0.5, text_x-0.2], [text_ys[5], text_y],\
+                                                                color='k', linewidth=1)
+# ax_2.plot([decision_xs[0]+0.5, decision_xs[1]+0.5], [text_ys[0], text_ys[1]+20],\
+#                                                                 color='k', linewidth=1)
+# ax_2.plot([decision_xs[1]+0.5, decision_xs[1]+0.5], [text_ys[1], text_ys[1]+20],\
+#                                                                 color='k', linewidth=1)
+
+
+
+
+# ax_2.scatter(decision_xs[1]+0.5, text_ys[1]+20, color='k', s=20)
+#
+ax_2.text(8, text_ys[6]-17, 'give way', rotation=-40, color='green', size=11)
+ax_2.text(12, text_ys[7]+10, 'merge in', rotation=27, color='green', size=11)
+#
 
 ax_2.legend(ncol=1, edgecolor='black', facecolor='white')
 #################################################################################
