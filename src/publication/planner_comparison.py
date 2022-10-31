@@ -2,6 +2,13 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+
+power = np.arange(6)
+2**power
+4**power
+3**power
+array([   1,    4,   16,   64,  256, 1024], dtype=int32)
+
 # %%
 def get_mc_collection(exp_dir, exp_names):
     mc_collection = []
@@ -20,6 +27,16 @@ def get_budgets(exp_dir):
     return budgets, exp_names
 
 def get_metric(metrics, kpi, planner_name):
+    if kpi == 'timesteps_to_merge':
+        clean_metrics = {}
+        for budget in metrics.keys():
+            _clean_metrics = {}
+            for epis in metrics[budget].keys():
+                if metrics[budget][epis][indexs['got_bad_state']] != 1:
+                    _clean_metrics[epis] = metrics[budget][epis]
+            clean_metrics[budget] = _clean_metrics
+        metrics = clean_metrics
+
     if planner_name == 'rule_based':
         metric = [np.array(list(metrics[1].values()))[:, indexs[kpi]] for budget in budgets]
     else:
@@ -67,9 +84,11 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 """
 run_name = 'run_23'
 run_name = 'run_39'
-planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
-
-planner_labels = ["MCTS", "Assume normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
+run_name = 'run_40'
+# planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
+# planner_labels = ["MCTS", "Assume normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
+planner_names = ["omniscient", "belief_search"]
+planner_labels = ["Omniscient", "LVT"]
 
 
 decision_logs = {}
@@ -112,13 +131,13 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     metric = get_metric(metrics, kpi, planner_name)
     metric = [_metric/10 for _metric in metric]
     metric_avgs = [_metric.mean() for _metric in metric]
-    metric_std = [_metric.std()/10 for _metric in metric]
     if planner_name == 'rule_based':
         plt.plot([-1, 600], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
     else:
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-    # plt.errorbar(budgets, metric_avgs, metric_std)
+    metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
+    plt.errorbar(budgets, metric_avgs, metric_std)
     plt.xlim(0, 520)
 
 plt.xlabel('Iterations')
@@ -147,6 +166,7 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         metric = [_metric for _metric in metric]
         metric_avgs = [_metric.mean() for _metric in metric]
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
+        # plt.errorbar(budgets, metric_avgs, metric_std)
 
 plt.xlabel('Iterations')
 plt.ylabel('Episode reward')
@@ -173,10 +193,23 @@ plt.grid(alpha=0.5)
 plt.savefig("giveway_rate.pdf", dpi=500, bbox_inches='tight')
 
 # %%
-"""
-Decision count vs planner (a bar chart)
-"""
-
-
 # %%
-decision_logs
+"""
+Decision time
+"""
+plt.figure()
+plt.xscale('log', basex=2)
+kpi = 'max_decision_time'
+for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
+    # if planner_name in ['mcts', 'belief_search']:
+    if planner_name in ['omniscient', 'belief_search']:
+        metrics = metric_logs[planner_name]
+        metric = get_metric(metrics, kpi, planner_name)
+        metric_avgs = [_metric.mean() for _metric in metric]
+        plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
+
+plt.xlabel('Iterations')
+plt.ylabel('Average Decision Time (s)')
+plt.xticks(budgets)
+plt.grid(alpha=0.5)
+plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')

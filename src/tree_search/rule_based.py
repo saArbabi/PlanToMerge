@@ -53,12 +53,12 @@ class RuleBased():
         # print('ttc   ', ttc)
         # print('tiv   ', tiv)
         if state.sdv.decision == 4 or state.sdv.decision == 5:
-            if (ttc > 5.9 or ttc < 0) and tiv > 2.7:
+            if (ttc > 5.6 or ttc < 0) and tiv > 2.5:
                 return 4
             return 5
 
         elif state.sdv.decision == 2:
-            if (ttc > 5.9 or ttc < 0) and tiv > 2.7:
+            if (ttc > 5.6 or ttc < 0) and tiv > 2.5:
                 return 4
             else:
                 return 2
