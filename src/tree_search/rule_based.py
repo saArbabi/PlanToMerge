@@ -52,13 +52,15 @@ class RuleBased():
         tiv = self.get_tiv(state.sdv)
         # print('ttc   ', ttc)
         # print('tiv   ', tiv)
+        ttc_safe = 5.7
+        tiv_safe = 2.5
         if state.sdv.decision == 4 or state.sdv.decision == 5:
-            if (ttc > 5.6 or ttc < 0) and tiv > 2.5:
+            if (ttc > ttc_safe or ttc < 0) and tiv > tiv_safe:
                 return 4
             return 5
 
         elif state.sdv.decision == 2:
-            if (ttc > 5.6 or ttc < 0) and tiv > 2.5:
+            if (ttc > ttc_safe or ttc < 0) and tiv > tiv_safe:
                 return 4
             else:
                 return 2
