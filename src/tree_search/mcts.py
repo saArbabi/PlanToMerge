@@ -40,23 +40,28 @@ class MCTSDPW(AbstractPlanner):
             if not state.sdv.neighbours['rl'] or state.sdv.is_merge_initiated():
                 options = [4]
             else:
-                options = [4, 5]
+                if state.sdv.driver_params['aggressiveness'] == 0:
+                    options = [1, 2, 4]
+                elif state.sdv.driver_params['aggressiveness'] == 1:
+                    options = [3, 2, 4]
+                else:
+                    options = [1, 2, 3, 4]
 
-        elif state.sdv.decision == 5 and \
-                state.sdv.neighbours['rl'] and \
-                    state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
-            options = [5]
+        # elif state.sdv.decision == 5 and \
+        #         state.sdv.neighbours['rl'] and \
+        #             state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
+        #     options = [5]
 
         elif state.sdv.is_merge_possible():
             if not state.sdv.neighbours['rl']:
                 options = [4]
             elif state.sdv.neighbours['rl']:
                 if state.sdv.driver_params['aggressiveness'] == 0:
-                    options = [1, 2, 4, 5]
+                    options = [1, 2, 4]
                 elif state.sdv.driver_params['aggressiveness'] == 1:
-                    options = [3, 2, 4, 5]
+                    options = [3, 2, 4]
                 else:
-                    options = [1, 2, 3, 4, 5]
+                    options = [1, 2, 3, 4]
         else:
             if state.sdv.driver_params['aggressiveness'] == 0:
                 options = [1, 2]

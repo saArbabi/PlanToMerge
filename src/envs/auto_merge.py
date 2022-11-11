@@ -135,7 +135,7 @@ class EnvAutoMerge(EnvMerge):
             return 0
 
         total_reward = 0
-        if decision == 5 and self.sdv.neighbours['rl']:
+        if self.sdv.speed < 1:
             total_reward -= 0.5
 
         if self.sdv.is_merge_complete():
