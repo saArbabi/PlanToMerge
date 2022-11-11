@@ -17,9 +17,9 @@ import numpy as np
 import time
 import json
 planner_name = 'mcts'
-# planner_name = 'qmdp'
-planner_name = 'belief_search'
-# planner_name = 'omniscient'
+planner_name = 'qmdp'
+# planner_name = 'belief_search'
+planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
 # planner_name = 'rule_based'
 
@@ -66,7 +66,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 511
+    episode_id = 503
     # episode_id = 503
     env.initialize_env(episode_id)
 
@@ -112,6 +112,7 @@ def main():
                 pass
 
         if planner.is_decision_time():
+            print('        decision: ', decision)
             avg_step_reward = env.get_reward(decision)
             cumulative_reward += avg_step_reward
             avg_step_rewards.append(avg_step_reward)

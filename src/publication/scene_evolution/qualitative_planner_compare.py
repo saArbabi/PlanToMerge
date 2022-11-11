@@ -27,17 +27,19 @@ import json
 # from matplotlib.lines import Line2D
 
 # %%
-
 """
 Load logs
 """
 plot_files = {'lvt':['20221027-21-18-04'], \
-                 # 'qmdp':['20221027-20-33-01'],
+                 'qmdp':['20221109-01-47-07'],
                  'mcts':['20221027-21-13-12'],
                  'omniscient':['20221027-21-21-37'],
+                 'mcts_mean':['20221109-02-05-36'],
+                 'rule_based':['20221109-02-09-39'],
                   } # [time_stamp, time_step]
 
-plot_cats = {'lvt':'NA', 'mcts':'NA', 'omniscient':'NA'}
+plot_cats = {'lvt':'NA', 'mcts':'NA', 'omniscient':'NA',
+             'qmdp':'NA', 'mcts_mean':'NA', 'rule_based':'NA'}
 save_to = './src/publication/scene_evolution/saved_files/'
 
 for planner_name in plot_cats.keys():
@@ -59,7 +61,16 @@ for planner_name in plot_cats.keys():
 """
 Plot veh states
 """
-%matplotlib tk
+# %matplotlib tk
+params = {
+          'font.family': "Times New Roman",
+          'legend.fontsize': 10,
+          'legend.handlelength': 2}
+plt.rcParams.update(params)
+MEDIUM_SIZE = 14
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
 
 import matplotlib.image as image
 from matplotlib.offsetbox import OffsetImage,AnchoredOffsetbox
@@ -72,9 +83,9 @@ plot_viewer = Viewer(config)
 
 plot_viewer.set_up_fig(2)
 plot_viewer.fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.35)
-colors = ['darkgreen', 'blue', 'red']
-line_styles = ['-', '-', '-', ]
-planner_labels = ['LVT', 'MCTS', 'Omniscient']
+colors = ['darkgreen', 'blue', 'red', 'darkgreen', 'blue', 'k']
+line_styles = ['-', '-', '-', '--', '--', '--']
+planner_labels = ['LVT', 'MCTS', 'Omniscient', 'QMDP', 'MCTS normal', 'Rule-based']
 
 for planner_name, planner_label, color, line_style in zip(plot_cats.keys(), planner_labels, colors, line_styles):
     # speed
@@ -94,7 +105,8 @@ for planner_name, planner_label, color, line_style in zip(plot_cats.keys(), plan
 plot_viewer.speed_ax.set_xlim(0, 18)
 plot_viewer.speed_ax.set_ylim(0, 30)
 plot_viewer.speed_ax.set_ylabel(r'Long. speed (m/s)')
-plot_viewer.speed_ax.legend(loc='upper right', ncol=3, edgecolor='black', facecolor='white')
+plot_viewer.speed_ax.legend(edgecolor='black', facecolor='white')
+# plot_viewer.speed_ax.legend(loc='upper right', ncol=3, edgecolor='black', facecolor='white')
 
 plot_viewer.lateral_pos_ax.set_ylabel(r'Lat. pos. (m)')
 plot_viewer.lateral_pos_ax.set_ylim(-0.1, config['lane_width']*2)
@@ -103,14 +115,7 @@ plot_viewer.lateral_pos_ax.set_yticks([1, 3, 5, 7])
 # plot_viewer.lateral_pos_ax.legend(ncol=1, edgecolor='black', facecolor='white')
 
 #s %%
-params = {
-          'font.family': "Times New Roman",
-          'legend.fontsize': 12,
-          'legend.handlelength': 2}
-plt.rcParams.update(params)
-MEDIUM_SIZE = 14
-plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
-plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
 
 plt.savefig("qualitative_planner_comparison.pdf", dpi=500, bbox_inches='tight')
 
