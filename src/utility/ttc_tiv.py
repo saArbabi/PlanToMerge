@@ -27,9 +27,9 @@ percentile_50 = np.quantile(ttcs, 0.5)
 percentile_10 = np.quantile(ttcs, 0.1)
 
 plt.axvline(percentile_50, color='red')
-plt.text(percentile_50+0.07, 100, '50th percentile', color='red', size=11)
+plt.text(percentile_50, 105, '50th percentile', color='red', size=16, horizontalalignment='left')
 plt.axvline(percentile_10, color='red')
-plt.text(percentile_10+0.07, 100, '10th percentile', color='red', size=11)
+plt.text(percentile_10, 105, '10th percentile', color='red', size=16, horizontalalignment='center')
 
 plt.savefig('ttc_hist.pdf', dpi=500, bbox_inches='tight')
 
@@ -48,10 +48,11 @@ plt.ylabel('Histogram count')
 plt.xlabel('TIV (s)')
 percentile_50 = np.quantile(tivs, 0.5)
 percentile_10 = np.quantile(tivs, 0.1)
-plt.axvline(percentile_50, 0, 0.9, color='red')
-
-plt.text(percentile_50+0.2, 350, '50th percentile', color='red', size=11)
+plt.axvline(percentile_50, color='red')
+plt.text(percentile_50, 410, '50th percentile', color='red', size=16, horizontalalignment='left')
 plt.axvline(percentile_10, color='red')
-plt.text(percentile_10+0.2, 390, '10th percentile', color='red', size=11)
-plt.ylim(0, 405)
+plt.text(percentile_10, 410, '10th percentile', color='red', size=16, horizontalalignment='center')
 plt.savefig('tiv_hist.pdf', dpi=500, bbox_inches='tight')
+# %%
+ np.quantile(ttcs, 0.5)
+ np.quantile(tivs, 0.5)
