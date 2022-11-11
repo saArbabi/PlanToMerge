@@ -3,12 +3,6 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 
-power = np.arange(6)
-2**power
-4**power
-3**power
-array([   1,    4,   16,   64,  256, 1024], dtype=int32)
-
 # %%
 def get_mc_collection(exp_dir, exp_names):
     mc_collection = []
@@ -32,7 +26,7 @@ def get_metric(metrics, kpi, planner_name):
         for budget in metrics.keys():
             _clean_metrics = {}
             for epis in metrics[budget].keys():
-                if metrics[budget][epis][indexs['got_bad_state']] != 1:
+                if metrics[budget][epis][indexs['got_bad_state']] != 1: # note these episodes are terminated
                     _clean_metrics[epis] = metrics[budget][epis]
             clean_metrics[budget] = _clean_metrics
         metrics = clean_metrics
@@ -43,19 +37,30 @@ def get_metric(metrics, kpi, planner_name):
         metric = [np.array(list(metrics[budget].values()))[:, indexs[kpi]] for budget in budgets]
     return metric
 
-def get_giveway_rates():
+def get_giveway_rates(planner_name):
     """
     Return average abort rate across budgets
     """
-    giveway_rates = []
-    for budget in budgets:
+    if planner_name != 'rule_based':
+        giveway_rates = []
+        for budget in budgets:
+            budget_giveway_rates = []
+            for epis_decisions in list(decision_logs[planner_name][budget].values()):
+                budget_giveway_rates.append(epis_decisions.count(5)/len(epis_decisions))
+                # if max(epis_decisions) == 5:
+                # else:
+                #     budget_giveway_rates.append(0)
+            giveway_rates.append(np.mean(budget_giveway_rates))
+    else:
+        giveway_rates = []
+        budget = 1
         budget_giveway_rates = []
         for epis_decisions in list(decision_logs[planner_name][budget].values()):
             if max(epis_decisions) == 5:
                 budget_giveway_rates.append(1)
             else:
                 budget_giveway_rates.append(0)
-        giveway_rates.append(np.mean(budget_giveway_rates))
+        giveway_rates = [np.mean(budget_giveway_rates)]*6
     return giveway_rates
 
 indexs = {}
@@ -71,7 +76,7 @@ indexs
 """
 params = {
           'font.family': "Times New Roman",
-          'legend.fontsize': 14,
+          'legend.fontsize': 13,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
 MEDIUM_SIZE = 20
@@ -82,13 +87,13 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # %%
 """ Load sim collections
 """
-run_name = 'run_23'
-run_name = 'run_39'
+# run_name = 'run_23'
+# run_name = 'run_39'
 run_name = 'run_40'
-# planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
-# planner_labels = ["MCTS", "Assume normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
-planner_names = ["omniscient", "belief_search"]
-planner_labels = ["Omniscient", "LVT"]
+planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
+planner_labels = ["MCTS", "MCTS normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
+# planner_names = ["omniscient", "belief_search"]
+# planner_labels = ["Omniscient", "LVT"]
 
 
 decision_logs = {}
@@ -113,11 +118,12 @@ for planner_name in planner_names:
             metric_logs[planner_name][budget][episode] = epis_metric[0:-2]
 
 # %%
+
 """
 Time to merge vs budget
 """
 colors = ['blue', 'blue', 'darkgreen', 'darkgreen', 'red', 'black']
-line_styles = ['-o', '--d', '--d', '-o', '-s', '--']
+line_styles = ['-o', '--d', '--d', '-o', '--s', '--']
 
 kpi = 'timesteps_to_merge'
 
@@ -132,24 +138,49 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     metric = [_metric/10 for _metric in metric]
     metric_avgs = [_metric.mean() for _metric in metric]
     if planner_name == 'rule_based':
-        plt.plot([-1, 600], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+        plt.plot([0, 1024], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+    elif planner_name in ['belief_search', 'mcts']:
+        metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
+        plt.errorbar(budgets, metric_avgs, metric_std, color=color, label=planner_label, capsize=5)
+        plt.plot(budgets, metric_avgs, line_style, color=color)
     else:
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-    metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
-    plt.errorbar(budgets, metric_avgs, metric_std)
+
     plt.xlim(0, 520)
 
-plt.xlabel('Iterations')
+plt.xlabel('Iteration k')
 plt.ylabel('Time to merge (s)')
 plt.xticks(budgets)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
+# plt.legend()
 plt.grid(alpha=0.5)
-# plt.savefig("ttm.pdf", dpi=500, bbox_inches='tight')
+plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
 
 
 
+# %%
+"""
+got_bad_state vs budget
+"""
+kpi = 'got_bad_state'
+plt.xscale('log', basex=2)
 
+for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
+    # if planner_name != 'rule_based':
+        metrics = metric_logs[planner_name]
+        metric = get_metric(metrics, kpi, planner_name)
+        metric = [_metric for _metric in metric]
+        metric_avgs = [_metric.mean() for _metric in metric]
+        plt.plot(budgets[0:4], metric_avgs[0:4], line_style, color=color, label=planner_label)
+        # plt.errorbar(budgets, metric_avgs, metric_std)
+
+plt.xlabel('Iteration k')
+plt.ylabel('Collision rate (%)')
+plt.xticks(budgets[0:4])
+plt.legend()
+plt.grid(alpha=0.5)
+plt.savefig("planner_got_bad_state.pdf", dpi=500, bbox_inches='tight')
 
 
 # %%
@@ -168,10 +199,10 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
-plt.xlabel('Iterations')
+plt.xlabel('Iteration k')
 plt.ylabel('Episode reward')
 plt.xticks(budgets)
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.23), edgecolor='black', ncol=3)
+plt.legend()
 plt.grid(alpha=0.5)
 plt.savefig("planner_rewards.pdf", dpi=500, bbox_inches='tight')
 
@@ -182,15 +213,25 @@ Abort count (%) vs budget
 plt.xscale('log', basex=2)
 
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
+    metric_avgs = get_giveway_rates(planner_name)
+
     if planner_name != 'rule_based':
-        metric_avgs = get_giveway_rates()
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-plt.xlabel('Iterations')
-plt.ylabel('Fraction of abort decisions')
+    # if planner_name == 'rule_based':
+        # plt.plot([0, 1024], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+
+    # elif planner_name in ['belief_search', 'mcts']:
+    #     metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
+    #     plt.errorbar(budgets, metric_avgs, metric_std, color=color, label=planner_label, capsize=5)
+    #     plt.plot(budgets, metric_avgs, line_style, color=color)
+
+plt.legend()
+plt.xlabel('Iteration k')
+plt.ylabel('Give way rate (%)')
 plt.xticks(budgets)
 plt.grid(alpha=0.5)
-plt.savefig("giveway_rate.pdf", dpi=500, bbox_inches='tight')
+plt.savefig("planner_giveway_rate.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 # %%
@@ -208,8 +249,8 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         metric_avgs = [_metric.mean() for _metric in metric]
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-plt.xlabel('Iterations')
+plt.xlabel('Iteration k')
 plt.ylabel('Average Decision Time (s)')
 plt.xticks(budgets)
 plt.grid(alpha=0.5)
-plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')

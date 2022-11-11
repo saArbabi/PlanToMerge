@@ -66,7 +66,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 503
+    episode_id = 521
     # episode_id = 503
     env.initialize_env(episode_id)
 

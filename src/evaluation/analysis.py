@@ -39,9 +39,9 @@ indexs
 planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
 # planner_names = ["mcts", "qmdp"]
 # planner_names = ["qmdp", "mcts"]
-# planner_names = ["rule_based"]
+planner_names = ["omniscient", "mcts", "belief_search"]
 # run_name = 'run317'
-run_name = 'run_39'
+run_name = 'run_49'
 # run_name = 'run_test'
 
 decision_logs = {}
@@ -200,15 +200,14 @@ planner_names = ['omniscient', 'belief_search']
 planner_names = ['rule_based', 'omniscient']
 planner_names = ['mcts', 'belief_search']
 planner_names = ['mcts', 'qmdp']
-planner_names = ['qmdp']
+planner_names = ['omniscient']
 # planner_names = ['mcts', 'qmdp']
 
 planner_count = len(planner_names)
 
-budget = 4
-episodes_considered = metric_logs["mcts"][budget].keys()
+budget = 16
+episodes_considered = metric_logs[planner_names[0]][budget].keys()
 fig, ax = plt.subplots(figsize=(10, 30))
-
 
 kpi = 'cumulative_reward'
 # kpi = 'timesteps_to_merge'
@@ -232,7 +231,7 @@ labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
 ax.spines['left'].set_position('zero')
-plt.savefig('failure_cases.pdf', dpi=500, bbox_inches='tight')
+# plt.savefig('failure_cases.pdf', dpi=500, bbox_inches='tight')
 
 # ax.legend()
 # ax.grid()

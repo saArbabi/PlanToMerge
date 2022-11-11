@@ -134,9 +134,13 @@ class EnvAutoMerge(EnvMerge):
         if not decision:
             return 0
 
-        total_reward = 0
-        if decision == 5 and self.sdv.neighbours['rl']:
-            total_reward -= 0.5
+        total_reward = -0.1
+        # total_reward = 0
+        # if decision == 5:
+        #     if self.sdv.prev_decision != 5 or  \
+        #         (self.sdv.neighbours['rl'] and \
+        #             self.sdv.prev_rl_veh.id != self.sdv.neighbours['rl'].id):
+        #         total_reward -= 1
 
         if self.sdv.is_merge_complete():
             total_reward += 3
