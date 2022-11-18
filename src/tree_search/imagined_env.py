@@ -51,6 +51,9 @@ class ImaginedEnv(EnvAutoMerge):
         Note: Collisions are not possible, since agent does not take actions that
             result in collisions
         """
+        # if self.sdv.is_merge_complete() or self.got_bad_state or \
+        #             (decision == 5 and self.sdv.neighbours['rl'] and \
+        #                 self.sdv.prev_rl_veh.id < self.sdv.neighbours['rl'].id):
         if self.sdv.is_merge_complete() or self.got_bad_state:
             return True
 
