@@ -74,15 +74,15 @@ class EnvAutoMerge(EnvMerge):
                 self.sdv.neighbours['rl']
         if cond:
             vehicle = self.sdv.neighbours['rl']
-            # TTC
-            if self.sdv.speed < vehicle.speed:
-                ttc = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed - self.sdv.speed)
-                tiv = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed)
-                # if ttc > 1.7 and tiv > 0.3:
-                if ttc > 3.3 and tiv > 1.3:
-
-                    return False
-                else:
+            ttc = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed - self.sdv.speed)
+            tiv = (self.sdv.glob_x - vehicle.glob_x)/(vehicle.speed)
+            # if ttc > 1.7 and tiv > 0.3:
+            # print('""""""""""""""""""""""""""""')
+            # print('ttc ', ttc)
+            # print('tiv ', tiv)
+            if (ttc > 3.3 or ttc < 0) and tiv > 1.3:
+                return False
+            else:
                     return True
 
     def log_actions(self, vehicle, actions):
@@ -134,7 +134,7 @@ class EnvAutoMerge(EnvMerge):
         if not decision:
             return 0
 
-        total_reward = -0.1
+        total_reward = -0.2
         # total_reward = 0
         # if decision == 5:
         #     if self.sdv.prev_decision != 5 or  \
@@ -143,13 +143,13 @@ class EnvAutoMerge(EnvMerge):
         #         total_reward -= 1
 
         if self.sdv.is_merge_complete():
-            total_reward += 3
+            total_reward += 4
 
         if self.got_bad_action:
-            total_reward += -5
+            total_reward += -3
 
         if self.got_bad_state:
             # print('bad bad')
-            total_reward -= 10
+            total_reward -= 7
 
         return total_reward
