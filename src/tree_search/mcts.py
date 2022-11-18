@@ -42,13 +42,11 @@ class MCTSDPW(AbstractPlanner):
             else:
                 options = [4, 5]
 
-        elif state.sdv.decision == 5:
-            if state.sdv.neighbours['rl'] and \
-                    state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
+        elif state.sdv.decision == 5 and state.sdv.neighbours['rl']:
+            if state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
                 options = [5]
-            else:
+            else: 
                 options = [4, 5]
-                
 
         elif state.sdv.is_merge_possible():
             if not state.sdv.neighbours['rl']:
@@ -69,6 +67,7 @@ class MCTSDPW(AbstractPlanner):
                 options = [1, 2, 3]
 
         return options
+
 
     def predict_joint_action(self, state):
         """
@@ -91,16 +90,16 @@ class MCTSDPW(AbstractPlanner):
         self.add_position_noise(state)
         state.env_reward_reset()
         state.sdv.update_decision(decision)
-        if step_type == 'search':
-            for i in range(self.steps_per_decision):
+        # if step_type == 'search':
+        #     for i in range(self.steps_per_decision):
+        #         joint_action = self.predict_joint_action(state)
+        #         state.step(joint_action)
+        #
+        # elif step_type == 'random_rollout':
+        for i in range(self.steps_per_decision):
+            if i % self.config['rollout_step_skips'] == 0:
                 joint_action = self.predict_joint_action(state)
-                state.step(joint_action)
-
-        elif step_type == 'random_rollout':
-            for i in range(self.steps_per_decision):
-                if i % self.config['rollout_step_skips'] == 0:
-                    joint_action = self.predict_joint_action(state)
-                state.step(joint_action)
+            state.step(joint_action)
 
         observation = state.planner_observe()
         reward = state.get_reward(decision)
