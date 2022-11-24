@@ -4,7 +4,6 @@ import pickle
 import os
 import numpy as np
 
-
 # %%
 def get_mc_collection(exp_dir, exp_names):
     mc_collection = []
@@ -35,13 +34,21 @@ for i in range(7):
     indexs[metric_labels[i]] = i
 indexs
 # %%
+for i in range(10):
+    if i % 5 == 0:
+        print(i)
+# %%
 
 planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
 # planner_names = ["mcts", "qmdp"]
 # planner_names = ["qmdp", "mcts"]
-planner_names = ["omniscient", "mcts", "belief_search"]
+# planner_names = ["omniscient", "mcts", "belief_search"]
+# planner_names = ["omniscient", "mcts"]
+# planner_names = ["omniscient", "belief_search", "mcts", "mcts_mean", "qmdp"]
+# planner_names = ["omniscient", "belief_search"]
+# planner_names = ["omniscient"]
 # run_name = 'run317'
-run_name = 'run_49'
+run_name = 'run_69'
 # run_name = 'run_test'
 
 decision_logs = {}
@@ -72,6 +79,11 @@ for planner_name in planner_names:
 # dims: [budgets, episodes, logged_states]
 # metric_logs['omniscient'][50]
 eval_config = read_eval_config('./src/evaluation/experiments/'+run_name+'/eval_config.json')
+# decision_logs['belief_search'][1024][584]
+# decision_logs['belief_search'][256][515]
+# decision_logs['belief_search'][64][503]
+# decision_logs['omniscient'][256][596]
+# decision_logs['omniscient'][64][596]
 # %%
 # %%
 subplot_xcount = 2
@@ -132,11 +144,10 @@ for planner_name in planner_names:
 """
 Agent aggressiveness distriubiton
 """
-128*2
 budget = 50
 bins = 30
 colors = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728']
-
+256*4
 for color, planner_name in zip(colors, planner_names):
     agg = list(aggressiveness_logs[planner_name][budget].values())
     agg = [x for xs in agg for x in xs]
@@ -199,15 +210,17 @@ planner_names = ['omniscient', 'belief_search']
 # planner_names = ['mcts', 'belief_search']
 planner_names = ['rule_based', 'omniscient']
 planner_names = ['mcts', 'belief_search']
-planner_names = ['mcts', 'qmdp']
-planner_names = ['omniscient']
+planner_names = ['omniscient', 'belief_search']
+# planner_names = ['mcts', 'qmdp']
+# planner_names = ['omniscient']
+# planner_names = ['mcts']
 # planner_names = ['mcts', 'qmdp']
 
 planner_count = len(planner_names)
 
-budget = 16
+budget = 1024
 episodes_considered = metric_logs[planner_names[0]][budget].keys()
-fig, ax = plt.subplots(figsize=(10, 30))
+fig, ax = plt.subplots(figsize=(10, 50))
 
 kpi = 'cumulative_reward'
 # kpi = 'timesteps_to_merge'
@@ -231,11 +244,39 @@ labels = [str(epis) for epis in episodes_considered]
 ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
 ax.spines['left'].set_position('zero')
+ax.legend()
+ax.grid()
 # plt.savefig('failure_cases.pdf', dpi=500, bbox_inches='tight')
 
 # ax.legend()
 # ax.grid()
 
+
+# %%
+planner_name = 'omniscient'
+planner_name = 'belief_search'
+episodes_considered = metric_logs[planner_name][budget].keys()
+kpi = 'cumulative_reward'
+planner_count = 2
+y_pos = np.linspace(planner_count/2, (planner_count+5)*len(episodes_considered), len(episodes_considered))
+
+fig, ax = plt.subplots(figsize=(10, 100))
+budget = 256
+metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
+kpi_val = metrics_arr[:, indexs[kpi]]
+ax.barh(y_pos, kpi_val, label=budget, color='blue')
+
+budget = 1024
+metrics_arr = np.array(list(metric_logs[planner_name][budget].values()))
+kpi_val = metrics_arr[:, indexs[kpi]]
+ax.barh(y_pos + 1, kpi_val, label=budget, color='red')
+
+ax.set_yticks(y_pos)
+ax.set_yticklabels([str(epis) for epis in episodes_considered])
+ax.legend()
+
+ax.spines['left'].set_position('zero')
+ax.grid()
 
 # %%
 
@@ -301,3 +342,4 @@ f'{planner_name}-budget-{budget}'
 0 ** 10
 0.5/0.75
 sum([4, 4])
+0.75*25

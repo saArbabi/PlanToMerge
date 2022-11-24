@@ -17,8 +17,8 @@ import numpy as np
 import time
 import json
 planner_name = 'mcts'
-planner_name = 'qmdp'
-# planner_name = 'belief_search'
+# planner_name = 'qmdp'
+planner_name = 'belief_search'
 planner_name = 'omniscient'
 # planner_name = 'mcts_mean'
 # planner_name = 'rule_based'
@@ -66,7 +66,7 @@ def main():
     with open('./src/envs/config.json', 'rb') as handle:
         config = json.load(handle)
     env = EnvAutoMerge()
-    episode_id = 521
+    episode_id = 557
     # episode_id = 503
     env.initialize_env(episode_id)
 

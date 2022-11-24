@@ -175,7 +175,7 @@ class Viewer():
 
             ax.bar(decision, count, 0.5, \
                     label=self.OPTIONS[decision][1], color=color)
-        ax.set_ylim([0, 40])
+        ax.set_ylim([0, max_count])
         ax.set_xlim([0, 7])
 
         ax.set_xticks(list(self.OPTIONS.keys()))
