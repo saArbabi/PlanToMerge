@@ -37,15 +37,16 @@ class MCTSDPW(AbstractPlanner):
 
     def available_options(self, state):
         if state.sdv.decision == 4:
-            if not state.sdv.neighbours['rl'] or state.sdv.is_merge_initiated():
-                options = [4]
-            else:
-                options = [4, 5]
+            options = [4]
+            # if not state.sdv.neighbours['rl'] or state.sdv.is_merge_initiated():
+            #     options = [4]
+            # else:
+            #     options = [4, 5]
 
         elif state.sdv.decision == 5 and state.sdv.neighbours['rl']:
             if state.sdv.prev_rl_veh.id >= state.sdv.neighbours['rl'].id:
                 options = [5]
-            else: 
+            else:
                 options = [4, 5]
 
         elif state.sdv.is_merge_possible():

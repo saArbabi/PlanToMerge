@@ -134,7 +134,7 @@ class EnvAutoMerge(EnvMerge):
         if not decision:
             return 0
 
-        total_reward = -0.2
+        total_reward = -0.3
         # total_reward = 0
         # if decision == 5:
         #     if self.sdv.prev_decision != 5 or  \
@@ -143,13 +143,12 @@ class EnvAutoMerge(EnvMerge):
         #         total_reward -= 1
 
         if self.sdv.is_merge_complete():
-            total_reward += 4
-
-        if self.got_bad_action:
-            total_reward += -3
+            total_reward += 5
 
         if self.got_bad_state:
             # print('bad bad')
-            total_reward -= 7
+            total_reward += -10
+        elif self.got_bad_action:
+            total_reward += -5
 
         return total_reward
