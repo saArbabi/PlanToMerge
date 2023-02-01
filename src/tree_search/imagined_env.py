@@ -9,6 +9,7 @@ import copy
 class ImaginedEnv(EnvAutoMerge):
     def __init__(self, state):
         self.hidden_state = [] # this is to be estimated via NIDM
+        self.name = 'imagined'
         for attrname in ['vehicles', 'sdv', 'time_step', 'dummy_stationary_car']:
             attrvalue = getattr(state, attrname)
             setattr(self, attrname, copy.deepcopy(attrvalue))

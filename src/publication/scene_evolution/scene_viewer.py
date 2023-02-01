@@ -22,7 +22,7 @@ class Viewer():
         self.logged_var = {}
 
     def draw_initial_traffi_scene(self):
-        self.fig = plt.figure(figsize=(10, 2))
+        self.fig = plt.figure(figsize=(11, 2.5))
         self.env_ax = self.fig.add_subplot(111)
 
         self.env_ax.set_xlim(0, self.config['lane_length'])
@@ -78,31 +78,34 @@ class Viewer():
 
 
 
-    def draw_vehicle_belief(self, belief_info, max_depth, id):
+    def draw_vehicle_belief(self, belief_info, max_depth_vis, id):
         ax = self.env_ax
         # colors = cm.BuPu(np.linspace(1, 0, max_depth))
-        colors = cm.rainbow(np.linspace(1, 0, max_depth))
+        max_depth = 10
+
+        colors = cm.rainbow(np.linspace(1, (1-(max_depth_vis/max_depth)), max_depth_vis))
 
         for depth, c in enumerate(colors):
-            if depth > max_depth:
+            if depth > max_depth_vis:
                 continue
             ax.scatter(belief_info[id][depth]['xs'],
                        belief_info[id][depth]['ys'],
-                       color=c, s=20, marker='x')
+                       color=c, s=50, alpha=0.3)
 
     def draw_vehicle(self, logged_states, id, time_step):
         ax = self.env_ax
-        vehicle_colors = {'sdv':'green', 1:'orange', 2:'navy', 3:'blueviolet', 4:'blue', 5:'orchid'}
+        vehicle_colors = {'sdv':'green', 1:'orange', 2:'navy', 3:'red', 4:'blue', 5:'orchid'}
         logged_state = logged_states[id][logged_states[id][:, 0] == time_step][0]
         glob_x = logged_state[-2]
         glob_y = logged_state[-1]
         color = vehicle_colors[id]
-        ax.scatter(glob_x, glob_y, s=100, marker=">", color=color, edgecolors=color)
+        ax.scatter(glob_x, glob_y, s=150, marker=">", color=color,
+                                        edgecolors='black', linewidth=1)
         if id == 'sdv':
-            ax.annotate('id:e', (glob_x-20, glob_y+0.7), color=color, size=12)
+            ax.annotate('id:e', (glob_x-20, glob_y+0.5), color=color, size=12)
         else:
-            ax.annotate('id:'+str(id), (glob_x-20, glob_y+0.7), color=color, size=12)
-        ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-30, glob_y-1.3), color=color, size=12)
+            ax.annotate('id:'+str(id), (glob_x-20, glob_y+0.5), color=color, size=12)
+        ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-30, glob_y-1), color=color, size=12)
 
 
     def draw_sdv_traj(self, logged_states, time_step):

@@ -2,6 +2,7 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+# %matplotlib tk
 
 # %%
 def get_mc_collection(exp_dir, exp_names):
@@ -89,9 +90,9 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 """
 # run_name = 'run_23'
 # run_name = 'run_39'
-run_name = 'run_40'
+run_name = 'run_69'
 planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
-planner_labels = ["MCTS", "MCTS normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
+planner_labels = ["MCTS", "MCTS-normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
 # planner_names = ["omniscient", "belief_search"]
 # planner_labels = ["Omniscient", "LVT"]
 
@@ -138,7 +139,7 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     metric = [_metric/10 for _metric in metric]
     metric_avgs = [_metric.mean() for _metric in metric]
     if planner_name == 'rule_based':
-        plt.plot([0, 1024], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+        plt.plot([0, 2000], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
     elif planner_name in ['belief_search', 'mcts']:
         metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
         plt.errorbar(budgets, metric_avgs, metric_std, color=color, label=planner_label, capsize=5)
@@ -146,12 +147,12 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     else:
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-
     plt.xlim(0, 520)
 
-plt.xlabel('Iteration k')
+plt.xlabel('Iteration n')
 plt.ylabel('Time to merge (s)')
 plt.xticks(budgets)
+plt.xlim(0, 1500)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
 # plt.legend()
 plt.grid(alpha=0.5)
@@ -167,21 +168,24 @@ kpi = 'got_bad_state'
 plt.xscale('log', basex=2)
 
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
-    # if planner_name != 'rule_based':
-        metrics = metric_logs[planner_name]
-        metric = get_metric(metrics, kpi, planner_name)
-        metric = [_metric for _metric in metric]
-        metric_avgs = [_metric.mean() for _metric in metric]
-        plt.plot(budgets[0:4], metric_avgs[0:4], line_style, color=color, label=planner_label)
+    metrics = metric_logs[planner_name]
+    metric = get_metric(metrics, kpi, planner_name)
+    metric = [_metric for _metric in metric]
+    metric_avgs = [_metric.mean()*100 for _metric in metric]
+    if planner_name == 'rule_based':
+        plt.plot([0, 2000], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+    else:
+        plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
+        print(planner_name, ' ', budgets[-1],' ', metric_avgs[-1])
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
-plt.xlabel('Iteration k')
-plt.ylabel('Collision rate (%)')
-plt.xticks(budgets[0:4])
+plt.xlabel('Iteration n')
+plt.ylabel('Unsafe state rate (%)')
+plt.xticks(budgets)
+plt.xlim(0, 1500)
 plt.legend()
 plt.grid(alpha=0.5)
 plt.savefig("planner_got_bad_state.pdf", dpi=500, bbox_inches='tight')
-
 
 # %%
 """
@@ -199,7 +203,7 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
-plt.xlabel('Iteration k')
+plt.xlabel('Iteration n')
 plt.ylabel('Episode reward')
 plt.xticks(budgets)
 plt.legend()
@@ -227,11 +231,11 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     #     plt.plot(budgets, metric_avgs, line_style, color=color)
 
 plt.legend()
-plt.xlabel('Iteration k')
+plt.xlabel('Iteration n')
 plt.ylabel('Give way rate (%)')
 plt.xticks(budgets)
 plt.grid(alpha=0.5)
-plt.savefig("planner_giveway_rate.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("planner_giveway_rate.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 # %%
@@ -249,7 +253,7 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         metric_avgs = [_metric.mean() for _metric in metric]
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-plt.xlabel('Iteration k')
+plt.xlabel('Iteration n')
 plt.ylabel('Average Decision Time (s)')
 plt.xticks(budgets)
 plt.grid(alpha=0.5)

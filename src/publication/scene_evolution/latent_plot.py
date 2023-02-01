@@ -51,8 +51,8 @@ for i, item_name in enumerate(col_names):
 """
 Load logs
 """
-plot_files = {'scenario_1':['20220920-03-50-11'], \
-                 'scenario_2':['20220920-04-11-20']
+plot_files = {'scenario_1':['20221125-19-01-51'], \
+                 'scenario_2':['20221125-19-05-11']
                   }
 plot_cats = {'scenario_1':'NA', 'scenario_2':'NA'}
 save_to = './src/publication/scene_evolution/saved_files/'

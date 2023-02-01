@@ -9,6 +9,7 @@ import sys
 class EnvAutoMerge(EnvMerge):
     def __init__(self):
         super().__init__()
+        self.name = 'real'
 
     def initialize_env(self, episode_id):
         """Initiates the environment
