@@ -88,10 +88,10 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # %%
 """ Load sim collections
 """
-run_name = 'run_23'
-run_name = 'run_39'
-planner_names = ["rule_based", "omniscient", "mcts", "belief_search"]
-planner_labels = ["Rule-based", "Omniscient", "MCTS", "LVT"]
+# run_name = 'run_23'
+run_name = 'run_69'
+planner_names = ["rule_based", "mcts", "omniscient", "qmdp", "belief_search"]
+planner_labels = ["Rule-based", "MCTS", "Omniscient", "QMDP", "LVT"]
 
 
 decision_logs = {}
@@ -119,17 +119,16 @@ for planner_name in planner_names:
 """
 Time to merge vs budget
 """
-order = [2, 3, 1, 0]
-
-colors = ['black', 'red','blue', 'darkgreen']
-line_styles = ['--', '-o', '-s', '-D']
+planner_labels = ["Rule-based", "MCTS", "Omniscient", "QMDP", "LVT"]
+colors = ['black', 'blue', 'red', 'darkgreen', 'darkgreen']
+line_styles = ['--', '-o', '--s', '--d', '-o']
 
 kpi = 'timesteps_to_merge'
 budgets = list(metric_logs['omniscient'].keys())
 plt.figure()
 plt.xscale('log', basex=2)
-plt.xlim(0, 520)
-plt.ylim(14.5, 18.5)
+plt.xlim(0, 1000)
+plt.ylim(13.5, 18.5)
 plt.xlabel('Iterations')
 plt.ylabel('Time to merge (s)')
 plt.grid(alpha=0.5)
@@ -142,7 +141,11 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     metric_avgs = [_metric.mean() for _metric in metric]
     metric_std = [_metric.std()/10 for _metric in metric]
     if planner_name == 'rule_based':
-        plt.plot([-1, 600], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+        plt.plot([-1, 1000], [metric_avgs[0], metric_avgs[0]], line_style, color=color, label=planner_label)
+    elif planner_name in ['belief_search', 'mcts']:
+        metric_std = [_metric.std()/np.sqrt(100) for _metric in metric]
+        plt.errorbar(budgets, metric_avgs, metric_std, color=color, label=planner_label, capsize=5)
+        plt.plot(budgets, metric_avgs, line_style, color=color)
     else:
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
