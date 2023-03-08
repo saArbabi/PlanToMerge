@@ -132,17 +132,29 @@ for plot_name in plot_cats.keys():
 # %%
 """ plot setup
 """
-MEDIUM_SIZE = 14
-plt.rcParams["font.family"] = "Times New Roman"
+# MEDIUM_SIZE = 14
+# plt.rcParams["font.family"] = "Times New Roman"
+# params = {
+#           'font.family': "Times New Roman",
+#           'legend.fontsize': 14,
+#           'legend.handlelength': 2}
+# plt.rcParams.update(params)
+# plt.rc('xtick', labelsize=20)
+# plt.rc('ytick', labelsize=20)
+# plt.rc('text', usetex=True)
+# plt.rc('font', family='serif')
 params = {
           'font.family': "Times New Roman",
           'legend.fontsize': 14,
-          'legend.handlelength': 2}
+          'legend.handlelength': 2,
+          "text.usetex":False}
 plt.rcParams.update(params)
-plt.rc('xtick', labelsize=20)
-plt.rc('ytick', labelsize=20)
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
+MEDIUM_SIZE = 25
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
+# plt.rc('font', **{'family':'serif','serif':['Palatino']})
+# plt.rc('text', usetex=True)
 # %%
 """
 2D Latent figure
@@ -151,7 +163,7 @@ zsamples_n = 5000
 examples_to_vis = np.random.choice(val_samples, zsamples_n, replace=False)
 sampled_z = latent_samples(model, examples_to_vis).numpy()
 # %%
-fig = plt.figure(figsize=(6.5, 4))
+fig = plt.figure(figsize=(4.4, 4))
 ax = fig.add_subplot(111)
 plot_name = 'scenario_1'
 
@@ -164,23 +176,23 @@ ax.grid(False)
 ax.scatter(z_idm[:, 0], z_idm[:, 1], s=20, marker="x", edgecolors='none', color='black')
 ax.scatter(z_idm[:, 0].numpy().mean(), z_idm[:, 1].numpy().mean(), s=5000, marker="s", edgecolors='black', facecolors='none')
 
-axins = inset_axes(ax,
-                    width="5%",
-                    height="90%",
-                    loc='right',
-                    borderpad=-2
-                   )
-fig.colorbar(latent_plot, cax=axins, ticks=[0.1, 0.3, 0.5, 0.7, 0.9])
-plt.ylabel('$\psi$', fontsize=25, rotation=0, labelpad=12)
-ax.set_xlabel('$z_1$', fontsize=35)
-ax.set_ylabel('$z_2$', fontsize=35)
+# axins = inset_axes(ax,
+#                     width="5%",
+#                     height="90%",
+#                     loc='right',
+#                     borderpad=-2
+#                    )
+# fig.colorbar(latent_plot, cax=axins, ticks=[0.1, 0.3, 0.5, 0.7, 0.9])
+# plt.ylabel('Aggressiveness level ($\psi$)', rotation=90, labelpad=12)
+ax.set_xlabel('$z_1$')
+ax.set_ylabel('$z_2$')
 # ax.set_xlim(-7, 5.5)
 ax.set_ylim(-12.5, 12.5)
 ax.minorticks_off()
 
 plt.savefig("latent_scenario_1.jpg", dpi=500, bbox_inches='tight')
 # %%
-fig = plt.figure(figsize=(6.5, 4))
+fig = plt.figure(figsize=(4.5, 4))
 ax = fig.add_subplot(111)
 plot_name = 'scenario_2'
 
@@ -197,12 +209,13 @@ axins = inset_axes(ax,
                     width="5%",
                     height="90%",
                     loc='right',
-                    borderpad=-2
+                    borderpad=-1.5
                    )
 fig.colorbar(latent_plot, cax=axins, ticks=[0.1, 0.3, 0.5, 0.7, 0.9])
-plt.ylabel('$\psi$', fontsize=25, rotation=0, labelpad=12)
-ax.set_xlabel('$z_1$', fontsize=35)
-ax.set_ylabel('$z_2$', fontsize=35)
+plt.ylabel(r'Aggressiveness level', rotation=90, labelpad=12)
+
+ax.set_xlabel('$z_1$')
+ax.set_ylabel('$z_2$')
 # ax.set_xlim(-7, 5.5)
 ax.set_ylim(-12.5, 12.5)
 ax.minorticks_off()

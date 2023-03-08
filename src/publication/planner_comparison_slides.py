@@ -90,8 +90,8 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 """
 # run_name = 'run_23'
 run_name = 'run_69'
-planner_names = ["rule_based", "mcts", "omniscient", "qmdp", "belief_search"]
-planner_labels = ["Rule-based", "MCTS", "Omniscient", "QMDP", "LVT"]
+planner_names = ["rule_based", "mcts", "omniscient", "belief_search"]
+planner_labels = ["Rule-based", "MCTS", "Omniscient", "LVT"]
 
 
 decision_logs = {}
@@ -119,9 +119,9 @@ for planner_name in planner_names:
 """
 Time to merge vs budget
 """
-planner_labels = ["Rule-based", "MCTS", "Omniscient", "QMDP", "LVT"]
-colors = ['black', 'blue', 'red', 'darkgreen', 'darkgreen']
-line_styles = ['--', '-o', '--s', '--d', '-o']
+planner_labels = ["Rule-based", "MCTS", "Omniscient", "LVT"]
+colors = ['black', 'blue', 'red', 'darkgreen']
+line_styles = ['--', '-o', '--s', '-o']
 
 kpi = 'timesteps_to_merge'
 budgets = list(metric_logs['omniscient'].keys())
@@ -219,3 +219,4 @@ plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 decision_logs
+2**10

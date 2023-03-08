@@ -69,7 +69,7 @@ logged_states[2].shape
 """
 Plot initial scene
 """
-%matplotlib tk
+# %matplotlib tk
 from src.publication.scene_evolution import scene_viewer
 reload(scene_viewer)
 from src.publication.scene_evolution.scene_viewer import Viewer
@@ -83,12 +83,12 @@ plot_viewer.draw_initial_traffi_scene()
 
 time_step = 6
 plot_viewer.draw_road()
-plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
+plot_viewer.draw_vehicle_with_info(logged_states, id='sdv', time_step=time_step)
 
-plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
-plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
-plot_viewer.draw_vehicle(logged_states, id=2, time_step=time_step)
-plot_viewer.draw_vehicle(logged_states, id=1, time_step=time_step)
+plot_viewer.draw_vehicle_with_info(logged_states, id=4, time_step=time_step)
+plot_viewer.draw_vehicle_with_info(logged_states, id=3, time_step=time_step)
+plot_viewer.draw_vehicle_with_info(logged_states, id=2, time_step=time_step)
+plot_viewer.draw_vehicle_with_info(logged_states, id=1, time_step=time_step)
 plt.savefig("scene_plot_initial.pdf", dpi=500, bbox_inches='tight')
 
 
@@ -116,11 +116,12 @@ plot_viewer = Viewer(config)
 plot_viewer.set_up_fig()
 plot_viewer.fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.35)
 plot_viewer.draw_road()
-plot_viewer.draw_sdv_traj(logged_states['sdv'], time_step=time_step)
 plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
 
 if plot_cat == 'aggressive':
-    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis=6, id=4)
+    max_depth_vis = 6
+    plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis, time_step=time_step)
+    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=4)
     plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
     plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
     ############
@@ -130,7 +131,9 @@ if plot_cat == 'aggressive':
     plot_viewer.draw_lat_pos(logged_states['sdv'])
 
 elif plot_cat == 'normal':
-    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis=10, id=3)
+    max_depth_vis = 10
+    plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis, time_step=time_step)
+    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=3)
     plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
     plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
     ############
