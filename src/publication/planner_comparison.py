@@ -80,7 +80,7 @@ params = {
           'legend.fontsize': 13,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
-MEDIUM_SIZE = 20
+MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
@@ -91,6 +91,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # run_name = 'run_23'
 # run_name = 'run_39'
 run_name = 'run_69'
+run_name = 'run_70'
 planner_names = ["mcts", "mcts_mean", "qmdp", "belief_search", "omniscient", "rule_based"]
 planner_labels = ["MCTS", "MCTS-normal", "QMDP", "LVT", "Omniscient", "Rule-based"]
 # planner_names = ["omniscient", "belief_search"]
@@ -131,8 +132,8 @@ kpi = 'timesteps_to_merge'
 
 
 budgets = list(metric_logs['omniscient'].keys())
+plt.figure(figsize=(6, 3.7))
 plt.xscale('log', basex=2)
-
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
     metrics = metric_logs[planner_name]
     metric = get_metric(metrics, kpi, planner_name)
@@ -149,13 +150,14 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
 
     plt.xlim(0, 520)
 
-plt.xlabel('Iteration n')
+plt.xlabel('Iterations')
 plt.ylabel('Time to merge (s)')
 plt.xticks(budgets)
 plt.xlim(0, 1500)
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
+# plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
+plt.legend(ncol=2)
 # plt.legend()
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.3)
 plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
 
 
@@ -165,6 +167,7 @@ plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
 got_bad_state vs budget
 """
 kpi = 'got_bad_state'
+plt.figure(figsize=(6, 3.7))
 plt.xscale('log', basex=2)
 
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
@@ -179,12 +182,12 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         print(planner_name, ' ', budgets[-1],' ', metric_avgs[-1])
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
-plt.xlabel('Iteration n')
+plt.xlabel('Iterations')
 plt.ylabel('Unsafe state rate (%)')
 plt.xticks(budgets)
 plt.xlim(0, 1500)
 plt.legend()
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.3)
 plt.savefig("planner_got_bad_state.pdf", dpi=500, bbox_inches='tight')
 
 # %%
@@ -192,6 +195,7 @@ plt.savefig("planner_got_bad_state.pdf", dpi=500, bbox_inches='tight')
 Reward to merge vs budget
 """
 kpi = 'cumulative_reward'
+plt.figure(figsize=(6, 3.7))
 plt.xscale('log', basex=2)
 
 for planner_name, planner_label, color, line_style in zip(planner_names, planner_labels, colors, line_styles):
@@ -203,11 +207,11 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
-plt.xlabel('Iteration n')
+plt.xlabel('Iterations')
 plt.ylabel('Episode reward')
 plt.xticks(budgets)
 plt.legend()
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.3)
 plt.savefig("planner_rewards.pdf", dpi=500, bbox_inches='tight')
 
 # %%
@@ -231,10 +235,10 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
     #     plt.plot(budgets, metric_avgs, line_style, color=color)
 
 plt.legend()
-plt.xlabel('Iteration n')
+plt.xlabel('Iterations')
 plt.ylabel('Give way rate (%)')
 plt.xticks(budgets)
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.3)
 # plt.savefig("planner_giveway_rate.pdf", dpi=500, bbox_inches='tight')
 
 # %%
@@ -253,8 +257,8 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         metric_avgs = [_metric.mean() for _metric in metric]
         plt.plot(budgets, metric_avgs, line_style, color=color, label=planner_label)
 
-plt.xlabel('Iteration n')
+plt.xlabel('Iterations')
 plt.ylabel('Average Decision Time (s)')
 plt.xticks(budgets)
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.3)
 # plt.savefig("avg_decision_time.pdf", dpi=500, bbox_inches='tight')

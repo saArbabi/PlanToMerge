@@ -10,6 +10,7 @@ class AbstractPlanner(object):
     def initialize_planner(self):
         self.steps_till_next_decision = 0
         self.seed(2022)
+        # self.seed(0)
 
     def seed(self, seed):
         """

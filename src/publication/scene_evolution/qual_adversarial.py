@@ -16,7 +16,7 @@ import pickle
 from importlib import reload
 import json
 from src.publication.scene_evolution.scene_viewer import Viewer
-%matplotlib tk
+# %matplotlib tk
 
 # from matplotlib.lines import Line2D
 
@@ -63,7 +63,7 @@ ax_2 = fig.add_subplot(212)
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.37)
 
 for ax in fig.axes:
-    ax.grid(alpha=0.6)
+    ax.grid(alpha=0.3)
     # ax.set_xlim(-0.2, 6)
     ax.set_xlabel(r'Time (s)')
 

@@ -31,7 +31,7 @@ plt.xlabel('Driver aggressiveness $\psi$')
 # plt.axvline(percentile_10, color='red')
 # plt.text(percentile_10+0.07, 100, '10th percentile', color='red', size=13)
 
-plt.savefig('driver_population.pdf', dpi=500, bbox_inches='tight')
+# plt.savefig('driver_population.pdf', dpi=500, bbox_inches='tight')
 
 
 # %%

@@ -22,7 +22,7 @@ class Viewer():
         self.logged_var = {}
 
     def draw_initial_traffi_scene(self):
-        self.fig = plt.figure(figsize=(11, 2.5))
+        self.fig = plt.figure(figsize=(7, 2))
         self.env_ax = self.fig.add_subplot(111)
 
         self.env_ax.set_xlim(0, self.config['lane_length'])
@@ -40,7 +40,7 @@ class Viewer():
             self.speed_ax = self.fig.add_subplot(312)
             self.lateral_pos_ax = self.fig.add_subplot(313)
             for ax in self.fig.axes[1:]:
-                ax.grid(alpha=0.6)
+                ax.grid(alpha=0.3)
                 # ax.set_xlim(-0.2, 6)
                 ax.set_xlabel(r'Time (s)')
 
@@ -54,7 +54,7 @@ class Viewer():
             self.speed_ax = self.fig.add_subplot(211)
             self.lateral_pos_ax = self.fig.add_subplot(212)
             for ax in self.fig.axes:
-                ax.grid(alpha=0.6)
+                ax.grid(alpha=0.3)
                 # ax.set_xlim(-0.2, 6)
                 ax.set_xlabel(r'Time (s)')
 
@@ -92,7 +92,7 @@ class Viewer():
                        belief_info[id][depth]['ys'],
                        color=c, s=50, alpha=0.3)
 
-    def draw_vehicle(self, logged_states, id, time_step):
+    def draw_vehicle_with_info(self, logged_states, id, time_step):
         ax = self.env_ax
         vehicle_colors = {'sdv':'green', 1:'orange', 2:'navy', 3:'red', 4:'blue', 5:'orchid'}
         logged_state = logged_states[id][logged_states[id][:, 0] == time_step][0]
@@ -102,19 +102,40 @@ class Viewer():
         ax.scatter(glob_x, glob_y, s=150, marker=">", color=color,
                                         edgecolors='black', linewidth=1)
         if id == 'sdv':
-            ax.annotate('id:e', (glob_x-20, glob_y+0.5), color=color, size=12)
+            id = 'e'
+
+        vehicle_id = 'v_' + str(id)
+        ax.annotate('${}$'.format(vehicle_id), (glob_x-10, glob_y+0.7), color=color, size=14)
+
+        if id == 4:
+            ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-40, glob_y-1.3), color=color, size=12)
         else:
-            ax.annotate('id:'+str(id), (glob_x-20, glob_y+0.5), color=color, size=12)
-        ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-30, glob_y-1), color=color, size=12)
+            ax.annotate('vel:'+str(round(logged_state[2], 1)), (glob_x-15, glob_y-1.3), color=color, size=12)
 
+    def draw_vehicle(self, logged_states, id, time_step):
+        ax = self.env_ax
+        vehicle_colors = {'sdv':'green', 1:'orange', 2:'navy', 3:'red', 4:'blue', 5:'orchid'}
+        logged_state = logged_states[id][logged_states[id][:, 0] == time_step][0]
+        glob_x = logged_state[-2]
+        glob_y = logged_state[-1]
+        color = vehicle_colors[id]
+        ax.scatter(glob_x, glob_y, s=150, marker=">", color=color,
+                                        edgecolors='black', linewidth=1)
 
-    def draw_sdv_traj(self, logged_states, time_step):
+    def draw_sdv_traj(self, logged_states, max_depth_vis, time_step):
         ax = self.env_ax
         logged_state = logged_states[logged_states[:, 0] >= time_step]
-        xs = logged_state[:, -2]
-        ys = logged_state[:, -1]
-        ax.plot(xs, ys, color='green', linewidth=2)
-        ax.scatter(xs[::10], ys[::10], marker='>', color='green', s=30)
+        xs = logged_state[:, -2][::10]
+        ys = logged_state[:, -1][::10]
+        ax.plot(xs[1:], ys[1:], color='green', linewidth=12, alpha=0.8, zorder=1)
+
+        max_depth = 10
+        colors = cm.rainbow(np.linspace(1, (1-(max_depth_vis/max_depth)), len(xs)))
+
+
+        for depth, c in enumerate(colors):
+            if depth > 0:
+                ax.scatter(xs[depth], ys[depth], color=c, s=60, edgecolor='black', zorder=2)
 
     def draw_scene(self, ax, vehicles):
         ax.clear()
@@ -123,7 +144,7 @@ class Viewer():
     def draw_speed(self, logged_states, color):
         speeds = logged_states[:, 2]
         time_axis = np.arange(len(speeds))/10
-        self.speed_ax.plot(time_axis, speeds, color, linewidth=2)
+        self.speed_ax.plot(time_axis, speeds, color, linewidth=1.5)
         self.speed_ax.set_xlim(0, time_axis[-1]+0.5)
         self.speed_ax.set_ylabel(r'Long. speed (m/s)')
 

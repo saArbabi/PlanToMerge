@@ -27,7 +27,7 @@ params = {
           'legend.fontsize': 12,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
-MEDIUM_SIZE = 16
+MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
@@ -81,16 +81,21 @@ for planner_name in planner_names:
     give_way_standard_error.append(give_way_vals.std()/np.sqrt(100))
 
 # %%
+plt.figure(figsize=(6, 2))
+ax = plt.subplot(111)
+# plt.figure(figsize=(6, 3))
+ax.errorbar(threshod_percentile, hard_brakes_avgs, hard_brakes_standard_error, color='black', capsize=3, linestyle='None')
+ax.plot(threshod_percentile, hard_brakes_avgs, 'o--', color='black', label='Hard brakes', markersize=5)
 
-plt.errorbar(threshod_percentile, hard_brakes_avgs, hard_brakes_standard_error, color='blue', capsize=5, linestyle='None')
-plt.plot(threshod_percentile, hard_brakes_avgs, 's-', color='blue', label='Hard brakes')
-
-plt.errorbar(threshod_percentile, give_way_avgs, hard_brakes_standard_error, color='green', capsize=5, linestyle='None')
-plt.plot(threshod_percentile, give_way_avgs, 's-', color='green', label='Give way')
+ax.errorbar(threshod_percentile, give_way_avgs, hard_brakes_standard_error, color='black', capsize=3, linestyle='None')
+ax.plot(threshod_percentile, give_way_avgs, 's-', color='black', label='Give way', markersize=5)
 
 # plt.ylim(-0.05, 1.05)
-plt.xticks(threshod_percentile)
-plt.xlabel('Threshold percentile')
-plt.grid(alpha=0.2)
-plt.legend()
+ax.set_xticks(threshod_percentile)
+ax.set_xlabel('Threshold percentile')
+ax.grid(alpha=0.2)
+ax.legend()
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+
 plt.savefig("param_testing.pdf", dpi=500, bbox_inches='tight')
