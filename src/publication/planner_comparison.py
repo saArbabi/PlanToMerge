@@ -84,7 +84,8 @@ MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
-
+from matplotlib.ticker import StrMethodFormatter
+plt.gca().xaxis.set_major_formatter(StrMethodFormatter('{x:.0f}')) # No decimal places
 # %%
 """ Load sim collections
 """
@@ -152,12 +153,13 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
 
 plt.xlabel('Iterations')
 plt.ylabel('Time to merge (s)')
-plt.xticks(budgets)
 plt.xlim(0, 1500)
 # plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), edgecolor='black', ncol=3)
 plt.legend(ncol=2)
 # plt.legend()
 plt.grid(alpha=0.3)
+plt.xticks(budgets)
+
 plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
 
 
@@ -188,6 +190,8 @@ plt.xticks(budgets)
 plt.xlim(0, 1500)
 plt.legend()
 plt.grid(alpha=0.3)
+plt.gca().xaxis.set_major_formatter(StrMethodFormatter('{x:.0f}')) # No decimal places
+
 plt.savefig("planner_got_bad_state.pdf", dpi=500, bbox_inches='tight')
 
 # %%
@@ -208,8 +212,10 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
 plt.xlabel('Iterations')
-plt.ylabel('Episode reward')
+plt.ylabel('Mean episode reward')
 plt.xticks(budgets)
+plt.gca().xaxis.set_major_formatter(StrMethodFormatter('{x:.0f}')) # No decimal places
+
 plt.legend()
 plt.grid(alpha=0.3)
 plt.savefig("planner_rewards.pdf", dpi=500, bbox_inches='tight')
@@ -238,6 +244,8 @@ plt.legend()
 plt.xlabel('Iterations')
 plt.ylabel('Give way rate (%)')
 plt.xticks(budgets)
+plt.gca().xaxis.set_major_formatter(StrMethodFormatter('{x:.0f}')) # No decimal places
+
 plt.grid(alpha=0.3)
 # plt.savefig("planner_giveway_rate.pdf", dpi=500, bbox_inches='tight')
 

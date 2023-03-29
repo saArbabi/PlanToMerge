@@ -89,7 +89,7 @@ plot_viewer.draw_vehicle_with_info(logged_states, id=4, time_step=time_step)
 plot_viewer.draw_vehicle_with_info(logged_states, id=3, time_step=time_step)
 plot_viewer.draw_vehicle_with_info(logged_states, id=2, time_step=time_step)
 plot_viewer.draw_vehicle_with_info(logged_states, id=1, time_step=time_step)
-plt.savefig("scene_plot_initial.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("scene_plot_initial.pdf", dpi=500, bbox_inches='tight')
 
 
 # %%
@@ -120,7 +120,7 @@ plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
 
 if plot_cat == 'aggressive':
     max_depth_vis = 6
-    plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis, time_step=time_step)
+    plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis+3, time_step=time_step)
     plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=4)
     plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
     plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
@@ -142,9 +142,9 @@ elif plot_cat == 'normal':
     plot_viewer.draw_speed(logged_states[4], 'blue')
     plot_viewer.draw_lat_pos(logged_states['sdv'])
 plot_viewer.speed_ax.set_ylim(0, 26)
-plot_viewer.speed_ax.legend(['LVT', 'Vehicle 3', 'Vehicle 4'],
+plot_viewer.speed_ax.legend(['${v_e}$', '${v_3}$', '${v_4}$'],
                     loc='lower right' ,ncol=1, edgecolor='black', facecolor='white')
-plot_viewer.lateral_pos_ax.legend(['LVT'], loc='upper left' , ncol=1, edgecolor='black', facecolor='white')
+plot_viewer.lateral_pos_ax.legend(['${v_e}$'], loc='upper left' , ncol=1, edgecolor='black', facecolor='white')
 #s %%
 params = {
           'font.family': "Times New Roman",
@@ -156,6 +156,7 @@ plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
 place_image(im, loc=1, ax=plot_viewer.env_ax, zoom=0.32)
+plot_viewer.add_custom_legend()
 # plot_viewer.fig.figimage(im, 0, plot_viewer.fig.bbox.ymax-10)
 
 if plot_cat == 'aggressive':

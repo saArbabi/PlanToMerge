@@ -5,6 +5,8 @@ from matplotlib.pyplot import cm
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle, Polygon
 import dill
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 
 class Viewer():
     def __init__(self, config):
@@ -77,6 +79,17 @@ class Viewer():
                                 colors='k', linestyles='--', linewidth=3)
 
 
+    def add_custom_legend(self):
+        ax = self.env_ax
+        legend_elements = [Line2D([0], [0], marker='>', color='w', label='${v_e}$',
+                          markerfacecolor='g', markersize=15),
+                            Line2D([0], [0], marker='>', color='w', label='${v_3}$',
+                                              markerfacecolor='red', markersize=15),
+                            Line2D([0], [0], marker='>', color='w', label='${v_4}$',
+                                              markerfacecolor='blue', markersize=15)]
+
+        # Create the figure
+        ax.legend(handles=legend_elements, loc='lower left', facecolor='white')
 
     def draw_vehicle_belief(self, belief_info, max_depth_vis, id):
         ax = self.env_ax
@@ -125,8 +138,11 @@ class Viewer():
     def draw_sdv_traj(self, logged_states, max_depth_vis, time_step):
         ax = self.env_ax
         logged_state = logged_states[logged_states[:, 0] >= time_step]
-        xs = logged_state[:, -2][::10]
-        ys = logged_state[:, -1][::10]
+        xs = logged_state[:, -2][::10].tolist() + [logged_state[:, -2][-1]]
+        ys = logged_state[:, -1][::10].tolist() + [logged_state[:, -1][-1]]
+        # xs = logged_state[:, -2][::10]
+        # ys = logged_state[:, -1][::10]
+
         ax.plot(xs[1:], ys[1:], color='green', linewidth=12, alpha=0.8, zorder=1)
 
         max_depth = 10

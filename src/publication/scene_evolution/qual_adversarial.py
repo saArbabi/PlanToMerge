@@ -73,7 +73,7 @@ decision_times = [0, 10, 20, 30, 40, 90] # u u m m g g g g g m m m m
 # decision_times_mid = [5, 15, 25, 30, 40, 100, 158] # up, up, up, idle, 2 x merge, give, merge
 #################################################################################
 delta_glob_x = np.abs(logged_states['sdv'][:, -2]-logged_states[3][:, -2])
-ax_2.plot(time_axis, delta_glob_x, color='green', label='LVT')
+ax_2.plot(time_axis, delta_glob_x, color='green', label=r'$v_e$')
 ax_2.set_ylabel(r'Rel. long. distance (m)')
 ax_2.set_xlim(-0.1, 15)
 ax_2.set_ylim(-5, 110)
@@ -118,8 +118,8 @@ ax_2.text(time_axis[110], delta_glob_x[110]+12, 'merge-in', rotation=23, color='
 ax_2.legend(ncol=1, edgecolor='black', facecolor='white')
 #################################################################################
 
-ax_1.plot(time_axis, logged_states[3][:, 2], color='red', label='Vehicle 3')
-ax_1.plot(time_axis, logged_states['sdv'][:, 2], color='green', label='LVT')
+ax_1.plot(time_axis, logged_states['sdv'][:, 2], color='green', label='${v_e}$')
+ax_1.plot(time_axis, logged_states[3][:, 2], color='red', label='${v_3}$')
 ax_1.set_ylabel(r'Long. speed (m/s)')
 ax_1.set_xlim(-0.1, 15)
 ax_1.legend(ncol=1, edgecolor='black', facecolor='white')
