@@ -160,7 +160,7 @@ plt.legend(ncol=2)
 plt.grid(alpha=0.3)
 plt.xticks(budgets)
 
-plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("planner_ttm.pdf", dpi=500, bbox_inches='tight')
 
 
 
@@ -185,7 +185,7 @@ for planner_name, planner_label, color, line_style in zip(planner_names, planner
         # plt.errorbar(budgets, metric_avgs, metric_std)
 
 plt.xlabel('Iterations')
-plt.ylabel('Unsafe state rate (%)')
+plt.ylabel('Safety violation rate (%)')
 plt.xticks(budgets)
 plt.xlim(0, 1500)
 plt.legend()

@@ -4,7 +4,6 @@ import numpy as np
 from matplotlib.pyplot import cm
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle, Polygon
-import dill
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 

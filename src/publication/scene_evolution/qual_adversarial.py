@@ -9,13 +9,15 @@ Initiate the episode, vehicle 3 starts timid but then changed to aggressiveness
 at time step 35.
 
 """
+# %%
+
 import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(suppress=True)
 import pickle
 from importlib import reload
 import json
-from src.publication.scene_evolution.scene_viewer import Viewer
+from scene_viewer import Viewer
 # %matplotlib tk
 
 # from matplotlib.lines import Line2D
@@ -32,7 +34,7 @@ Load logs
 #      vehicle.glob_y]
 
 timestr = '20221125-03-06-37' # dealing with timid car
-save_to = './src/publication/scene_evolution/saved_files/'
+save_to = '/home/salar/my_projects/PlanToMerge/PlanToMerge/src/publication/scene_evolution/saved_files/'
 file_name = f'{timestr}_logged_states'
 with open(save_to+file_name+'.pickle', 'rb') as handle:
     logged_states = pickle.load(handle)
@@ -44,7 +46,7 @@ with open(save_to+file_name+'.pickle', 'rb') as handle:
         if car_id != 'sdv':
             logged_states[car_id] = np.array(state_vals)
             logged_states[car_id] = logged_states[car_id][:logged_states['sdv'].shape[0], :]
-#s %%
+# %%
 
 params = {
           'font.family': "Times New Roman",
@@ -125,4 +127,4 @@ ax_1.set_xlim(-0.1, 15)
 ax_1.legend(ncol=1, edgecolor='black', facecolor='white')
 #################################################################################
 ################################################################################
-plt.savefig("adversarial.pdf", dpi=500, bbox_inches='tight')
+# plt.savefig("adversarial.pdf", dpi=500, bbox_inches='tight')
