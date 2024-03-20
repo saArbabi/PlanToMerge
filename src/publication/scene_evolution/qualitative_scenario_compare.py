@@ -19,13 +19,15 @@ for vehicle in vehicles: # see env_initializor.py
 
 return vehicles
 """
+# %%
+
 import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(suppress=True)
 import pickle
 from importlib import reload
 import json
-from src.publication.scene_evolution.scene_viewer import Viewer
+from scene_viewer import Viewer
 
 # from matplotlib.lines import Line2D
 
@@ -43,7 +45,7 @@ elif plot_cat == 'normal':
     time_step = 25
 
 
-save_to = './src/publication/scene_evolution/saved_files/'
+save_to = '/home/salar/my_projects/PlanToMerge/PlanToMerge/src/publication/scene_evolution/saved_files/'
 file_name = f'{timestr}_tree_info_step_{time_step}'
 with open(save_to+file_name+'.pickle', 'rb') as handle:
     tree_info = pickle.load(handle)
@@ -104,12 +106,12 @@ def place_image(im, loc=3, ax=None, zoom=1, **kw):
 
 import matplotlib.image as image
 from matplotlib.offsetbox import OffsetImage,AnchoredOffsetbox
-from src.publication.scene_evolution import scene_viewer
+import scene_viewer
 reload(scene_viewer)
-from src.publication.scene_evolution.scene_viewer import Viewer
+from scene_viewer import Viewer
 
-im = image.imread('./src/publication/scene_evolution/time_color_bar.PNG')
-with open('./src/envs/config.json', 'rb') as handle:
+im = image.imread('./time_color_bar.PNG')
+with open('../../envs/config.json', 'rb') as handle:
     config = json.load(handle)
 
 plot_viewer = Viewer(config)
