@@ -1,3 +1,18 @@
+"""
+The following results are showcased:
+>>>>>>>> comparing agent behaviour when dealing with a aggressive vs timid driver
+Run planner_vis.py to get the search tree/traffic states.
+episode: 511
+Note:
+150 itr allocated for planner budget.
+Initiate the episode, vehicle 3 starts timid but then changed to aggressiveness
+at time step 35.
+tips with planner_vis: 
+1) input 'st' at timestep you want to save tree states. These are later used for visualising
+beliefs. 
+2) input 'slogs' at the end of the episode so that full trajecotires are logged. 
+
+"""
 
 # %%
 
