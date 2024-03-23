@@ -72,12 +72,12 @@ logged_states[2].shape
 Plot initial scene
 """
 # %matplotlib tk
-from src.publication.scene_evolution import scene_viewer
-reload(scene_viewer)
-from src.publication.scene_evolution.scene_viewer import Viewer
+# from src.publication.scene_evolution import scene_viewer
+# reload(scene_viewer)
+# from src.publication.scene_evolution.scene_viewer import Viewer
 
 
-with open('./src/envs/config.json', 'rb') as handle:
+with open('../../envs/config.json', 'rb') as handle:
     config = json.load(handle)
 
 plot_viewer = Viewer(config)
