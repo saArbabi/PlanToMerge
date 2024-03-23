@@ -1,14 +1,4 @@
-"""
-The following results are showcased:
->>>>>>>> comparing agent behaviour when dealing with a aggressive vs timid driver
-Run plan_vis.py to get the search tree/traffic states.
-episode: 511
-Note:
-150 itr allocated for planner budget.
-Initiate the episode, vehicle 3 starts timid but then changed to aggressiveness
-at time step 35.
 
-"""
 # %%
 
 import matplotlib.pyplot as plt
@@ -67,8 +57,8 @@ Load logs
 """
 import matplotlib.image as image
 
-timestr = '20221125-03-58-53' # dealing with aggressive car
-time_step = 85
+timestr = '20240323-15-31-30' # dealing with aggressive car
+time_step = 95
 
 
 save_to = '/home/salar/my_projects/PlanToMerge/PlanToMerge/src/publication/scene_evolution/saved_files/'
@@ -95,7 +85,7 @@ with open(save_to+file_name+'.pickle', 'rb') as handle:
 im = image.imread('./time_color_bar.PNG')
 with open('../../envs/config.json', 'rb') as handle:
     config = json.load(handle)
-# %%
+# s%%
 class ViewerAdversary(Viewer):
     def __init__(self, config):
         super().__init__(config)
@@ -127,6 +117,7 @@ plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis+3, time_step=time_
 plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=4)
 plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
 plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
+plot_viewer.add_custom_legend()
 
 #################################################################################
 ax_2 = plot_viewer.speed_ax
@@ -177,7 +168,7 @@ ax_3.plot([time_axis[35], time_axis[30]], [delta_glob_x[35], delta_glob_x[30]+17
 # ###############################################################################
 
 ax_3.text(time_axis[60] - 1, delta_glob_x[60] - 2, 'give-way', rotation=-27, color='green', size=14)
-ax_3.text(time_axis[110] - 1, delta_glob_x[110] - 1, 'merge-in', rotation=23, color='green', size=14)
+ax_3.text(time_axis[110] - 1, delta_glob_x[110] - 1, 'merge-in', rotation=30, color='green', size=14)
 
 ax_3.legend(ncol=1, edgecolor='black', facecolor='white')
 #################################################################################
@@ -189,4 +180,4 @@ ax_2.set_xlim(-0.1, 15)
 ax_2.legend(ncol=1, edgecolor='black', facecolor='white')
 #################################################################################
 ################################################################################
-# plt.savefig("adversarial.pdf", dpi=500, bbox_inches='tight')
+plt.savefig("adversarial.pdf", dpi=500, bbox_inches='tight')

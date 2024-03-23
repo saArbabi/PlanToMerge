@@ -1,6 +1,7 @@
 import numpy as np
 from vehicles.tracked_vehicle import TrackedVehicle
 
+
 class EnvInitializor():
     def __init__(self, config):
         self.lanes_n = config['lanes_n']
@@ -90,15 +91,15 @@ class EnvInitializor():
                 vehicles.append(new_vehicle)
                 break
 
-        # for vehicle in vehicles:
-        #     if vehicle.id == 3:
-        #         vehicle.driver_params['aggressiveness'] = 0.9
-        #         # vehicle.driver_params['aggressiveness'] = 0.5
-        #         vehicle.glob_x -= 10
-        #         vehicle.set_driver_params(self.rng)
-        #
-        #     if vehicle.id == 4:
-        #         vehicle.glob_x += 20
+        for vehicle in vehicles:
+            if vehicle.id == 3:
+                # vehicle.driver_params['aggressiveness'] = 0.9
+                vehicle.driver_params['aggressiveness'] = 0.5
+                vehicle.glob_x -= 10
+                vehicle.set_driver_params(self.rng)
+        
+            if vehicle.id == 4:
+                vehicle.glob_x += 20
 
 
         return vehicles
