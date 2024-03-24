@@ -23,6 +23,7 @@ import pickle
 from importlib import reload
 import json
 from scene_viewer import Viewer
+from matplotlib.offsetbox import OffsetImage,AnchoredOffsetbox
 # %matplotlib tk
 
 # from matplotlib.lines import Line2D
@@ -51,7 +52,7 @@ with open(save_to+file_name+'.pickle', 'rb') as handle:
         if car_id != 'sdv':
             logged_states[car_id] = np.array(state_vals)
             logged_states[car_id] = logged_states[car_id][:logged_states['sdv'].shape[0], :]
-# %%
+# a%%
 
 params = {
           'font.family': "Times New Roman",
@@ -97,7 +98,6 @@ with open(save_to+file_name+'.pickle', 'rb') as handle:
             logged_states[car_id] = logged_states[car_id][:logged_states['sdv'].shape[0], :]
 
 
-im = image.imread('./time_color_bar.PNG')
 with open('../../envs/config.json', 'rb') as handle:
     config = json.load(handle)
 # s%%
@@ -119,7 +119,7 @@ class ViewerAdversary(Viewer):
         self.env_ax.set_yticks([1, 3, 5, 7])
         self.env_ax.set_xlabel(r'Longitudinal position (m)')
         self.env_ax.set_ylabel(r'Lat. pos. (m)')
-
+ 
  
 plot_viewer = ViewerAdversary(config)
 plot_viewer.set_up_fig()
@@ -129,11 +129,18 @@ plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
 ############
 max_depth_vis = 6
 plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis+3, time_step=time_step)
-plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=4)
+plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis-1, id=4)
+plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis+3, id=3)
 plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
 plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
-plot_viewer.add_custom_legend()
+#################################################################################
+im = image.imread('./time_color_bar.png')
+imagebox = OffsetImage(im, zoom=0.1)
+ab = AnchoredOffsetbox(loc=1, bbox_to_anchor=(455, 553), child=imagebox, frameon=False)
+plot_viewer.env_ax.add_artist(ab)
 
+plot_viewer.add_custom_legend()
+ 
 #################################################################################
 ax_2 = plot_viewer.speed_ax
 ax_3 = plot_viewer.delta_glob_x

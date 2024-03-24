@@ -98,19 +98,13 @@ plot_viewer.draw_vehicle_with_info(logged_states, id=1, time_step=time_step)
 """
 Plot scene
 """
-def place_image(im, loc=3, ax=None, zoom=1, **kw):
-    if ax==None: ax=plt.gca()
-    imagebox = OffsetImage(im, zoom=zoom*0.72)
-    ab = AnchoredOffsetbox(loc=loc, bbox_to_anchor=(445, 550), child=imagebox, frameon=False, **kw)
-    ax.add_artist(ab)
-
+ 
 import matplotlib.image as image
 from matplotlib.offsetbox import OffsetImage,AnchoredOffsetbox
 import scene_viewer
 reload(scene_viewer)
 from scene_viewer import Viewer
 
-im = image.imread('./time_color_bar.PNG')
 with open('../../envs/config.json', 'rb') as handle:
     config = json.load(handle)
 
@@ -123,6 +117,7 @@ plot_viewer.draw_vehicle(logged_states, id='sdv', time_step=time_step)
 if plot_cat == 'aggressive':
     max_depth_vis = 6
     plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis+3, time_step=time_step)
+    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis+3, id=3)
     plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=4)
     plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
     plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
@@ -136,6 +131,7 @@ elif plot_cat == 'normal':
     max_depth_vis = 10
     plot_viewer.draw_sdv_traj(logged_states['sdv'], max_depth_vis, time_step=time_step)
     plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis, id=3)
+    plot_viewer.draw_vehicle_belief(belief_info, max_depth_vis-7, id=4)
     plot_viewer.draw_vehicle(logged_states, id=4, time_step=time_step)
     plot_viewer.draw_vehicle(logged_states, id=3, time_step=time_step)
     ############
@@ -157,7 +153,11 @@ MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
-place_image(im, loc=1, ax=plot_viewer.env_ax, zoom=0.32)
+im = image.imread('./time_color_bar.png')
+imagebox = OffsetImage(im, zoom=0.1)
+ab = AnchoredOffsetbox(loc=1, bbox_to_anchor=(450, 553), child=imagebox, frameon=False)
+plot_viewer.env_ax.add_artist(ab)
+
 plot_viewer.add_custom_legend()
 # plot_viewer.fig.figimage(im, 0, plot_viewer.fig.bbox.ymax-10)
 
